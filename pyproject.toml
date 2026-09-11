@@ -1,0 +1,32 @@
+[project]
+name = "consulting-intelligence-agent"
+version = "0.1.0"
+description = "Evidence-grounded requirement lifecycle management"
+requires-python = ">=3.11"
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+
+[tool.ruff.lint]
+select = [
+    "E",      # pycodestyle errors
+    "W",      # pycodestyle warnings
+    "F",      # pyflakes
+    "I",      # isort
+    "B",      # flake8-bugbear
+    "UP",     # pyupgrade
+]
+ignore = [
+    "E501",   # line too long (handled by formatter)
+]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+
+[tool.pytest.ini_options]
+testpaths = ["src/engine", "tests"]
+python_files = ["test_*.py"]
+python_functions = ["test_*"]
+addopts = "-v"
