@@ -6,14 +6,13 @@ The proposal states this separation explicitly, so no inconsistency arises.
 
 ## Ownership tracks
 
-> **FILL IN:** one member withdrew in Week 6. Replace `Member B` and `Member C` with the two remaining
-> names in this table and in `docs/06-build-plan.md`. Nothing else needs editing.
+> Ownership has been assigned to the remaining team members for the final implementation split.
 
 | Track | Owner | Scope |
 |---|---|---|
 | **A — Ingestion, extraction, evidence, export** | Benjamin Wood | FR04, FR05, FR06, FR12 |
-| **B — Retrieval, matching, classification, scoring** | Member B | FR07, FR08, FR10 |
-| **C — State engine, persistence, review, logging** | Member C | FR01, FR02, FR03, FR09, FR11 |
+| **B — Retrieval, matching, classification, scoring** | Danyang | FR07, FR08, FR10 |
+| **C — State engine, persistence, review, logging** | Lucas | FR01, FR02, FR03, FR09, FR11 |
 
 Shared: corpus authoring (rotation in `docs/05-annotation-and-corpus.md`), the baseline (built last,
 paired), and the harness skeleton (C builds it, B extends scoring).

@@ -31,7 +31,7 @@ Coding agents: read `AGENTS.md` first.
 |---|---|
 | A — Ingestion, extraction, evidence, export | Benjamin Wood |
 | B — Retrieval, matching, classification | Danyang |
-| C — State engine, persistence, review, logging | *(fill in)* |
+| C — State engine, persistence, review, logging | Lucas |
 
 ## Quickstart
 
