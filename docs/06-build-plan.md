@@ -43,13 +43,13 @@ Week labels are provisional. Check against the course demonstration schedule.
 
 ## Three-way split
 
-> **FILL IN:** replace `Member B` and `Member C` with names. Also update `docs/03-requirements.md`.
+> Ownership has been assigned to the remaining team members for the final implementation split.
 
 | Track | Owner | Owns | Also |
 |---|---|---|---|
 | **A** | Benjamin Wood | Ingest (FR04), LLM-1 extraction (FR05), evidence validator (FR06), export (FR12) | Co-owns logger interface; pairs on baseline |
-| **B** | Member B | Retrieval (FR10), LLM-2 matching and classification (FR07, FR08), prompt registry | Extends `score.py`; pairs on baseline |
-| **C** | Member C | State engine (FR11), persistence and events (FR09), Streamlit review (FR01–03), run logger | Builds harness skeleton; co-owns logger interface |
+| **B** | Danyang | Retrieval (FR10), LLM-2 matching and classification (FR07, FR08), prompt registry | Extends `score.py`; pairs on baseline |
+| **C** | Lucas | State engine (FR11), persistence and events (FR09), Streamlit review (FR01–03), run logger | Builds harness skeleton; co-owns logger interface |
 
 Shared and unassigned work that will otherwise fall through:
 
