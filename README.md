@@ -30,7 +30,7 @@ Coding agents: read `AGENTS.md` first.
 | Track | Owner |
 |---|---|
 | A — Ingestion, extraction, evidence, export | Benjamin Wood |
-| B — Retrieval, matching, classification | *(fill in)* |
+| B — Retrieval, matching, classification | Danyang |
 | C — State engine, persistence, review, logging | *(fill in)* |
 
 ## Quickstart
