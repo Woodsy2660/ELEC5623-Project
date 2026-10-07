@@ -52,6 +52,10 @@ The entrypoint is `src/api/hosted.py`. The build installs and builds `/web` into
 `web/dist`, and that app serves the screens. Fixture routes are under `/api` so
 they do not collide with the React routes. No environment variable is required.
 
+Vercel provides Python 3.12, 3.13, and 3.14. `.python-version` is `3.12` for that
+preview. Local development stays on the 3.11 virtualenv. Runtime pins live in
+`pyproject.toml` and `uv.lock`; `requirements.txt` remains the local install list.
+
 `npm run dev` in `/web` still uses `http://127.0.0.1:8000`. A hosted page calls
 `/api` on its own origin.
 

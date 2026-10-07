@@ -3,6 +3,23 @@ name = "consulting-intelligence-agent"
 version = "0.1.0"
 description = "Evidence-grounded requirement lifecycle management"
 requires-python = ">=3.11"
+dependencies = [
+    "pydantic==2.9.2",
+    "sqlalchemy==2.0.35",
+    "fastapi==0.142.2",
+    "uvicorn==0.54.0",
+]
+
+[dependency-groups]
+dev = [
+    "pytest==8.3.3",
+    "hypothesis==6.115.5",
+    "httpx==0.28.1",
+    "ruff==0.7.1",
+]
+
+[tool.uv]
+package = false
 
 [tool.ruff]
 target-version = "py311"
