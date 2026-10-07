@@ -11,7 +11,7 @@
   /classify        LLM-2 call + enum construction                    FR07/08
   /engine          PURE. stdlib only. no I/O. state machine          FR11
   /persist         SQLAlchemy models, transactional writes           FR09
-  /review_ui       Streamlit                                         FR01/02/03
+  /review_ui       React/Vite in /web                                FR01/02/03
   /export          register + history serialisation                  FR12
   /logging         model_calls wrapper, runs table
   /eval            harness scripts, scoring
@@ -24,10 +24,39 @@
   /holdout-adversarial   NOT OPENED until final scoring
 /tests
 /docs
+/web               Vite + React review UI. The state engine stays in Python.
+  /src/components  one component per designed class
+  /src/routes      one route per exported screen
+  /src/styles      copies of design/styles/tokens.css and app.css, plus screens.css
+  /src/api         typed client. schema.d.ts is generated
 ```
 
 `src/engine/` must import successfully and pass its tests with no `.env`, no network and no database.
 This is checked in CI. It is the reason the contribution is independently testable.
+
+## Web
+
+The proposal named a Streamlit review UI. The screens are now the React app in `/web`, because
+`design/` is the screen specification. Lifecycle transitions stay in `src/engine/`; the UI renders
+`can_confirm`, `can_confirm_reason`, and a 409 reason. See `docs/02-architecture.md`.
+
+- `web/src/api/schema.d.ts` is generated. From `web/`, run `npm run gen:api`. Do not edit it by hand.
+- `web/src/styles/tokens.css` and `web/src/styles/app.css` are copies of `design/styles/`. Run
+  `npm run sync:ds` to refresh them. `npm run check:ds` fails if they differ. Do not hand-edit the copies.
+- Page classes that exist only in an exported screen's `<style>` block live in `web/src/styles/screens.css`.
+
+### Shared preview on Vercel
+
+Import this repository with the Vercel root set to the repository root, not `web/`.
+The entrypoint is `src/api/hosted.py`. The build installs and builds `/web` into
+`web/dist`, and that app serves the screens. Fixture routes are under `/api` so
+they do not collide with the React routes. No environment variable is required.
+
+`npm run dev` in `/web` still uses `http://127.0.0.1:8000`. A hosted page calls
+`/api` on its own origin.
+
+The store is the in-memory fixture. Confirm, reject, edit, and settings changes
+last only for the life of that running instance.
 
 ## Python
 

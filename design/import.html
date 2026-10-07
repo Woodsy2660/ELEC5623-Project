@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Import transcript</title>
+<link rel="stylesheet" href="./styles/tokens.css">
+<link rel="stylesheet" href="./styles/app.css">
+</head>
+<body>
+<style>
+@import url("https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500&family=Playfair+Display:wght@400;500&family=JetBrains+Mono:wght@500&display=swap");
+body { margin: 0; }
+a { color: #0f0e0d; text-underline-offset: 3px; }
+.nav { display: block; padding: 9px 14px; border-radius: 999px; font-size: 14px; color: #56504a; text-decoration: none; }
+.nav:hover { background: #e9e3dc; color: #0f0e0d; }
+.nav[aria-current="page"] { background: #0f0e0d; color: #f1ece6; }
+.fld { display: block; width: 100%; box-sizing: border-box; padding: 9px 12px; border: 1px solid #cfc6b9; border-radius: 10px; background: #fff; font-family: inherit; font-size: 14px; color: #1a1714; }
+.fld:focus { outline: 2px solid #3e5277; outline-offset: 2px; }
+</style>
+
+<div style="min-height: 900px; background: var(--surface-page); font-family: var(--font-sans); color: var(--ink); display: flex; flex-direction: column">
+  <header style="display: flex; align-items: center; justify-content: flex-start; padding: 18px 30px; border-bottom: 1px solid var(--border-subtle)">
+    <img src="./assets/consultsi.png" alt="Consult SI" style="height: 19px; width: auto; display: block">
+  </header>
+  <div style="display: flex; flex-wrap: wrap; flex: 1 1 auto">
+
+  <nav style="flex: 0 0 248px; box-sizing: border-box; padding: 24px 16px; border-right: 1px solid var(--border-subtle); display: flex; flex-direction: column; gap: 24px">
+    <div style="display: flex; flex-direction: column; gap: 2px">
+      <a class="nav" href="./index.html">Home</a>
+      <a class="nav" href="./meetings.html" aria-current="page">Meetings</a>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 2px">
+      <div style="padding: 0 14px 8px; font-size: 11px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-meta)">Client portal</div>
+      <a class="nav" href="./register.html">Register</a>
+      <a class="nav" href="./review.html">Review queue <span class="cia-count">7</span></a>
+      <a class="nav" href="./capture.html">Live capture</a>
+    </div>
+    <div style="margin-top: auto; display: flex; flex-direction: column; gap: 2px">
+      <a class="nav" href="./settings.html">Settings</a>
+      <div style="padding: 12px 14px; border-top: 1px solid var(--border-subtle); margin-top: 8px">
+        <div style="font-size: 13px">Ben Wood</div>
+        <div class="cia-authority" style="font-size: 12px">Cannot confirm scope</div>
+      </div>
+    </div>
+  </nav>
+
+  <main style="flex: 999 1 560px; min-width: 0; box-sizing: border-box; padding: 40px 48px">
+    <div style="max-width: 680px; display: flex; flex-direction: column; gap: 28px">
+
+      <div>
+        <h1 style="margin: 0; font-family: var(--font-display); font-size: 38px; line-height: 44px; letter-spacing: -0.01em">Import a transcript</h1>
+        <p style="margin: 10px 0 0; font-size: 14px; line-height: 22px; color: var(--ink-meta)">For past meetings, calls captured elsewhere, or anything the bot did not join. Live capture is the normal path — <a href="./capture.html">connect a calendar</a> and the transcript arrives on its own.</p>
+      </div>
+
+      <div style="background: var(--surface-sunken); border: 1px solid var(--border-subtle); border-radius: 10px; padding: 16px 20px; font-size: 13px; line-height: 21px; color: var(--ink-meta)">Turn order is load-bearing. Once imported, a meeting’s turns are never renumbered, because every piece of evidence points at one by position.</div>
+
+      <div style="border: 1px dashed var(--border-strong); border-radius: 10px; background: var(--surface-raised); padding: 40px 24px; text-align: center">
+        <div style="font-family: var(--font-display); font-size: 21px">Drop a transcript file</div>
+        <p style="margin: 6px 0 16px; font-size: 13px; color: var(--ink-meta)">Plain text with speaker labels, or an export from a meeting tool</p>
+        <button type="button" class="cia-btn">Choose file</button>
+      </div>
+
+      <div style="background: var(--surface-raised); border: 1px solid var(--border-subtle); border-radius: 10px; padding: 20px; display: flex; flex-direction: column; gap: 18px">
+        <div style="display: flex; align-items: center; gap: 12px">
+          <span class="cia-id">D1-M03.txt</span>
+          <span style="font-size: 13px; color: var(--ink-meta)">62 turns parsed · 4 speakers found</span>
+          <span style="margin-left: auto; font-size: 13px; color: var(--ink); font-weight: 600">Ready</span>
+        </div>
+
+        <div style="display: flex; gap: 16px; flex-wrap: wrap">
+          <div style="flex: 1 1 220px; min-width: 0">
+            <label for="proj" style="display: block; font-size: 12px; color: var(--ink-meta); margin-bottom: 6px">Project</label>
+            <select class="fld" id="proj">
+              <option>Client portal</option>
+              <option>Warehouse scanning</option>
+              <option>Driver app</option>
+            </select>
+          </div>
+          <div style="flex: 1 1 160px; min-width: 0">
+            <label for="ord" style="display: block; font-size: 12px; color: var(--ink-meta); margin-bottom: 6px">Meeting order</label>
+            <input class="fld" id="ord" type="text" value="3 — after 18 Mar">
+          </div>
+        </div>
+
+        <div>
+          <div style="font-size: 11px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-meta); margin-bottom: 10px">Speakers and scope authority</div>
+          <div style="display: flex; flex-direction: column; gap: 2px">
+            <div style="display: flex; align-items: center; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--border-subtle)">
+              <span class="cia-id" style="flex: 0 0 130px">CLIENT_PO</span>
+              <span style="flex: 999 1 auto; min-width: 0; font-size: 14px">Priya Raman · product owner</span>
+              <span class="cia-authority cia-authority--can">&#9679; Can confirm scope</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--border-subtle)">
+              <span class="cia-id" style="flex: 0 0 130px">CLIENT_DEV</span>
+              <span style="flex: 999 1 auto; min-width: 0; font-size: 14px">Tom Alder · engineer</span>
+              <span class="cia-authority">&#9675; Cannot confirm scope</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--border-subtle)">
+              <span class="cia-id" style="flex: 0 0 130px">CONSULTANT_A</span>
+              <span style="flex: 999 1 auto; min-width: 0; font-size: 14px">Ben Wood · lead consultant</span>
+              <span class="cia-authority">&#9675; Cannot confirm scope</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 12px; padding: 8px 0; background: var(--surface-sunken); border-left: 2px solid var(--ink); border-radius: 0 6px 6px 0; padding-left: 12px; padding-right: 8px">
+              <span class="cia-id" style="flex: 0 0 130px">CLIENT_CFO</span>
+              <span style="flex: 999 1 auto; min-width: 0; font-size: 14px; color: var(--ink)">New speaker &mdash; assign a role before importing</span>
+              <button type="button" class="cia-btn" style="font-size: 13px; padding: 5px 12px">Assign</button>
+            </div>
+          </div>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 12px; padding-top: 4px">
+          <button type="button" class="cia-btn cia-btn--primary" disabled>Import and process</button>
+          <span style="font-size: 13px; color: var(--ink-meta)">Blocked: one speaker has no role</span>
+        </div>
+      </div>
+
+      <p style="margin: 0; font-size: 13px; line-height: 20px; color: var(--ink-meta)">Authority is configuration, not something the agent reads out of the conversation. A speaker&#39;s name or tone never establishes who can change agreed scope, so an unmapped speaker blocks the import rather than defaulting to anything.</p>
+
+    </div>
+  </main>
+</div>
+</div>
+</body>
+</html>

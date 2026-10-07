@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Review queue — Client portal</title>
+<link rel="stylesheet" href="./styles/tokens.css">
+<link rel="stylesheet" href="./styles/app.css">
+</head>
+<body>
+<style>
+@import url("https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500&family=Playfair+Display:wght@400;500&family=JetBrains+Mono:wght@500&display=swap");
+body { margin: 0; }
+a { color: #0f0e0d; text-underline-offset: 3px; }
+.nav { display: block; padding: 9px 14px; border-radius: 999px; font-size: 14px; color: #56504a; text-decoration: none; }
+.nav:hover { background: #e9e3dc; color: #0f0e0d; }
+.nav[aria-current="page"] { background: #0f0e0d; color: #f1ece6; }
+.qitem { display: block; width: 100%; box-sizing: border-box; text-align: left; background: none; border: 1px solid transparent; border-radius: 10px; padding: 10px 12px; cursor: pointer; font-family: inherit; }
+.qitem:hover { background: #f2eee8; }
+.qitem[aria-current="true"] { background: #fff; border-color: #cfc6b9; box-shadow: 0 1px 2px rgba(26,23,20,0.06); }
+</style>
+
+<div style="min-height: 900px; background: var(--surface-page); font-family: var(--font-sans); color: var(--ink); display: flex; flex-direction: column">
+  <header style="display: flex; align-items: center; justify-content: flex-start; padding: 18px 30px; border-bottom: 1px solid var(--border-subtle)">
+    <img src="./assets/consultsi.png" alt="Consult SI" style="height: 19px; width: auto; display: block">
+  </header>
+  <div style="display: flex; flex-wrap: wrap; flex: 1 1 auto">
+
+  <nav style="flex: 0 0 248px; box-sizing: border-box; padding: 24px 16px; border-right: 1px solid var(--border-subtle); display: flex; flex-direction: column; gap: 24px">
+    <div style="display: flex; flex-direction: column; gap: 2px">
+      <a class="nav" href="./index.html">Home</a>
+      <a class="nav" href="./meetings.html">Meetings</a>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 2px">
+      <div style="padding: 0 14px 8px; font-size: 11px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-meta)">Client portal</div>
+      <a class="nav" href="./register.html">Register</a>
+      <a class="nav" href="./review.html" aria-current="page">Review queue <span class="cia-count">7</span></a>
+      <a class="nav" href="./capture.html">Live capture</a>
+    </div>
+    <div style="margin-top: auto; display: flex; flex-direction: column; gap: 2px">
+      <a class="nav" href="./settings.html">Settings</a>
+      <div style="padding: 12px 14px; border-top: 1px solid var(--border-subtle); margin-top: 8px">
+        <div style="font-size: 13px">Ben Wood</div>
+        <div class="cia-authority" style="font-size: 12px">Cannot confirm scope</div>
+      </div>
+    </div>
+  </nav>
+
+  <div style="flex: 0 0 300px; box-sizing: border-box; padding: 32px 12px; border-right: 1px solid var(--border-subtle); display: flex; flex-direction: column; gap: 4px">
+    <div style="padding: 0 12px 12px">
+      <div style="font-size: 15px; font-weight: 500">7 proposals</div>
+      <div style="font-size: 13px; color: var(--ink-meta); margin-top: 2px">From meeting 2 · 18 Mar</div>
+    </div>
+
+    <button type="button" class="qitem">
+      <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px"><span class="cia-id">R01</span><span class="cia-relation" style="font-size: 11px; padding: 1px 6px">supersession</span></div>
+      <div style="font-size: 13px; line-height: 19px; color: var(--ink-proposed)">Authenticate through the identity provider using SSO</div>
+    </button>
+
+    <button type="button" class="qitem" aria-current="true">
+      <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px"><span class="cia-id">R03</span><span class="cia-relation" style="font-size: 11px; padding: 1px 6px; color: var(--state-contradicted); border-color: var(--state-contradicted)">contradiction</span></div>
+      <div style="font-size: 13px; line-height: 19px; color: var(--ink)">Password reset email may no longer be required</div>
+    </button>
+
+    <button type="button" class="qitem">
+      <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px"><span class="cia-id">R06</span><span class="cia-relation" style="font-size: 11px; padding: 1px 6px">restatement</span></div>
+      <div style="font-size: 13px; line-height: 19px; color: var(--ink-proposed)">Order receipt email unchanged</div>
+    </button>
+
+    <button type="button" class="qitem">
+      <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px"><span class="cia-id">R05</span><span class="cia-relation" style="font-size: 11px; padding: 1px 6px">refinement</span></div>
+      <div style="font-size: 13px; line-height: 19px; color: var(--ink-proposed)">CSV export accepts a start and end date</div>
+    </button>
+
+    <button type="button" class="qitem">
+      <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px"><span class="cia-id">R07</span><span class="cia-relation" style="font-size: 11px; padding: 1px 6px; color: var(--state-contradicted); border-color: var(--state-contradicted)">contradiction</span></div>
+      <div style="font-size: 13px; line-height: 19px; color: var(--ink-proposed)">Two-second load target disputed</div>
+    </button>
+
+    <button type="button" class="qitem">
+      <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px"><span class="cia-id">R04</span><span class="cia-relation" style="font-size: 11px; padding: 1px 6px">restatement</span></div>
+      <div style="font-size: 13px; line-height: 19px; color: var(--ink-proposed)">Order history unchanged</div>
+    </button>
+
+    <button type="button" class="qitem">
+      <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px"><span class="cia-id">new</span><span class="cia-relation" style="font-size: 11px; padding: 1px 6px">new</span></div>
+      <div style="font-size: 13px; line-height: 19px; color: var(--ink-proposed)">Session expires after 30 minutes of inactivity</div>
+    </button>
+
+    <div style="margin-top: 12px; padding: 12px; border-top: 1px solid var(--border-subtle); font-size: 12px; line-height: 18px; color: var(--ink-meta)">1 candidate discarded: evidence did not resolve to stored transcript text. Counted as an extraction error.</div>
+  </div>
+
+  <main style="flex: 999 1 520px; min-width: 0; box-sizing: border-box; padding: 32px 40px">
+
+    <div class="cia-scope">
+      <span class="cia-scope__client">Northwind Logistics</span>
+      <span class="cia-scope__sep">/</span>
+      <button type="button" class="cia-scope__project">Client portal &#9662;</button>
+      <span class="cia-id">7 proposals from meeting 3</span>
+      <span class="cia-scope__note">Scoped to this project &mdash; retrieval never crosses projects</span>
+    </div>
+
+
+    <div class="cia-proposal cia-proposal--unresolved" style="max-width: 760px">
+
+      <div class="cia-proposal__head">
+        <div>
+          <p class="cia-proposal__statement">The password reset email may no longer be required under SSO.</p>
+          <div class="cia-proposal__transition">
+            <span class="cia-id">Client portal / R03 v1</span>
+            <span class="cia-chip cia-chip--proposed">Proposed</span>
+            <span>&#8594;</span>
+            <span class="cia-chip cia-chip--contradicted">Contradicted</span>
+          </div>
+        </div>
+        <span class="cia-relation" style="color: var(--state-contradicted); border-color: var(--state-contradicted)">contradiction</span>
+      </div>
+
+      <div class="cia-proposal__body">
+
+        <div>
+          <div class="cia-proposal__section-label">Evidence</div>
+          <div class="cia-evidence">
+            <div class="cia-evidence__meta">
+              <span class="cia-evidence__speaker">Client Dev</span>
+              <span class="cia-id">D1-M02:0006</span>
+            </div>
+            <p class="cia-evidence__quote"><span class="cia-evidence__context">It does, but </span><span class="cia-evidence__span">I&#39;d want to confirm that with the identity provider team before you write it off</span><span class="cia-evidence__context">. Leave it open for now.</span></p>
+            <a class="cia-evidence__link" href="./detail.html">Open in transcript</a>
+          </div>
+          <div style="margin-top: 10px"><span class="cia-authority">&#9675; Tom Alder (engineer) cannot confirm scope</span></div>
+        </div>
+
+        <div>
+          <div class="cia-proposal__section-label">Model rationale</div>
+          <p class="cia-rationale">The obligation is challenged but no replacement is stated, and the speaker cannot confirm scope. Classified as contradiction rather than supersession.</p>
+        </div>
+
+        <div>
+          <div class="cia-proposal__section-label">Retrieved alternatives (5 considered)</div>
+          <div class="cia-alts">
+            <div class="cia-alt cia-alt--chosen">
+              <span class="cia-alt__rank">1</span>
+              <span class="cia-alt__text">The system sends a password reset email containing a reset link</span>
+              <span class="cia-chip cia-chip--proposed">Proposed</span>
+            </div>
+            <div class="cia-alt">
+              <span class="cia-alt__rank">2</span>
+              <span class="cia-alt__text">On dispatch, the customer receives an order receipt email with line items and tracking number</span>
+              <span class="cia-chip cia-chip--confirmed">Confirmed</span>
+            </div>
+            <div class="cia-alt">
+              <span class="cia-alt__rank">3</span>
+              <span class="cia-alt__text">Customers authenticate with an email address and password</span>
+              <span class="cia-chip cia-chip--superseded">Superseded</span>
+            </div>
+            <div class="cia-alt">
+              <span class="cia-alt__rank">4</span>
+              <span class="cia-alt__text">Passwords must be at least twelve characters</span>
+              <span class="cia-chip cia-chip--withdrawn">Withdrawn</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="cia-actions">
+        <button type="button" class="cia-btn cia-btn--primary" disabled>Confirm</button>
+        <button type="button" class="cia-btn">Edit</button>
+        <button type="button" class="cia-btn cia-btn--danger">Reject</button>
+        <span class="cia-actions__note">Needs confirmation from a scope owner</span>
+      </div>
+
+    </div>
+
+    <p style="margin: 20px 0 0; max-width: 760px; font-size: 13px; line-height: 20px; color: var(--ink-meta)">Rank 2 is the near-duplicate. Both are emails the system sends and both were discussed in adjacent turns; showing what the classifier considered and did not pick is how a reviewer catches a wrong match rather than trusting one.</p>
+
+  </main>
+</div>
+</div>
+</body>
+</html>

@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>In-call sidecar</title>
+<link rel="stylesheet" href="./styles/tokens.css">
+<link rel="stylesheet" href="./styles/app.css">
+</head>
+<body>
+<style>
+@import url("https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500&family=Playfair+Display:wght@400;500&family=JetBrains+Mono:wght@500&display=swap");
+body { margin: 0; }
+a { color: #0f0e0d; text-underline-offset: 3px; }
+</style>
+
+<div style="width: 480px; height: 860px; box-sizing: border-box; padding: 24px; background: var(--surface-sunken); font-family: var(--font-sans); color: var(--ink); display: flex; flex-direction: column; gap: 20px">
+
+  <div style="display: flex; justify-content: flex-start; padding-bottom: 4px">
+    <img src="./assets/consultsi.png" alt="Consult SI" style="height: 17px; width: auto; display: block">
+  </div>
+  <div style="font-size: 11px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-meta)">Pill &mdash; anchors bottom-centre, moves to the edge on focus loss</div>
+
+  <div style="display: flex; justify-content: center">
+    <div class="cia-pill">
+      <span class="cia-dot-live"></span>
+      <span>Capturing &middot; 18:42</span>
+      <span class="cia-counter">47 turns</span>
+    </div>
+  </div>
+
+  <div style="font-size: 11px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-meta)">Panel &mdash; 340px, never over the user&#39;s windows</div>
+
+  <div style="display: flex; justify-content: center">
+    <div class="cia-sidecar">
+      <div class="cia-sidecar__head">
+        <span class="cia-dot-live"></span>
+        <span class="cia-sidecar__title">Client portal &middot; meeting 3</span>
+        <span class="cia-id" style="margin-left: auto">18:42</span>
+      </div>
+
+      <div class="cia-sidecar__body" style="padding-bottom: 16px">
+        <div style="font-size: 11px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-meta); margin-bottom: 4px">Live transcript</div>
+        <div class="cia-turn">
+          <span class="cia-turn__speaker">Client Dev &middot; 16:48</span>
+          <p class="cia-turn__text">Our security team won&#39;t sign off on us holding customer passwords at all.</p>
+        </div>
+        <div class="cia-turn">
+          <span class="cia-turn__speaker">Client PO &middot; 17:11</span>
+          <p class="cia-turn__text">So we will use single sign-on instead.</p>
+        </div>
+        <div class="cia-turn cia-turn--partial" style="border-bottom: none">
+          <span class="cia-turn__speaker">Consultant A &middot; 18:40</span>
+          <p class="cia-turn__text">That&#39;s a significant change from the last<span style="opacity: .45">&#8230;</span></p>
+        </div>
+      </div>
+
+      <div style="height: 1px; background: var(--border-subtle)"></div>
+
+      <div class="cia-sidecar__body" style="padding-top: 16px; padding-bottom: 16px; background: var(--surface-sunken)">
+        <p class="cia-sidecar__empty"><b style="font-weight: 500; color: var(--ink)">No proposals yet.</b> Matching runs when the meeting ends &mdash; a decision made late can reverse one made early.</p>
+      </div>
+
+      <div class="cia-sidecar__body" style="padding-top: 16px">
+        <div style="font-size: 11px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-meta); margin-bottom: 10px">Current scope</div>
+        <div class="cia-alts">
+          <div class="cia-alt"><span class="cia-alt__rank">R04</span><span class="cia-alt__text">Order history view</span><span class="cia-chip cia-chip--confirmed">Confirmed</span></div>
+          <div class="cia-alt"><span class="cia-alt__rank">R01</span><span class="cia-alt__text">Email and password login</span><span class="cia-chip cia-chip--confirmed">Confirmed</span></div>
+          <div class="cia-alt"><span class="cia-alt__rank">R03</span><span class="cia-alt__text">Password reset email</span><span class="cia-chip cia-chip--contradicted">Contradicted</span></div>
+          <div class="cia-alt"><span class="cia-alt__rank">R02</span><span class="cia-alt__text">Twelve-character passwords</span><span class="cia-chip cia-chip--withdrawn">Withdrawn</span></div>
+        </div>
+
+        <div style="display: flex; gap: 8px; margin-top: 18px">
+          <a href="./capture.html" style="text-decoration: none"><span class="cia-btn cia-btn--primary" style="display: inline-block; font-size: 13px; padding: 8px 16px">End and process</span></a>
+          <a href="./register.html" style="text-decoration: none; align-self: center; font-size: 13px">Open register</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <p style="margin: 0; font-size: 13px; line-height: 21px; color: var(--ink-meta)">Transcript streams; reasoning waits. The panel shows what was already agreed, which is what a consultant actually needs mid-argument &mdash; and shows no extraction count, no running tally, nothing the model thinks about this call.</p>
+
+</div>
+</body>
+</html>

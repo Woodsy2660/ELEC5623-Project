@@ -27,6 +27,10 @@ runs/
 # IDE
 .idea/
 .vscode/
+
+# Web
+node_modules/
+web/dist/
 *.swp
 *.swo
 

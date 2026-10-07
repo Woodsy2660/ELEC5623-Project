@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Register — Client portal</title>
+<link rel="stylesheet" href="./styles/tokens.css">
+<link rel="stylesheet" href="./styles/app.css">
+</head>
+<body>
+<style>
+@import url("https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500&family=Playfair+Display:wght@400;500&family=JetBrains+Mono:wght@500&display=swap");
+body { margin: 0; }
+a { color: #0f0e0d; text-underline-offset: 3px; }
+.nav { display: block; padding: 9px 14px; border-radius: 999px; font-size: 14px; color: #56504a; text-decoration: none; }
+.nav:hover { background: #e9e3dc; color: #0f0e0d; }
+.nav[aria-current="page"] { background: #0f0e0d; color: #f1ece6; }
+.rowlink { text-decoration: none; color: inherit; }
+tr:hover .rowlink { text-decoration: underline; text-underline-offset: 2px; }
+</style>
+
+<div style="min-height: 900px; background: var(--surface-page); font-family: var(--font-sans); color: var(--ink); display: flex; flex-direction: column">
+  <header style="display: flex; align-items: center; justify-content: flex-start; padding: 18px 30px; border-bottom: 1px solid var(--border-subtle)">
+    <img src="./assets/consultsi.png" alt="Consult SI" style="height: 19px; width: auto; display: block">
+  </header>
+  <div style="display: flex; flex-wrap: wrap; flex: 1 1 auto">
+
+  <nav style="flex: 0 0 248px; box-sizing: border-box; padding: 24px 16px; border-right: 1px solid var(--border-subtle); display: flex; flex-direction: column; gap: 24px">
+    <div style="display: flex; flex-direction: column; gap: 2px">
+      <a class="nav" href="./index.html">Home</a>
+      <a class="nav" href="./meetings.html">Meetings</a>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 2px">
+      <div style="padding: 0 14px 8px; font-size: 11px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-meta)">Client portal</div>
+      <a class="nav" href="./register.html" aria-current="page">Register</a>
+      <a class="nav" href="./review.html">Review queue <span class="cia-count">7</span></a>
+      <a class="nav" href="./capture.html">Live capture</a>
+    </div>
+    <div style="margin-top: auto; display: flex; flex-direction: column; gap: 2px">
+      <a class="nav" href="./settings.html">Settings</a>
+      <div style="padding: 12px 14px; border-top: 1px solid var(--border-subtle); margin-top: 8px">
+        <div style="font-size: 13px">Ben Wood</div>
+        <div class="cia-authority" style="font-size: 12px">Cannot confirm scope</div>
+      </div>
+    </div>
+  </nav>
+
+  <main style="flex: 999 1 560px; min-width: 0; box-sizing: border-box; padding: 40px 48px; display: flex; flex-direction: column; gap: 28px">
+
+    <div class="cia-scope">
+      <span class="cia-scope__client">Northwind Logistics</span>
+      <span class="cia-scope__sep">/</span>
+      <button type="button" class="cia-scope__project">Client portal &#9662;</button>
+      <span class="cia-id">8 requirement families &middot; 12 versions</span>
+      <span class="cia-scope__note">Scoped to this project &mdash; retrieval never crosses projects</span>
+    </div>
+
+
+    <header style="display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; flex-wrap: wrap">
+      <div>
+        <h1 style="margin: 0; font-family: var(--font-display); font-size: 38px; line-height: 44px; letter-spacing: -0.01em">Register</h1>
+        <p style="margin: 6px 0 0; font-size: 14px; color: var(--ink-meta)">Client portal · state after meeting 2 of 2 · 8 requirement families</p>
+      </div>
+      <div style="display: flex; gap: 8px">
+        <button type="button" class="cia-btn">Export</button>
+        <a href="./review.html" style="text-decoration: none"><span class="cia-btn cia-btn--primary" style="display: inline-block">Review 7 proposals</span></a>
+      </div>
+    </header>
+
+    <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center">
+      <button type="button" class="cia-btn" style="font-size: 13px; padding: 6px 12px; background: var(--ink); color: var(--surface-raised); border-color: var(--ink)">All 12</button>
+      <button type="button" class="cia-btn" style="font-size: 13px; padding: 6px 12px">Confirmed 3</button>
+      <button type="button" class="cia-btn" style="font-size: 13px; padding: 6px 12px">Proposed 4</button>
+      <button type="button" class="cia-btn" style="font-size: 13px; padding: 6px 12px">Contradicted 2</button>
+      <button type="button" class="cia-btn" style="font-size: 13px; padding: 6px 12px">History 3</button>
+      <span style="margin-left: auto; font-size: 13px; color: var(--ink-meta)">Sorted by state, then ID</span>
+    </div>
+
+    <div style="background: var(--surface-raised); border: 1px solid var(--border-subtle); border-radius: 10px; overflow: hidden">
+      <table class="cia-register">
+        <thead>
+          <tr>
+            <th style="width: 110px">ID</th>
+            <th>Requirement</th>
+            <th style="width: 150px">State</th>
+            <th style="width: 130px">Last changed</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr data-state="confirmed">
+            <td><span class="cia-id">R04 v1</span></td>
+            <td><a class="rowlink" href="./detail.html"><span class="cia-register__text">Customers can view all their orders, newest first, with status and total</span></a></td>
+            <td><span class="cia-chip cia-chip--confirmed">Confirmed</span></td>
+            <td><span style="font-size: 13px; color: var(--ink-meta)">M01 · 4 Mar</span></td>
+          </tr>
+          <tr data-state="confirmed">
+            <td><span class="cia-id">R05 v2</span></td>
+            <td><a class="rowlink" href="./detail.html"><span class="cia-register__text">CSV export of order history, with optional start and end date</span></a></td>
+            <td><span class="cia-chip cia-chip--confirmed">Confirmed</span></td>
+            <td><span style="font-size: 13px; color: var(--ink-meta)">M02 · 18 Mar</span></td>
+          </tr>
+          <tr data-state="confirmed">
+            <td><span class="cia-id">R06 v1</span></td>
+            <td><a class="rowlink" href="./detail.html"><span class="cia-register__text">On dispatch, the customer receives an order receipt email with line items and tracking number</span></a></td>
+            <td><span class="cia-chip cia-chip--confirmed">Confirmed</span></td>
+            <td><span style="font-size: 13px; color: var(--ink-meta)">M01 · 4 Mar</span></td>
+          </tr>
+          <tr data-state="proposed">
+            <td><span class="cia-id">R01 v2</span></td>
+            <td><a class="rowlink" href="./review.html"><span class="cia-register__text">Customers authenticate through the existing identity provider using SSO</span></a></td>
+            <td><span class="cia-chip cia-chip--proposed">Proposed</span></td>
+            <td><span style="font-size: 13px; color: var(--ink-meta)">M02 · 18 Mar</span></td>
+          </tr>
+          <tr data-state="proposed">
+            <td><span class="cia-id">R08 v1</span></td>
+            <td><a class="rowlink" href="./review.html"><span class="cia-register__text">Session expires after 30 minutes of inactivity</span></a></td>
+            <td><span class="cia-chip cia-chip--proposed">Proposed</span></td>
+            <td><span style="font-size: 13px; color: var(--ink-meta)">M02 · 18 Mar</span></td>
+          </tr>
+          <tr data-state="contradicted">
+            <td><span class="cia-id">R03 v1</span></td>
+            <td><a class="rowlink" href="./review.html"><span class="cia-register__text">The system sends a password reset email containing a reset link</span></a><div style="margin-top: 4px; font-size: 13px; color: var(--state-contradicted)">Challenged in M02 — no replacement stated, awaiting the identity provider team</div></td>
+            <td><span class="cia-chip cia-chip--contradicted">Contradicted</span></td>
+            <td><span style="font-size: 13px; color: var(--ink-meta)">M02 · 18 Mar</span></td>
+          </tr>
+          <tr data-state="contradicted">
+            <td><span class="cia-id">R07 v1</span></td>
+            <td><a class="rowlink" href="./detail.html"><span class="cia-register__text">Order history loads in under two seconds for a customer with 1000 orders</span></a><div style="margin-top: 4px; font-size: 13px; color: var(--state-contradicted)">Challenged in M02 — no replacement number offered</div></td>
+            <td><span class="cia-chip cia-chip--contradicted">Contradicted</span></td>
+            <td><span style="font-size: 13px; color: var(--ink-meta)">M02 · 18 Mar</span></td>
+          </tr>
+          <tr data-state="superseded">
+            <td><span class="cia-id">R01 v1</span></td>
+            <td><a class="rowlink" href="./detail.html"><span class="cia-register__text">Customers authenticate with an email address and password</span></a></td>
+            <td><span class="cia-chip cia-chip--superseded">Superseded</span></td>
+            <td><span style="font-size: 13px; color: var(--ink-meta)">M02 · 18 Mar</span></td>
+          </tr>
+          <tr data-state="superseded">
+            <td><span class="cia-id">R05 v1</span></td>
+            <td><a class="rowlink" href="./detail.html"><span class="cia-register__text">Customers can export their order history as CSV</span></a></td>
+            <td><span class="cia-chip cia-chip--superseded">Superseded</span></td>
+            <td><span style="font-size: 13px; color: var(--ink-meta)">M02 · 18 Mar</span></td>
+          </tr>
+          <tr data-state="withdrawn">
+            <td><span class="cia-id">R02 v1</span></td>
+            <td><a class="rowlink" href="./detail.html"><span class="cia-register__text">Passwords must be at least twelve characters</span></a></td>
+            <td><span class="cia-chip cia-chip--withdrawn">Withdrawn</span></td>
+            <td><span style="font-size: 13px; color: var(--ink-meta)">M02 · 18 Mar</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p style="margin: 0; font-size: 13px; line-height: 20px; color: var(--ink-meta); max-width: 78ch">Superseded rows are struck through and kept; withdrawn rows are kept without a strike, because withdrawn means never adopted rather than replaced. Both stay readable — the contrast floor is set so history can be read, not merely detected.</p>
+
+  </main>
+</div>
+</div>
+</body>
+</html>

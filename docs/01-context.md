@@ -84,3 +84,4 @@ Recorded here so the final report can declare them rather than quietly omit them
 | ≥15 holdout examples per relationship class | Likely 8–14 for rarer classes | Follows from the scenario cut. Proposal pre-commits to reporting shortfall rather than tuning on test |
 | E6: 4–6 external counterbalanced participants | Lightweight protocol, teammates plus outsiders if available | Not on critical path; sample limitation declared |
 | Four relationship labels | Four *transition-driving* labels plus two utterance labels | `restatement` and `not_requirement` had nowhere to go; see `docs/05-annotation-and-corpus.md` |
+| Streamlit review UI | React/Vite in `/web` | The design export is the screen specification. The state engine stays in Python; the UI only renders the server's decision |

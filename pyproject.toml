@@ -25,6 +25,18 @@ ignore = [
 quote-style = "double"
 indent-style = "space"
 
+[tool.vercel]
+entrypoint = "src.api.hosted:app"
+
+[tool.vercel.scripts]
+build = "npm --prefix web ci && npm --prefix web run build"
+
+# CORS middleware would otherwise keep the UI inside the function. Promote the
+# Vite build to the CDN; API routes still hit the function.
+[tool.vercel.fastapi.static]
+cdn = true
+exclude = true
+
 [tool.pytest.ini_options]
 testpaths = ["src/engine", "tests"]
 python_files = ["test_*.py"]

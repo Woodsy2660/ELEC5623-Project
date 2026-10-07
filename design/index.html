@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Home</title>
+<link rel="stylesheet" href="./styles/tokens.css">
+<link rel="stylesheet" href="./styles/app.css">
+</head>
+<body>
+<style>
+@import url("https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500&family=Playfair+Display:wght@400;500&family=JetBrains+Mono:wght@500&display=swap");
+body { margin: 0; }
+a { color: #0f0e0d; text-underline-offset: 3px; }
+.nav { display: block; padding: 9px 14px; border-radius: 999px; font-size: 14px; color: #56504a; text-decoration: none; }
+.nav:hover { background: #e9e3dc; color: #0f0e0d; }
+.nav[aria-current="page"] { background: #0f0e0d; color: #f1ece6; }
+.card { display: block; text-decoration: none; color: inherit; background: #fbf9f6; border: 1px solid #dfd8d0; border-radius: 10px; padding: 24px; }
+.card:hover { border-color: #c6bdb3; }
+</style>
+
+<div style="min-height: 900px; background: var(--surface-page); font-family: var(--font-sans); color: var(--ink); display: flex; flex-direction: column">
+  <header style="display: flex; align-items: center; justify-content: flex-start; padding: 18px 30px; border-bottom: 1px solid var(--border-subtle)">
+    <img src="./assets/consultsi.png" alt="Consult SI" style="height: 19px; width: auto; display: block">
+  </header>
+  <div style="display: flex; flex-wrap: wrap; flex: 1 1 auto">
+
+  <nav style="flex: 0 0 248px; box-sizing: border-box; padding: 24px 16px; border-right: 1px solid var(--border-subtle); display: flex; flex-direction: column; gap: 24px">
+    <div style="display: flex; flex-direction: column; gap: 2px">
+      <a class="nav" href="./index.html" aria-current="page">Home</a>
+      <a class="nav" href="./meetings.html">Meetings</a>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 2px">
+      <div style="padding: 0 14px 8px; font-size: 11px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-meta)">Client portal</div>
+      <a class="nav" href="./register.html">Register</a>
+      <a class="nav" href="./review.html">Review queue <span class="cia-count">7</span></a>
+      <a class="nav" href="./capture.html">Live capture</a>
+    </div>
+    <div style="margin-top: auto; display: flex; flex-direction: column; gap: 2px">
+      <a class="nav" href="./settings.html">Settings</a>
+      <div style="padding: 12px 14px; border-top: 1px solid var(--border-subtle); margin-top: 8px">
+        <div style="font-size: 13px">Ben Wood</div>
+        <div class="cia-authority" style="font-size: 12px">Cannot confirm scope</div>
+      </div>
+    </div>
+  </nav>
+
+  <main style="flex: 999 1 560px; min-width: 0; box-sizing: border-box; padding: 40px 48px; display: flex; flex-direction: column; gap: 36px">
+
+    <header>
+      <h1 style="margin: 0; font-family: var(--font-display); font-size: 44px; line-height: 50px; letter-spacing: -0.01em">Good afternoon, Ben</h1>
+      <p style="margin: 10px 0 0; font-size: 15px; color: var(--ink-meta)">One call in progress. Seven proposals waiting on a decision.</p>
+    </header>
+
+    <section style="background: var(--ink); color: var(--surface-page); border-radius: 16px; padding: 28px 32px; display: flex; align-items: center; gap: 28px; flex-wrap: wrap">
+      <div style="flex: 999 1 320px; min-width: 0">
+        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px">
+          <span class="cia-dot-live"></span>
+          <span style="font-size: 11px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; opacity: .85">Recording now &middot; 18:42</span>
+        </div>
+        <div style="font-family: var(--font-display); font-size: 27px; line-height: 34px">Requirements review &middot; Client portal</div>
+        <div style="margin-top: 8px; font-size: 14px; opacity: .75">Google Meet &middot; 4 participants &middot; 47 turns captured</div>
+      </div>
+      <a href="./capture.html" style="text-decoration: none"><span class="cia-btn" style="display: inline-block; background: var(--surface-page); border-color: var(--surface-page)">Open capture</span></a>
+    </section>
+
+    <section>
+      <h2 style="margin: 0 0 16px; font-size: 11px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-meta)">Next up</h2>
+      <div style="background: var(--surface-raised); border: 1px solid var(--border-subtle); border-radius: 10px">
+        <div style="display: flex; align-items: center; gap: 20px; padding: 16px 24px; border-bottom: 1px solid var(--border-subtle)">
+          <span class="cia-id" style="flex: 0 0 110px">Thu 09:30</span>
+          <span style="flex: 999 1 auto; min-width: 0; font-size: 15px">Warehouse scanning &middot; sprint review</span>
+          <span class="cia-tag cia-tag--on">Bot will join</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 20px; padding: 16px 24px">
+          <span class="cia-id" style="flex: 0 0 110px">Fri 14:00</span>
+          <span style="flex: 999 1 auto; min-width: 0; font-size: 15px">Driver app &middot; discovery call</span>
+          <span class="cia-tag">Not capturing</span>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2 style="margin: 0 0 16px; font-size: 11px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-meta)">Projects</h2>
+      <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px">
+
+        <a class="card" href="./register.html">
+          <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 12px">
+            <span style="font-family: var(--font-display); font-size: 21px">Client portal</span>
+            <span class="cia-id">8 reqs</span>
+          </div>
+          <p style="margin: 10px 0 18px; font-size: 13px; line-height: 20px; color: var(--ink-meta)">Northwind Logistics &middot; 3 meetings</p>
+          <div style="display: flex; gap: 6px; flex-wrap: wrap">
+            <span class="cia-chip cia-chip--confirmed">3 confirmed</span>
+            <span class="cia-chip cia-chip--contradicted">2 contradicted</span>
+          </div>
+          <div style="margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--border-subtle); font-size: 13px; color: var(--ink)">7 proposals to review</div>
+        </a>
+
+        <a class="card" href="./register.html">
+          <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 12px">
+            <span style="font-family: var(--font-display); font-size: 21px">Warehouse scanning</span>
+            <span class="cia-id">14 reqs</span>
+          </div>
+          <p style="margin: 10px 0 18px; font-size: 13px; line-height: 20px; color: var(--ink-meta)">Northwind Logistics &middot; 3 meetings</p>
+          <div style="display: flex; gap: 6px; flex-wrap: wrap">
+            <span class="cia-chip cia-chip--confirmed">12 confirmed</span>
+            <span class="cia-chip cia-chip--superseded">4 superseded</span>
+          </div>
+          <div style="margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--border-subtle); font-size: 13px; color: var(--ink-meta)">Nothing to review</div>
+        </a>
+
+        <a class="card" href="./register.html">
+          <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 12px">
+            <span style="font-family: var(--font-display); font-size: 21px">Driver app</span>
+            <span class="cia-id">0 reqs</span>
+          </div>
+          <p style="margin: 10px 0 18px; font-size: 13px; line-height: 20px; color: var(--ink-meta)">Meridian Freight &middot; no meetings yet</p>
+          <div style="display: flex; gap: 6px; flex-wrap: wrap">
+            <span class="cia-chip cia-chip--empty">Empty</span>
+          </div>
+          <div style="margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--border-subtle); font-size: 13px; color: var(--ink-meta)">Capture a call, or <a href="./import.html">import a transcript</a></div>
+        </a>
+
+      </div>
+    </section>
+
+  </main>
+</div>
+</div>
+</body>
+</html>

@@ -1,0 +1,77 @@
+/* Consulting Intelligence Agent — generated from tokens.json (v2) */
+:root, [data-theme="light"] {
+  --surface-page: #f1ece6;
+  --surface-raised: #fbf9f6;
+  --surface-sunken: #e9e3dc;
+  --surface-accent: #c7b3a1;
+  --border-subtle: #dfd8d0;
+  --border-strong: #c6bdb3;
+  --ink: #0f0e0d;
+  --ink-proposed: #56504a;
+  --ink-historical: #6b645c;
+  --ink-meta: #6b645c;
+  --state-confirmed: #1b6b6a;
+  --state-confirmed-fill: #1f7a79;
+  --state-confirmed-ground: #e2edec;
+  --state-contradicted: #403db8;
+  --state-contradicted-fill: #4a47c4;
+  --state-contradicted-ground: #e6e5f7;
+  --state-superseded: #8a5c45;
+  --state-superseded-fill: #9d6b52;
+  --state-superseded-ground: #f0e6df;
+  --state-empty: #6e6760;
+  --state-empty-ground: #eeeae6;
+  --state-live: #8e3b36;
+  --focus-ring: var(--ink);
+  --shadow-card: 0 1px 2px rgba(15,14,13,0.05);
+  --shadow-float: 0 12px 36px rgba(15,14,13,0.16);
+}
+[data-theme="dark"] {
+  --surface-page: #14120f;
+  --surface-raised: #1e1b17;
+  --surface-sunken: #0e0c0a;
+  --surface-accent: #3a3128;
+  --border-subtle: #2d2821;
+  --border-strong: #423a30;
+  --ink: #f4efe8;
+  --ink-proposed: #a79d92;
+  --ink-historical: #8b8276;
+  --ink-meta: #948b7f;
+  --state-confirmed: #5fb3b1;
+  --state-confirmed-ground: #152524;
+  --state-contradicted: #9b98ee;
+  --state-contradicted-ground: #1b1a33;
+  --state-superseded: #c08f72;
+  --state-superseded-ground: #271c16;
+  --state-empty: #8b8276;
+  --state-empty-ground: #191713;
+  --state-live: #e39089;
+}
+:root {
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-8: 48px;
+  --space-10: 64px;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-pill: 999px;
+  --font-display: "Playfair Display", Georgia, serif;
+  --font-sans: "DM Sans", system-ui, -apple-system, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+}
+.display-xl { font-family: var(--font-display); font-size: 52px; line-height: 58px; font-weight: 400; letter-spacing: -0.01em; }
+.display-l { font-family: var(--font-display); font-size: 38px; line-height: 44px; font-weight: 400; letter-spacing: -0.01em; }
+.display-m { font-family: var(--font-display); font-size: 27px; line-height: 34px; font-weight: 400; }
+.quote { font-family: var(--font-display); font-size: 17px; line-height: 28px; font-weight: 400; }
+.heading { font-family: var(--font-sans); font-size: 17px; line-height: 24px; font-weight: 500; letter-spacing: -0.01em; }
+.subheading { font-family: var(--font-sans); font-size: 15px; line-height: 22px; font-weight: 500; }
+.body { font-family: var(--font-sans); font-size: 15px; line-height: 24px; font-weight: 400; }
+.small { font-family: var(--font-sans); font-size: 13px; line-height: 20px; font-weight: 400; }
+.label { font-family: var(--font-sans); font-size: 11px; line-height: 14px; font-weight: 500; letter-spacing: 0.08em; }
+.id { font-family: var(--font-mono); font-size: 12px; line-height: 16px; font-weight: 500; }
+.id-small { font-family: var(--font-mono); font-size: 11px; line-height: 14px; font-weight: 500; }
