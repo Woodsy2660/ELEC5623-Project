@@ -24,6 +24,7 @@ Coding agents: read `AGENTS.md` first.
 | [`docs/05-annotation-and-corpus.md`](docs/05-annotation-and-corpus.md) | Label definitions, authoring protocol |
 | [`docs/06-build-plan.md`](docs/06-build-plan.md) | Build order, schedule, three-way split, cut list |
 | [`docs/07-conventions.md`](docs/07-conventions.md) | Repo layout, code conventions, logging |
+| [`docs/08-track-c-status.md`](docs/08-track-c-status.md) | Track C status, interface, and open decisions |
 
 ## Team
 
@@ -42,6 +43,9 @@ cp .env.example .env        # add your Azure Foundry deployment details
 
 # The state engine runs with no credentials and no database:
 pytest src/engine
+
+# Launch the read-only review UI preview:
+streamlit run src/review_ui/app.py
 
 # Load a development scenario and score one metric:
 python -m src.eval.ingest_scenario --scenario scenarios/dev/D1
