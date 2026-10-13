@@ -24,6 +24,8 @@ Coding agents: read `AGENTS.md` first.
 | [`docs/05-annotation-and-corpus.md`](docs/05-annotation-and-corpus.md) | Label definitions, authoring protocol |
 | [`docs/06-build-plan.md`](docs/06-build-plan.md) | Build order, schedule, three-way split, cut list |
 | [`docs/07-conventions.md`](docs/07-conventions.md) | Repo layout, code conventions, logging |
+| [`docs/08-track-c-status.md`](docs/08-track-c-status.md) | Track C status, interface, and open decisions |
+| [`docs/09-database.md`](docs/09-database.md) | Local SQLite initialization, transactions, and schema-change limits |
 
 ## Team
 
@@ -42,6 +44,28 @@ cp .env.example .env        # add your Azure Foundry deployment details
 
 # The state engine runs with no credentials and no database:
 pytest src/engine
+
+# Initialize the local database (does not connect the fixture API to it):
+python -m src.persist --database-url sqlite:///consulting_intelligence.db
+
+# Start the fixture API (keep this terminal running):
+python -m src.api
+```
+
+In a second terminal, from the repository root:
+
+```bash
+npm --prefix web ci
+npm --prefix web run dev
+```
+
+The React/Vite app in `/web` is the only review frontend. The API currently uses
+in-memory demonstration data, not the model pipeline or SQLite persistence.
+The former Track C Streamlit preview has been removed; its source remains in Git history.
+
+The evaluation entry points below are still scaffolds and raise `NotImplementedError`:
+
+```bash
 
 # Load a development scenario and score one metric:
 python -m src.eval.ingest_scenario --scenario scenarios/dev/D1

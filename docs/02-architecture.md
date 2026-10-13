@@ -29,7 +29,7 @@ holds if E3-oracle is actually run. See `docs/04-evaluation.md`.
 Not full event sourcing. Two stores written in the same SQLite transaction:
 
 - `events` — append-only, immutable. Source of audit and of E5 cutoff replay.
-- `requirements_current` — denormalised current rows. Read by Streamlit and retrieval.
+- `requirements_current` — denormalised current rows. Read by the review API and retrieval.
 
 **Replay is an evaluation-harness operation, not a live read path.** The running system never rebuilds
 state by replaying events. `src/eval/replay_to_cutoff.py` does, for E5.

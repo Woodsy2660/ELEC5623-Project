@@ -1,6 +1,9 @@
-"""Tests for the state machine. Stdlib only, no external dependencies."""
+"""Tests for the state machine. The module under test remains stdlib-only."""
 
-from src.engine.state_machine import EventType, State, validate_transition
+from hypothesis import given
+from hypothesis import strategies as st
+
+from src.engine.state_machine import TRANSITIONS, EventType, State, validate_transition
 
 
 def test_create_from_none_produces_proposed() -> None:
@@ -62,3 +65,16 @@ def test_cannot_create_from_existing_state() -> None:
     """Cannot create from an existing state."""
     result = validate_transition(State.PROPOSED, EventType.CREATE)
     assert result is None
+
+
+@given(st.sampled_from([None, *State]), st.sampled_from(list(EventType)))
+def test_only_documented_transitions_succeed(
+    from_state: State | None, event_type: EventType
+) -> None:
+    """No state/event pair outside the documented transition table can succeed."""
+    result = validate_transition(from_state, event_type)
+
+    if (from_state, event_type) in TRANSITIONS:
+        assert result == TRANSITIONS[(from_state, event_type)]
+    else:
+        assert result is None

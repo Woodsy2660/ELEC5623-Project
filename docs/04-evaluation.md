@@ -8,7 +8,7 @@ Same code, two modes. Mode is a run-level parameter recorded in `runs`.
 
 | Mode | Candidate source | Confirmation |
 |---|---|---|
-| `demo` | Extracted (LLM-1) | Human via Streamlit |
+| `demo` | Extracted (LLM-1) | Human via the React review UI |
 | `eval` | Switchable: `extracted` or `gold` | Gold decision file |
 
 **Gold-candidate injection is not optional.** Without it, extraction error is reported as matching
@@ -121,4 +121,4 @@ The build is ready to evaluate when all of these hold, even with an ugly UI and 
 - Prompts are files with hashes recorded on every call
 - Export of register plus decision history works
 
-**Demo-complete** is the above plus Streamlit for FR01–FR03.
+**Demo-complete** is the above plus the React review UI for FR01–FR03.

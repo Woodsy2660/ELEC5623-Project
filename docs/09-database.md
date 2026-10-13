@@ -1,0 +1,96 @@
+# 09 — Local database foundation
+
+**Owner:** Lucas / Track C. **Traceability:** FR09, with storage primitives for
+E4 and future E1/E7 work. This is not the full persistence or review implementation.
+
+## Decisions already specified
+
+- `docs/02-architecture.md` specifies SQLite, events plus current rows, retained
+  versions, and one transaction for an approved event/version/current-row update.
+- `docs/07-conventions.md` specifies SQLAlchemy. Version `2.0.35` is already pinned.
+- `src/persist/models.py` already defines the tables. This slice reuses those models
+  without altering their columns or deciding replacement-family semantics.
+- `.env.example` names `DATABASE_URL`. The smaller local default is
+  `sqlite:///consulting_intelligence.db`, relative to the process working directory.
+
+## Initialize locally
+
+From the repository root, with the Python dependencies installed:
+
+```powershell
+python -m src.persist --database-url sqlite:///consulting_intelligence.db
+```
+
+This creates `consulting_intelligence.db` in the repository root. Repeating the
+command preserves existing rows and creates missing tables only. There is no
+reset, drop, seed, model call, or automatic API switch. Database files are ignored
+by Git; team members initialize their own copies from the shared models.
+
+The CLI also accepts a process environment variable:
+
+```powershell
+$env:DATABASE_URL = "sqlite:///consulting_intelligence.db"
+python -m src.persist
+```
+
+Priority is explicit `--database-url`, then process `DATABASE_URL`, then the local
+default. An explicitly empty URL is an error. This command does **not** load `.env`
+automatically; copying the template alone does not configure the process.
+
+## Existing tables
+
+| Purpose | Tables |
+|---|---|
+| Project, transcript, authority | `projects`, `meetings`, `turns`, `speakers` |
+| Requirement identity and history | `requirements`, `requirement_versions`, `requirements_current` |
+| Pipeline artifacts | `candidates`, `proposals` |
+| Audit | `events` |
+| Runs and model-call records | `runs`, `model_calls` |
+| Scoring only | `gold_events` |
+
+Initialization creates all 13 tables but does not read, seed, or join gold labels.
+Only `src/eval/score.py` may read `gold_events` when scoring is implemented.
+
+## Python entry points
+
+`src/persist/database.py` provides:
+
+- `create_database_engine(url)`: synchronous SQLite only; enables foreign keys on
+  **every** connection. Creating an engine alone does not initialize its tables.
+- `initialize_database(engine)`: creates missing tables from the existing metadata.
+- `transaction(engine)`: yields a SQLAlchemy Session, commits on success, rolls back
+  on failure, and closes the session. Do not manually commit inside the context.
+
+The transaction helper is not a business write gate. Before changing the register,
+the future service must validate the proposal and obtain human/gold confirmation.
+Keep all database imports outside `src/engine/`. Dispose engines when their owner
+shuts down. No database/session connection is created merely by importing the module.
+
+## Verification and limits
+
+Run `python -m pytest tests/test_database.py src/engine` without an Azure key.
+Storage tests use temporary databases and synthetic project/meeting records. They
+check table creation, repeated initialization preserving data, committed data after
+close/reopen, rollback after flushed writes, primary-key conflict rollback, foreign
+keys, URL validation, and environment-based CLI configuration.
+
+On 2026-10-13, all **11 new database test items** and the **26 existing engine test
+items** passed. The API/hosted tests were not included in that verification.
+
+These tests do not establish the event/version/current-row business transaction,
+confirmed scope safety, duplicate-event handling, project access control, deletion
+cascades, full crash recovery, or complete E1/E4/E7 acceptance. The React/FastAPI
+preview still uses its original in-memory fixture store.
+
+## Changing the database later
+
+- Changing the database file location only needs a different URL; it does not move
+  existing data. Non-SQLite engines are intentionally outside this slice.
+- **`create_all` is not a migration tool.** Editing a model does not alter an existing
+  table. Back up any data worth keeping and implement an explicit migration when
+  columns or constraints change. No destructive reset command is supplied.
+- Schema constraints still need review before real writes: source-hash uniqueness,
+  family/version uniqueness, project-consistent references, deletion rules, and
+  event-payload/logging contracts. Initialization does not silently add them.
+- Decide supersession replacement identity and Create/Confirm sequencing with the
+  team before implementing those write paths. This foundation leaves them open.
