@@ -44,8 +44,24 @@ cp .env.example .env        # add your Azure Foundry deployment details
 # The state engine runs with no credentials and no database:
 pytest src/engine
 
-# Launch the read-only review UI preview:
-streamlit run src/review_ui/app.py
+# Start the fixture API (keep this terminal running):
+python -m src.api
+```
+
+In a second terminal, from the repository root:
+
+```bash
+npm --prefix web ci
+npm --prefix web run dev
+```
+
+The React/Vite app in `/web` is the only review frontend. The API currently uses
+in-memory demonstration data, not the model pipeline or SQLite persistence.
+The former Track C Streamlit preview has been removed; its source remains in Git history.
+
+The evaluation entry points below are still scaffolds and raise `NotImplementedError`:
+
+```bash
 
 # Load a development scenario and score one metric:
 python -m src.eval.ingest_scenario --scenario scenarios/dev/D1

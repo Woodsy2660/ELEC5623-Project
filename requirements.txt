@@ -1,7 +1,6 @@
 # Core dependencies
 pydantic==2.9.2
 sqlalchemy==2.0.35
-streamlit==1.39.0
 
 # Fixture API (no database). The state engine stays in Python.
 fastapi==0.142.2

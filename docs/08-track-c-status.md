@@ -6,6 +6,8 @@
 This document is the working hand-off for Track C. It records implemented work,
 interfaces offered to other tracks, and decisions that still require agreement.
 
+**Last reviewed:** 2026-10-13, after merging upstream `219a5a4` into `lucas-track-c`.
+
 ## Implemented now
 
 - `src/engine/state_machine.py` is a pure, standard-library lifecycle transition table.
@@ -14,9 +16,17 @@ interfaces offered to other tracks, and decisions that still require agreement.
 - Engine tests cover listed transitions, unlisted transitions, relationship-to-event
   mapping, no-ops, invalid classifier combinations, and the supersession authority
   guard (FR11 / E4).
-- `src/review_ui/app.py` provides a read-only Streamlit homepage using clearly marked
-  preview data. It establishes the FR01–FR03 layout without connecting actions to
-  persistence.
+- The upstream React/Vite frontend in `/web` is now the **only** review UI. The
+  earlier Track C Streamlit homepage and its dependency have been removed. They
+  remain recoverable from commit `599eca6` / branch `lucas-track-c-backup-20261013`.
+- Upstream `src/api/` offers fixture-backed review, evidence display, meeting import,
+  settings, and transcript replay. Its decision gate calls `validate_transition`,
+  but it does **not** call `assess_proposal` or execute a database transaction.
+  A `register_changed` flag in a response is not proof of a persisted register update.
+
+The real pipeline, transactional persistence, model-call logger, and evaluation
+harness are not implemented. The upstream API fixtures are demonstration data,
+not authored evaluation scenarios or model outputs.
 
 The engine does **not** write to a database, call a model, parse transcript text, or
 read gold data. That separation is deliberate and required by the experiment.
@@ -64,13 +74,56 @@ assumed merely because the classifier emitted `supersession`.
 
 ## Dependencies and next work
 
-1. **Now, Track C:** maintain engine tests and agree the unresolved decisions below.
-2. **With Track A:** scenario ingest, project/speaker persistence, idempotency, and
-   the shared model-call logger interface.
-3. **With Track B:** adapter from `Classification` to `assess_proposal`; B must not
-   allow an ID outside `retrieved_ids`.
-4. **After those interfaces exist:** transactional event/version/current-row writes,
-   replay, then connect the existing Streamlit preview to real proposals and records.
+### Work that can start without waiting for A or B
+
+These are planned tasks, not claims of completed implementation. Use temporary
+databases and explicit test inputs, not cloud calls, UI fixtures presented as real
+results, or holdout labels.
+
+1. **Database foundation (FR09, NFR03; E4/E7):** add a SQLite/session helper under
+   `src/persist/`, enable foreign keys, create the existing schema, and test commit,
+   rollback, and close/reopen. Do not implement A's transcript parser or change the
+   fixture API's wire contract. Audit project-scoped lookups and schema constraints
+   before adding repository operations.
+2. **Stronger pure-engine tests (FR11; E4):** verify every state/event pair against
+   an independent expected table, rather than reading production `TRANSITIONS` as
+   the expected answer. Add deterministic event-sequence and guard tests. These do
+   not establish persistence, interruption safety, or full E4 acceptance on their own.
+3. **Transaction tests for settled events (FR09; E4):** with synthetic records,
+   exercise documented single-family transitions such as Confirm, Refine,
+   Contradict, and Resolve; verify old versions remain, current rows agree with
+   events, invalid/unconfirmed requests do not write, and injected failures roll
+   back all writes. Defer replacement-family and new-item confirmation semantics
+   until the decisions below are agreed. Version creation also needs B's embedding
+   contract before this can be claimed as fully integrated.
+4. **Replay/harness groundwork (E5):** define a small explicit event test sequence
+   and expected meeting-cutoff states. Implement replay of actual events only once
+   their payload and ordering are fixed. Gold comparisons belong in `score.py`;
+   do not import gold labels into inference or replay helpers.
+5. **Logger contract review (NFR02/NFR04; E8):** prepare proposed fields, retry and
+   failure examples, prompt-hash handling, and injected pricing tests. AGENTS.md
+   requires deployment, temperature, and retries to be recorded for every call;
+   review the existing `runs` / `model_calls` schema for compliance with A before
+   freezing or implementing the shared call wrapper. Do not invent provider rates.
+
+**Recommended first implementation slice:** database foundation plus stronger
+pure-engine tests. It requires no model, real transcript, new frontend, or decision
+about supersession semantics.
+
+### Work needing coordination before integration
+
+- **With A / Ben:** confirm any unpushed work, transcript parsing and source-hash
+  contract, project/speaker persistence ownership, and the shared logger interface.
+  Keep `/web` and existing HTTP response shapes stable during this discussion.
+- **With B:** confirm `Classification`, retrieved-family history and embedding
+  inputs. Build the adapter to `assess_proposal` outside `src/engine/`; do not let
+  a matched ID outside `retrieved_ids` pass validation.
+- **Across tracks:** agree the decisions below before replacing the fixture gate
+  with the real validation/confirmation/transaction chain. An `unresolved` flag
+  alone cannot establish the explicit-replacement guard from validated evidence.
+- **Documentation:** upstream adopts React/FastAPI in `docs/01` and `docs/07`, but
+  `AGENTS.md` still lists them under "Do not build". Ask the team to reconcile this
+  restriction; do not infer permission to add another frontend or framework.
 
 ## Decisions still needed from the team
 
