@@ -10,12 +10,20 @@ interfaces offered to other tracks, and decisions that still require agreement.
 
 ## Implemented now
 
-- `src/engine/state_machine.py` is a pure, standard-library lifecycle transition table.
+- The existing upstream `src/engine/state_machine.py` is a pure, standard-library
+  lifecycle transition table; Track C did not author or change that base table.
 - `src/engine/proposal_rules.py` deterministically assesses a classification proposal
   before it can reach persistence.
 - Engine tests cover listed transitions, unlisted transitions, relationship-to-event
   mapping, no-ops, invalid classifier combinations, and the supersession authority
-  guard (FR11 / E4).
+  guard (FR11 / E4). Of the 26 passing engine test items, 10 came from upstream;
+  Track C added 15 proposal-rule cases and one Hypothesis test. The latter currently
+  uses the production transition table as its oracle; strengthening it remains work.
+- `src/persist/database.py` now provides SQLite engine creation, per-connection
+  foreign keys, idempotent schema initialization, and a commit/rollback Session
+  context. `python -m src.persist` initializes the existing 13-table schema; see
+  `docs/09-database.md`. This is storage infrastructure, not a validated register
+  write service or a connection to the review API.
 - The upstream React/Vite frontend in `/web` is now the **only** review UI. The
   earlier Track C Streamlit homepage and its dependency have been removed. They
   remain recoverable from commit `599eca6` / branch `lucas-track-c-backup-20261013`.
@@ -24,9 +32,13 @@ interfaces offered to other tracks, and decisions that still require agreement.
   but it does **not** call `assess_proposal` or execute a database transaction.
   A `register_changed` flag in a response is not proof of a persisted register update.
 
-The real pipeline, transactional persistence, model-call logger, and evaluation
-harness are not implemented. The upstream API fixtures are demonstration data,
-not authored evaluation scenarios or model outputs.
+The real pipeline, business-level event/version/current-row transactions,
+model-call logger, and evaluation harness are not implemented. The upstream API
+fixtures are demonstration data, not authored evaluation scenarios or model outputs.
+
+**Verified in this slice:** 11 new database test items and 26 engine test items pass
+(plus one existing placeholder test). Ruff checks pass for the new storage modules
+and tests. This is not a full-suite/API test result or full E4 acceptance.
 
 The engine does **not** write to a database, call a model, parse transcript text, or
 read gold data. That separation is deliberate and required by the experiment.
@@ -76,15 +88,16 @@ assumed merely because the classifier emitted `supersession`.
 
 ### Work that can start without waiting for A or B
 
-These are planned tasks, not claims of completed implementation. Use temporary
+Except for the database foundation noted below, these are planned tasks, not
+claims of completed implementation. Use temporary
 databases and explicit test inputs, not cloud calls, UI fixtures presented as real
 results, or holdout labels.
 
-1. **Database foundation (FR09, NFR03; E4/E7):** add a SQLite/session helper under
-   `src/persist/`, enable foreign keys, create the existing schema, and test commit,
-   rollback, and close/reopen. Do not implement A's transcript parser or change the
-   fixture API's wire contract. Audit project-scoped lookups and schema constraints
-   before adding repository operations.
+1. **Database foundation (FR09; E4 groundwork) — implemented:** SQLite/session helper,
+   per-connection foreign keys, existing-schema initialization, and commit/rollback/
+   close-reopen tests. No transcript parser or fixture API wire contract was changed.
+   Project-scoped lookups, schema constraints, and business write operations remain
+   follow-up work; E7 access/deletion guarantees are not established by this slice.
 2. **Stronger pure-engine tests (FR11; E4):** verify every state/event pair against
    an independent expected table, rather than reading production `TRANSITIONS` as
    the expected answer. Add deterministic event-sequence and guard tests. These do
@@ -106,9 +119,9 @@ results, or holdout labels.
    review the existing `runs` / `model_calls` schema for compliance with A before
    freezing or implementing the shared call wrapper. Do not invent provider rates.
 
-**Recommended first implementation slice:** database foundation plus stronger
-pure-engine tests. It requires no model, real transcript, new frontend, or decision
-about supersession semantics.
+**Recommended next independent slice:** stronger pure-engine tests, then settled
+single-family transaction tests on the database foundation. It requires no model,
+real transcript, new frontend, or decision about supersession semantics.
 
 ### Work needing coordination before integration
 

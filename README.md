@@ -25,6 +25,7 @@ Coding agents: read `AGENTS.md` first.
 | [`docs/06-build-plan.md`](docs/06-build-plan.md) | Build order, schedule, three-way split, cut list |
 | [`docs/07-conventions.md`](docs/07-conventions.md) | Repo layout, code conventions, logging |
 | [`docs/08-track-c-status.md`](docs/08-track-c-status.md) | Track C status, interface, and open decisions |
+| [`docs/09-database.md`](docs/09-database.md) | Local SQLite initialization, transactions, and schema-change limits |
 
 ## Team
 
@@ -43,6 +44,9 @@ cp .env.example .env        # add your Azure Foundry deployment details
 
 # The state engine runs with no credentials and no database:
 pytest src/engine
+
+# Initialize the local database (does not connect the fixture API to it):
+python -m src.persist --database-url sqlite:///consulting_intelligence.db
 
 # Start the fixture API (keep this terminal running):
 python -m src.api
