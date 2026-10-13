@@ -1,0 +1,602 @@
+{
+  "draft_format": "D2-authoring-draft-v1",
+  "scenario_id": "D2",
+  "split": "dev",
+  "status": "pending_Danyang_review_Lucas_dialogue_and_event_contract_alignment",
+  "created_date": "2026-10-07",
+  "gold_author": "Danyang (Track B; review pending)",
+  "dialogue_author": "Lucas (Track C; dialogue pending)",
+  "ai_assistance": "Initial event-sequence draft assisted by Codex; not final human-reviewed gold.",
+  "runnable": false,
+  "source_spans_pending": true,
+  "speakers": [
+    {
+      "label": "client",
+      "role": "client representative",
+      "can_confirm_scope": true
+    },
+    {
+      "label": "consultant",
+      "role": "consultant",
+      "can_confirm_scope": false
+    },
+    {
+      "label": "observer",
+      "role": "observer",
+      "can_confirm_scope": false
+    }
+  ],
+  "requirement_families": [
+    {
+      "id": "R01",
+      "obligation": "Employee login"
+    },
+    {
+      "id": "R02",
+      "obligation": "Delivery of password-reset links"
+    },
+    {
+      "id": "R03",
+      "obligation": "Delivery of payment receipts"
+    }
+  ],
+  "contract_questions": [
+    "Supersession closes the previous version and creates/confirms a replacement under the same family ID. These draft steps express the intended outcome; atomic persistence and runtime mapping are not yet specified.",
+    "Delayed approval (event 7) is restatement of requirement content plus a separate Confirm decision. The annotation guide also says restatement has no state change; the team must align the relation/decision separation before final labels.",
+    "Events 13, 17 and 18 restate the recorded decision/history, rather than asserting that an obsolete or blocked obligation is currently required. Review their labels against the final dialogue before freezing."
+  ],
+  "events": [
+    {
+      "event_index": 1,
+      "meeting_ordinal": 1,
+      "source_span": null,
+      "speaker_label": "client",
+      "speaker_can_confirm": true,
+      "canonical_requirement_id": null,
+      "context_requirement_id": "R01",
+      "relevant_version": null,
+      "relation": "new",
+      "intended_content": "Establish email-and-password login as agreed scope.",
+      "proposed_version_text": "Employees must log in using email and password.",
+      "review_outcome_draft": "confirm_scope",
+      "lifecycle_steps_draft": [
+        {
+          "action": "create",
+          "from_state": null,
+          "to_state": "proposed",
+          "from_version": null,
+          "to_version": 1,
+          "version_text": "Employees must log in using email and password."
+        },
+        {
+          "action": "confirm",
+          "from_state": "proposed",
+          "to_state": "confirmed",
+          "from_version": 1,
+          "to_version": 1
+        }
+      ],
+      "expected_current_after": {
+        "requirement_id": "R01",
+        "version": 1,
+        "state": "confirmed"
+      }
+    },
+    {
+      "event_index": 2,
+      "meeting_ordinal": 1,
+      "source_span": null,
+      "speaker_label": "client",
+      "speaker_can_confirm": true,
+      "canonical_requirement_id": null,
+      "context_requirement_id": "R02",
+      "relevant_version": null,
+      "relation": "new",
+      "intended_content": "Establish delivery of password-reset links by email; this is separate from login.",
+      "proposed_version_text": "The service must send a password-reset link to the employee by email.",
+      "review_outcome_draft": "confirm_scope",
+      "lifecycle_steps_draft": [
+        {
+          "action": "create",
+          "from_state": null,
+          "to_state": "proposed",
+          "from_version": null,
+          "to_version": 1,
+          "version_text": "The service must send a password-reset link to the employee by email."
+        },
+        {
+          "action": "confirm",
+          "from_state": "proposed",
+          "to_state": "confirmed",
+          "from_version": 1,
+          "to_version": 1
+        }
+      ],
+      "expected_current_after": {
+        "requirement_id": "R02",
+        "version": 1,
+        "state": "confirmed"
+      }
+    },
+    {
+      "event_index": 3,
+      "meeting_ordinal": 1,
+      "source_span": null,
+      "speaker_label": "consultant",
+      "speaker_can_confirm": false,
+      "canonical_requirement_id": null,
+      "context_requirement_id": "R03",
+      "relevant_version": null,
+      "relation": "new",
+      "intended_content": "Propose receipt email delivery. The client explicitly postpones approval; do not confirm it.",
+      "proposed_version_text": "The service must email a receipt to the customer after a successful payment.",
+      "review_outcome_draft": "accept_proposal_only",
+      "lifecycle_steps_draft": [
+        {
+          "action": "create",
+          "from_state": null,
+          "to_state": "proposed",
+          "from_version": null,
+          "to_version": 1,
+          "version_text": "The service must email a receipt to the customer after a successful payment."
+        }
+      ],
+      "expected_current_after": {
+        "requirement_id": "R03",
+        "version": 1,
+        "state": "proposed"
+      }
+    },
+    {
+      "event_index": 4,
+      "meeting_ordinal": 1,
+      "source_span": null,
+      "speaker_label": "consultant",
+      "speaker_can_confirm": false,
+      "canonical_requirement_id": null,
+      "context_requirement_id": "R01",
+      "relevant_version": null,
+      "relation": "not_requirement",
+      "intended_content": "Ask whether corporate single sign-on might be an option. No replacement is decided.",
+      "proposed_version_text": null,
+      "review_outcome_draft": "no_write",
+      "lifecycle_steps_draft": [],
+      "expected_current_after": {
+        "requirement_id": "R01",
+        "version": 1,
+        "state": "confirmed"
+      }
+    },
+    {
+      "event_index": 5,
+      "meeting_ordinal": 1,
+      "source_span": null,
+      "speaker_label": "observer",
+      "speaker_can_confirm": false,
+      "canonical_requirement_id": null,
+      "context_requirement_id": "R03",
+      "relevant_version": null,
+      "relation": "not_requirement",
+      "intended_content": "Ask whether receipts could be sent by SMS. It remains an open question.",
+      "proposed_version_text": null,
+      "review_outcome_draft": "no_write",
+      "lifecycle_steps_draft": [],
+      "expected_current_after": {
+        "requirement_id": "R03",
+        "version": 1,
+        "state": "proposed"
+      }
+    },
+    {
+      "event_index": 6,
+      "meeting_ordinal": 1,
+      "source_span": null,
+      "speaker_label": "client",
+      "speaker_can_confirm": true,
+      "canonical_requirement_id": "R01",
+      "context_requirement_id": "R01",
+      "relevant_version": 1,
+      "relation": "restatement",
+      "intended_content": "Repeat the agreed email-and-password login decision without adding a constraint.",
+      "proposed_version_text": null,
+      "review_outcome_draft": "no_change",
+      "lifecycle_steps_draft": [],
+      "expected_current_after": {
+        "requirement_id": "R01",
+        "version": 1,
+        "state": "confirmed"
+      }
+    },
+    {
+      "event_index": 7,
+      "meeting_ordinal": 2,
+      "source_span": null,
+      "speaker_label": "client",
+      "speaker_can_confirm": true,
+      "canonical_requirement_id": "R03",
+      "context_requirement_id": "R03",
+      "relevant_version": 1,
+      "relation": "restatement",
+      "intended_content": "Explicitly approve the receipt-email proposal from Meeting 1. The content is unchanged; the approval is new.",
+      "proposed_version_text": null,
+      "review_outcome_draft": "confirm_scope",
+      "lifecycle_steps_draft": [
+        {
+          "action": "confirm",
+          "from_state": "proposed",
+          "to_state": "confirmed",
+          "from_version": 1,
+          "to_version": 1
+        }
+      ],
+      "expected_current_after": {
+        "requirement_id": "R03",
+        "version": 1,
+        "state": "confirmed"
+      }
+    },
+    {
+      "event_index": 8,
+      "meeting_ordinal": 2,
+      "source_span": null,
+      "speaker_label": "client",
+      "speaker_can_confirm": true,
+      "canonical_requirement_id": "R02",
+      "context_requirement_id": "R02",
+      "relevant_version": 1,
+      "relation": "refinement",
+      "intended_content": "Add a two-minute delivery limit to emailed password-reset links. Email remains the channel.",
+      "proposed_version_text": "The service must send a password-reset link to the employee by email within two minutes of the request.",
+      "review_outcome_draft": "confirm_scope",
+      "lifecycle_steps_draft": [
+        {
+          "action": "refine",
+          "from_state": "confirmed",
+          "to_state": "confirmed",
+          "from_version": 1,
+          "to_version": 2,
+          "version_text": "The service must send a password-reset link to the employee by email within two minutes of the request."
+        }
+      ],
+      "expected_current_after": {
+        "requirement_id": "R02",
+        "version": 2,
+        "state": "confirmed"
+      }
+    },
+    {
+      "event_index": 9,
+      "meeting_ordinal": 2,
+      "source_span": null,
+      "speaker_label": "client",
+      "speaker_can_confirm": true,
+      "canonical_requirement_id": "R01",
+      "context_requirement_id": "R01",
+      "relevant_version": 1,
+      "relation": "supersession",
+      "intended_content": "Explicitly replace email-and-password login with corporate single sign-on, with no email-login fallback.",
+      "proposed_version_text": "Employees must log in using corporate single sign-on instead of email and password.",
+      "review_outcome_draft": "confirm_scope",
+      "lifecycle_steps_draft": [
+        {
+          "action": "supersede",
+          "from_state": "confirmed",
+          "to_state": "superseded",
+          "from_version": 1,
+          "to_version": 1
+        },
+        {
+          "action": "create",
+          "from_state": null,
+          "to_state": "proposed",
+          "from_version": null,
+          "to_version": 2,
+          "version_text": "Employees must log in using corporate single sign-on instead of email and password."
+        },
+        {
+          "action": "confirm",
+          "from_state": "proposed",
+          "to_state": "confirmed",
+          "from_version": 2,
+          "to_version": 2
+        }
+      ],
+      "expected_current_after": {
+        "requirement_id": "R01",
+        "version": 2,
+        "state": "confirmed"
+      }
+    },
+    {
+      "event_index": 10,
+      "meeting_ordinal": 2,
+      "source_span": null,
+      "speaker_label": "client",
+      "speaker_can_confirm": true,
+      "canonical_requirement_id": null,
+      "context_requirement_id": "R03",
+      "relevant_version": null,
+      "relation": "not_requirement",
+      "intended_content": "Ask whether SMS receipts could be cheaper. Even an authorised speaker has not made a replacement decision.",
+      "proposed_version_text": null,
+      "review_outcome_draft": "no_write",
+      "lifecycle_steps_draft": [],
+      "expected_current_after": {
+        "requirement_id": "R03",
+        "version": 1,
+        "state": "confirmed"
+      }
+    },
+    {
+      "event_index": 11,
+      "meeting_ordinal": 2,
+      "source_span": null,
+      "speaker_label": "client",
+      "speaker_can_confirm": true,
+      "canonical_requirement_id": "R03",
+      "context_requirement_id": "R03",
+      "relevant_version": 1,
+      "relation": "contradiction",
+      "intended_content": "State that the agreed automatic receipt-email obligation cannot stand because the mail delivery arrangement is unavailable. State no replacement. Keep the conflict unresolved.",
+      "proposed_version_text": null,
+      "review_outcome_draft": "record_conflict",
+      "lifecycle_steps_draft": [
+        {
+          "action": "contradict",
+          "from_state": "confirmed",
+          "to_state": "contradicted",
+          "from_version": 1,
+          "to_version": 1
+        }
+      ],
+      "expected_current_after": {
+        "requirement_id": "R03",
+        "version": 1,
+        "state": "contradicted"
+      }
+    },
+    {
+      "event_index": 12,
+      "meeting_ordinal": 2,
+      "source_span": null,
+      "speaker_label": "client",
+      "speaker_can_confirm": true,
+      "canonical_requirement_id": "R02",
+      "context_requirement_id": "R02",
+      "relevant_version": 2,
+      "relation": "restatement",
+      "intended_content": "Summarise password-reset delivery by email within two minutes, with no new restriction.",
+      "proposed_version_text": null,
+      "review_outcome_draft": "no_change",
+      "lifecycle_steps_draft": [],
+      "expected_current_after": {
+        "requirement_id": "R02",
+        "version": 2,
+        "state": "confirmed"
+      }
+    },
+    {
+      "event_index": 13,
+      "meeting_ordinal": 3,
+      "source_span": null,
+      "speaker_label": "consultant",
+      "speaker_can_confirm": false,
+      "canonical_requirement_id": "R01",
+      "context_requirement_id": "R01",
+      "relevant_version": 1,
+      "relation": "restatement",
+      "intended_content": "Refer to the email-and-password wording from Meeting 1 as the approach already replaced in Meeting 2. The reference must not reinstate it or create a new requirement.",
+      "proposed_version_text": null,
+      "review_outcome_draft": "no_change",
+      "lifecycle_steps_draft": [],
+      "expected_current_after": {
+        "requirement_id": "R01",
+        "version": 2,
+        "state": "confirmed"
+      }
+    },
+    {
+      "event_index": 14,
+      "meeting_ordinal": 3,
+      "source_span": null,
+      "speaker_label": "client",
+      "speaker_can_confirm": true,
+      "canonical_requirement_id": "R02",
+      "context_requirement_id": "R02",
+      "relevant_version": 2,
+      "relation": "supersession",
+      "intended_content": "Explicitly replace email delivery of password-reset links with SMS. Preserve the existing two-minute delivery limit.",
+      "proposed_version_text": "The service must send a password-reset link to the employee by SMS instead of email, within two minutes of the request.",
+      "review_outcome_draft": "confirm_scope",
+      "lifecycle_steps_draft": [
+        {
+          "action": "supersede",
+          "from_state": "confirmed",
+          "to_state": "superseded",
+          "from_version": 2,
+          "to_version": 2
+        },
+        {
+          "action": "create",
+          "from_state": null,
+          "to_state": "proposed",
+          "from_version": null,
+          "to_version": 3,
+          "version_text": "The service must send a password-reset link to the employee by SMS instead of email, within two minutes of the request."
+        },
+        {
+          "action": "confirm",
+          "from_state": "proposed",
+          "to_state": "confirmed",
+          "from_version": 3,
+          "to_version": 3
+        }
+      ],
+      "expected_current_after": {
+        "requirement_id": "R02",
+        "version": 3,
+        "state": "confirmed"
+      }
+    },
+    {
+      "event_index": 15,
+      "meeting_ordinal": 3,
+      "source_span": null,
+      "speaker_label": "client",
+      "speaker_can_confirm": true,
+      "canonical_requirement_id": "R01",
+      "context_requirement_id": "R01",
+      "relevant_version": 2,
+      "relation": "refinement",
+      "intended_content": "Add a five-second authentication limit to corporate single sign-on. The single sign-on requirement remains true.",
+      "proposed_version_text": "Employees must log in using corporate single sign-on, with authentication completed within five seconds.",
+      "review_outcome_draft": "confirm_scope",
+      "lifecycle_steps_draft": [
+        {
+          "action": "refine",
+          "from_state": "confirmed",
+          "to_state": "confirmed",
+          "from_version": 2,
+          "to_version": 3,
+          "version_text": "Employees must log in using corporate single sign-on, with authentication completed within five seconds."
+        }
+      ],
+      "expected_current_after": {
+        "requirement_id": "R01",
+        "version": 3,
+        "state": "confirmed"
+      }
+    },
+    {
+      "event_index": 16,
+      "meeting_ordinal": 3,
+      "source_span": null,
+      "speaker_label": "client",
+      "speaker_can_confirm": true,
+      "canonical_requirement_id": "R01",
+      "context_requirement_id": "R01",
+      "relevant_version": 3,
+      "relation": "restatement",
+      "intended_content": "Repeat the current single-sign-on decision including its five-second limit.",
+      "proposed_version_text": null,
+      "review_outcome_draft": "no_change",
+      "lifecycle_steps_draft": [],
+      "expected_current_after": {
+        "requirement_id": "R01",
+        "version": 3,
+        "state": "confirmed"
+      }
+    },
+    {
+      "event_index": 17,
+      "meeting_ordinal": 3,
+      "source_span": null,
+      "speaker_label": "client",
+      "speaker_can_confirm": true,
+      "canonical_requirement_id": "R03",
+      "context_requirement_id": "R03",
+      "relevant_version": 1,
+      "relation": "restatement",
+      "intended_content": "Summarise that the previously agreed receipt email remains blocked and unresolved. Do not approve an alternative or resolve the conflict.",
+      "proposed_version_text": null,
+      "review_outcome_draft": "no_change",
+      "lifecycle_steps_draft": [],
+      "expected_current_after": {
+        "requirement_id": "R03",
+        "version": 1,
+        "state": "contradicted"
+      }
+    },
+    {
+      "event_index": 18,
+      "meeting_ordinal": 3,
+      "source_span": null,
+      "speaker_label": "consultant",
+      "speaker_can_confirm": false,
+      "canonical_requirement_id": "R02",
+      "context_requirement_id": "R02",
+      "relevant_version": 2,
+      "relation": "restatement",
+      "intended_content": "Refer to the earlier email-reset wording as a decision now replaced by SMS in this meeting. Do not undo the replacement.",
+      "proposed_version_text": null,
+      "review_outcome_draft": "no_change",
+      "lifecycle_steps_draft": [],
+      "expected_current_after": {
+        "requirement_id": "R02",
+        "version": 3,
+        "state": "confirmed"
+      }
+    }
+  ],
+  "meeting_end_snapshots": [
+    {
+      "meeting_ordinal": 1,
+      "current": [
+        {
+          "requirement_id": "R01",
+          "version": 1,
+          "state": "confirmed",
+          "text": "Employees must log in using email and password."
+        },
+        {
+          "requirement_id": "R02",
+          "version": 1,
+          "state": "confirmed",
+          "text": "The service must send a password-reset link to the employee by email."
+        },
+        {
+          "requirement_id": "R03",
+          "version": 1,
+          "state": "proposed",
+          "text": "The service must email a receipt to the customer after a successful payment."
+        }
+      ]
+    },
+    {
+      "meeting_ordinal": 2,
+      "current": [
+        {
+          "requirement_id": "R01",
+          "version": 2,
+          "state": "confirmed",
+          "text": "Employees must log in using corporate single sign-on instead of email and password."
+        },
+        {
+          "requirement_id": "R02",
+          "version": 2,
+          "state": "confirmed",
+          "text": "The service must send a password-reset link to the employee by email within two minutes of the request."
+        },
+        {
+          "requirement_id": "R03",
+          "version": 1,
+          "state": "contradicted",
+          "text": "The service must email a receipt to the customer after a successful payment."
+        }
+      ]
+    },
+    {
+      "meeting_ordinal": 3,
+      "current": [
+        {
+          "requirement_id": "R01",
+          "version": 3,
+          "state": "confirmed",
+          "text": "Employees must log in using corporate single sign-on, with authentication completed within five seconds."
+        },
+        {
+          "requirement_id": "R02",
+          "version": 3,
+          "state": "confirmed",
+          "text": "The service must send a password-reset link to the employee by SMS instead of email, within two minutes of the request."
+        },
+        {
+          "requirement_id": "R03",
+          "version": 1,
+          "state": "contradicted",
+          "text": "The service must email a receipt to the customer after a successful payment."
+        }
+      ]
+    }
+  ]
+}
