@@ -1,0 +1,28 @@
+/* Page styles taken from the exported HTML <style> blocks.
+   tokens.css and app.css stay untouched copies of the design system. */
+
+body { margin: 0; }
+a { color: #0f0e0d; text-underline-offset: 3px; }
+
+.nav { display: block; padding: 9px 14px; border-radius: 999px; font-size: 14px; color: #56504a; text-decoration: none; }
+.nav:hover { background: #e9e3dc; color: #0f0e0d; }
+.nav[aria-current="page"] { background: #0f0e0d; color: #f1ece6; }
+
+.rowlink { text-decoration: none; color: inherit; }
+tr:hover .rowlink { text-decoration: underline; text-underline-offset: 2px; }
+
+.card { display: block; text-decoration: none; color: inherit; background: #fbf9f6; border: 1px solid #dfd8d0; border-radius: 10px; padding: 24px; }
+.card:hover { border-color: #c6bdb3; }
+
+.qitem { display: block; width: 100%; box-sizing: border-box; text-align: left; background: none; border: 1px solid transparent; border-radius: 10px; padding: 10px 12px; cursor: pointer; font-family: inherit; }
+.qitem:hover { background: #f2eee8; }
+.qitem[aria-current="true"] { background: #fff; border-color: #cfc6b9; box-shadow: 0 1px 2px rgba(26, 23, 20, 0.06); }
+
+.mcard { display: block; text-decoration: none; color: inherit; background: #fff; border: 1px solid #e4ded5; border-radius: 10px; padding: 20px 24px; }
+.mcard:hover { border-color: #cfc6b9; }
+
+.sec { background: #fbf9f6; border: 1px solid #dfd8d0; border-radius: 10px; padding: 24px 28px; }
+
+.fld { display: block; width: 100%; box-sizing: border-box; padding: 9px 12px; border: 1px solid #cfc6b9; border-radius: 10px; background: #fff; font-family: inherit; font-size: 14px; color: #1a1714; }
+.sec .fld { width: auto; padding: 8px 12px; border: 1px solid #c6bdb3; border-radius: 6px; background: #fbf9f6; }
+.fld:focus { outline: 2px solid #3e5277; outline-offset: 2px; }

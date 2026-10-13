@@ -30,6 +30,9 @@ These are not preferences. Violating one invalidates the experiment.
    deterministic transition validator.
 8. **Missing, invalid and unresolved outputs are errors**, counted in primary metrics. Never silently
    drop, never repair by parsing, never substitute a default.
+9. **The state engine stays in Python.** No TypeScript computes, predicts, or validates a lifecycle
+   transition. The review UI renders `can_confirm`, `can_confirm_reason`, and a 409 reason from the
+   server. See `docs/02-architecture.md`.
 
 ## Do not build
 

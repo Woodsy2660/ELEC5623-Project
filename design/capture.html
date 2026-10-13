@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Live capture</title>
+<link rel="stylesheet" href="./styles/tokens.css">
+<link rel="stylesheet" href="./styles/app.css">
+</head>
+<body>
+<style>
+@import url("https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500&family=Playfair+Display:wght@400;500&family=JetBrains+Mono:wght@500&display=swap");
+body { margin: 0; }
+a { color: #0f0e0d; text-underline-offset: 3px; }
+.nav { display: block; padding: 9px 14px; border-radius: 999px; font-size: 14px; color: #56504a; text-decoration: none; }
+.nav:hover { background: #e9e3dc; color: #0f0e0d; }
+.nav[aria-current="page"] { background: #0f0e0d; color: #f1ece6; }
+</style>
+
+<div style="min-height: 900px; background: var(--surface-page); font-family: var(--font-sans); color: var(--ink); display: flex; flex-direction: column">
+  <header style="display: flex; align-items: center; justify-content: flex-start; padding: 18px 30px; border-bottom: 1px solid var(--border-subtle)">
+    <img src="./assets/consultsi.png" alt="Consult SI" style="height: 19px; width: auto; display: block">
+  </header>
+  <div style="display: flex; flex-wrap: wrap; flex: 1 1 auto">
+
+  <nav style="flex: 0 0 248px; box-sizing: border-box; padding: 24px 16px; border-right: 1px solid var(--border-subtle); display: flex; flex-direction: column; gap: 24px">
+    <div style="display: flex; flex-direction: column; gap: 2px">
+      <a class="nav" href="./index.html">Home</a>
+      <a class="nav" href="./meetings.html">Meetings</a>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 2px">
+      <div style="padding: 0 14px 8px; font-size: 11px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-meta)">Client portal</div>
+      <a class="nav" href="./register.html">Register</a>
+      <a class="nav" href="./review.html">Review queue</a>
+      <a class="nav" href="./capture.html" aria-current="page">Live capture</a>
+    </div>
+    <div style="margin-top: auto; display: flex; flex-direction: column; gap: 2px">
+      <a class="nav" href="./settings.html">Settings</a>
+      <div style="padding: 12px 14px; border-top: 1px solid var(--border-subtle); margin-top: 8px">
+        <div style="font-size: 13px">Ben Wood</div>
+        <div class="cia-authority" style="font-size: 12px">Cannot confirm scope</div>
+      </div>
+    </div>
+  </nav>
+
+  <main style="flex: 999 1 560px; min-width: 0; box-sizing: border-box; padding: 40px 48px; display: flex; flex-direction: column; gap: 28px">
+
+    <div class="cia-scope">
+      <span class="cia-scope__client">Northwind Logistics</span>
+      <span class="cia-scope__sep">/</span>
+      <button type="button" class="cia-scope__project">Client portal &#9662;</button>
+      <span class="cia-id">8 requirement families</span>
+      <span class="cia-scope__note">Scoped to this project &mdash; retrieval never crosses projects</span>
+    </div>
+
+
+    <header style="display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; flex-wrap: wrap">
+      <div>
+        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px">
+          <span class="cia-dot-live"></span>
+          <span style="font-size: 11px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: var(--state-live)">Recording &middot; 18:42</span>
+        </div>
+        <h1 style="margin: 0; font-family: var(--font-display); font-size: 38px; line-height: 44px; letter-spacing: -0.01em">Requirements review</h1>
+        <p style="margin: 8px 0 0; font-size: 14px; color: var(--ink-meta)">Client portal &middot; meeting 3 &middot; Google Meet &middot; 4 participants</p>
+      </div>
+      <div style="display: flex; gap: 8px">
+        <button type="button" class="cia-btn">Pause capture</button>
+        <a href="./meetings.html" style="text-decoration: none"><span class="cia-btn cia-btn--primary" style="display: inline-block">End and process</span></a>
+      </div>
+    </header>
+
+    <div style="display: flex; flex-wrap: wrap; gap: 32px">
+
+      <section style="flex: 999 1 420px; min-width: 0">
+        <div style="display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 14px">
+          <h2 style="margin: 0; font-size: 11px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-meta)">Live transcript</h2>
+          <span class="cia-id">47 turns</span>
+        </div>
+
+        <div style="background: var(--surface-raised); border: 1px solid var(--border-subtle); border-radius: 10px; padding: 8px 24px 24px">
+          <div class="cia-turn">
+            <span class="cia-turn__speaker">Consultant A &middot; 16:02</span>
+            <p class="cia-turn__text">So before we go further, you mentioned there&#39;d been a security review internally. Did anything land on us?</p>
+          </div>
+          <div class="cia-turn">
+            <span class="cia-turn__speaker">Client Dev &middot; 16:48</span>
+            <p class="cia-turn__text">It did. Our security team won&#39;t sign off on us holding customer passwords at all.</p>
+          </div>
+          <div class="cia-turn">
+            <span class="cia-turn__speaker">Client PO &middot; 17:11</span>
+            <p class="cia-turn__text">So we will use single sign-on instead. Customers authenticate through our existing identity provider, and we drop the email and password login entirely.</p>
+          </div>
+          <div class="cia-turn cia-turn--partial" style="border-bottom: none">
+            <span class="cia-turn__speaker">Consultant A &middot; 18:40</span>
+            <p class="cia-turn__text">That&#39;s a significant change from the last session. Just to be clear, email and password login is off the table, not an option<span style="opacity: .45">&#8230;</span></p>
+          </div>
+        </div>
+
+        <p style="margin: 14px 0 0; font-size: 13px; line-height: 21px; color: var(--ink-meta)">Turns arrive as the capture bot transcribes them. The last turn is still forming, so it sits in receded ink until it settles.</p>
+      </section>
+
+      <aside style="flex: 1 1 300px; min-width: 0; display: flex; flex-direction: column; gap: 20px">
+
+        <div style="background: var(--surface-sunken); border: 1px solid var(--border-subtle); border-radius: 10px; padding: 20px">
+          <div style="font-size: 11px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-meta); margin-bottom: 10px">Proposals</div>
+          <p style="margin: 0; font-size: 14px; line-height: 22px; color: var(--ink-proposed)">None yet, by design.</p>
+          <p style="margin: 10px 0 0; font-size: 13px; line-height: 21px; color: var(--ink-meta)">Matching runs against the register once the meeting ends. A decision made late can reverse one made early, so nothing is proposed from a partial transcript.</p>
+        </div>
+
+        <div>
+          <div style="font-size: 11px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-meta); margin-bottom: 12px">Current scope &middot; 8 requirements</div>
+          <div class="cia-alts">
+            <div class="cia-alt"><span class="cia-alt__rank">R04</span><span class="cia-alt__text">Order history view</span><span class="cia-chip cia-chip--confirmed">Confirmed</span></div>
+            <div class="cia-alt"><span class="cia-alt__rank">R05</span><span class="cia-alt__text">CSV export, date range</span><span class="cia-chip cia-chip--confirmed">Confirmed</span></div>
+            <div class="cia-alt"><span class="cia-alt__rank">R06</span><span class="cia-alt__text">Order receipt email</span><span class="cia-chip cia-chip--confirmed">Confirmed</span></div>
+            <div class="cia-alt"><span class="cia-alt__rank">R01</span><span class="cia-alt__text">Email and password login</span><span class="cia-chip cia-chip--confirmed">Confirmed</span></div>
+            <div class="cia-alt"><span class="cia-alt__rank">R03</span><span class="cia-alt__text">Password reset email</span><span class="cia-chip cia-chip--contradicted">Contradicted</span></div>
+            <div class="cia-alt"><span class="cia-alt__rank">R02</span><span class="cia-alt__text">Twelve-character passwords</span><span class="cia-chip cia-chip--withdrawn">Withdrawn</span></div>
+          </div>
+        </div>
+
+        <div style="border-top: 1px solid var(--border-subtle); padding-top: 16px">
+          <div style="font-size: 11px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-meta); margin-bottom: 10px">In the call</div>
+          <div style="display: flex; flex-direction: column; gap: 8px">
+            <div style="display: flex; align-items: center; gap: 10px"><span style="font-size: 14px; flex: 1">Priya Raman</span><span class="cia-authority cia-authority--can">&#9679; Can confirm</span></div>
+            <div style="display: flex; align-items: center; gap: 10px"><span style="font-size: 14px; flex: 1">Tom Alder</span><span class="cia-authority">&#9675; Cannot confirm</span></div>
+            <div style="display: flex; align-items: center; gap: 10px"><span style="font-size: 14px; flex: 1">Ben Wood</span><span class="cia-authority">&#9675; Cannot confirm</span></div>
+            <div style="display: flex; align-items: center; gap: 10px"><span style="font-size: 14px; flex: 1">Sana Qureshi</span><span class="cia-authority">&#9675; Cannot confirm</span></div>
+          </div>
+        </div>
+
+      </aside>
+    </div>
+
+  </main>
+</div>
+</div>
+</body>
+</html>

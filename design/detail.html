@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>R01 — requirement detail</title>
+<link rel="stylesheet" href="./styles/tokens.css">
+<link rel="stylesheet" href="./styles/app.css">
+</head>
+<body>
+<style>
+@import url("https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500&family=Playfair+Display:wght@400;500&family=JetBrains+Mono:wght@500&display=swap");
+body { margin: 0; }
+a { color: #0f0e0d; text-underline-offset: 3px; }
+.nav { display: block; padding: 9px 14px; border-radius: 999px; font-size: 14px; color: #56504a; text-decoration: none; }
+.nav:hover { background: #e9e3dc; color: #0f0e0d; }
+.nav[aria-current="page"] { background: #0f0e0d; color: #f1ece6; }
+</style>
+
+<div style="min-height: 900px; background: var(--surface-page); font-family: var(--font-sans); color: var(--ink); display: flex; flex-direction: column">
+  <header style="display: flex; align-items: center; justify-content: flex-start; padding: 18px 30px; border-bottom: 1px solid var(--border-subtle)">
+    <img src="./assets/consultsi.png" alt="Consult SI" style="height: 19px; width: auto; display: block">
+  </header>
+  <div style="display: flex; flex-wrap: wrap; flex: 1 1 auto">
+
+  <nav style="flex: 0 0 248px; box-sizing: border-box; padding: 24px 16px; border-right: 1px solid var(--border-subtle); display: flex; flex-direction: column; gap: 24px">
+    <div style="display: flex; flex-direction: column; gap: 2px">
+      <a class="nav" href="./index.html">Home</a>
+      <a class="nav" href="./meetings.html">Meetings</a>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 2px">
+      <div style="padding: 0 14px 8px; font-size: 11px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-meta)">Client portal</div>
+      <a class="nav" href="./register.html" aria-current="page">Register</a>
+      <a class="nav" href="./review.html">Review queue <span class="cia-count">7</span></a>
+      <a class="nav" href="./capture.html">Live capture</a>
+    </div>
+    <div style="margin-top: auto; display: flex; flex-direction: column; gap: 2px">
+      <a class="nav" href="./settings.html">Settings</a>
+      <div style="padding: 12px 14px; border-top: 1px solid var(--border-subtle); margin-top: 8px">
+        <div style="font-size: 13px">Ben Wood</div>
+        <div class="cia-authority" style="font-size: 12px">Cannot confirm scope</div>
+      </div>
+    </div>
+  </nav>
+
+  <main style="flex: 999 1 560px; min-width: 0; box-sizing: border-box; padding: 40px 48px; display: flex; flex-direction: column; gap: 28px">
+
+    <div class="cia-scope">
+      <span class="cia-scope__client">Northwind Logistics</span>
+      <span class="cia-scope__sep">/</span>
+      <button type="button" class="cia-scope__project">Client portal &#9662;</button>
+      <span class="cia-id">8 requirement families</span>
+      <span class="cia-scope__note">Scoped to this project &mdash; retrieval never crosses projects</span>
+    </div>
+
+
+    <div>
+      <a href="./register.html" style="font-size: 13px">&#8592; Register</a>
+      <div style="display: flex; align-items: baseline; gap: 12px; margin-top: 10px; flex-wrap: wrap">
+        <h1 style="margin: 0; font-family: var(--font-display); font-size: 38px; line-height: 44px; letter-spacing: -0.01em">Authentication</h1>
+        <span class="cia-id" style="font-size: 14px">R01</span>
+        <span class="cia-chip cia-chip--proposed">Proposed</span>
+      </div>
+      <p style="margin: 8px 0 0; font-size: 15px; line-height: 23px; color: var(--ink-proposed); max-width: 70ch">Customers authenticate through the existing identity provider using SSO.</p>
+      <p style="margin: 6px 0 0; font-size: 13px; color: var(--ink-meta)">Current version v2 · awaiting confirmation · 2 versions, 3 events</p>
+    </div>
+
+    <section style="display: flex; flex-wrap: wrap; gap: 32px">
+
+      <div style="flex: 999 1 420px; min-width: 0">
+        <h2 style="margin: 0 0 14px; font-size: 11px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-meta)">Decision history</h2>
+
+        <div style="display: flex; flex-direction: column; gap: 0">
+
+          <div style="display: flex; gap: 16px">
+            <div style="flex: 0 0 10px; display: flex; flex-direction: column; align-items: center; padding-top: 6px">
+              <span style="width: 10px; height: 10px; border-radius: 50%; background: var(--ink-proposed); display: block"></span>
+              <span style="width: 1px; flex: 1; background: var(--border-strong); display: block"></span>
+            </div>
+            <div style="flex: 999 1 auto; min-width: 0; padding-bottom: 28px">
+              <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap">
+                <span class="cia-id">v2</span>
+                <span class="cia-relation">supersession</span>
+                <span style="font-size: 13px; color: var(--ink-meta)">Meeting 2 · 18 Mar</span>
+              </div>
+              <p style="margin: 8px 0; font-size: 15px; line-height: 23px; color: var(--ink-proposed)">Customers authenticate through the existing identity provider using SSO.</p>
+              <div class="cia-evidence" style="margin-top: 10px">
+                <div class="cia-evidence__meta">
+                  <span class="cia-evidence__speaker">Client PO</span>
+                  <span class="cia-id">D1-M02:0002</span>
+                </div>
+                <p class="cia-evidence__quote"><span class="cia-evidence__context">Our security team won&#39;t sign off on us holding customer passwords, so </span><span class="cia-evidence__span">we will use single sign-on instead</span><span class="cia-evidence__context">. Customers authenticate through our existing identity provider.</span></p>
+              </div>
+              <div style="margin-top: 10px; font-size: 13px; color: var(--ink-meta)">Proposed by the agent · awaiting confirmation from Priya Raman</div>
+            </div>
+          </div>
+
+          <div style="display: flex; gap: 16px">
+            <div style="flex: 0 0 10px; display: flex; flex-direction: column; align-items: center; padding-top: 6px">
+              <span style="width: 10px; height: 10px; border-radius: 50%; border: 1px solid var(--ink-historical); box-sizing: border-box; display: block"></span>
+              <span style="width: 1px; flex: 1; background: var(--border-strong); display: block"></span>
+            </div>
+            <div style="flex: 999 1 auto; min-width: 0; padding-bottom: 28px">
+              <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap">
+                <span class="cia-id">v1</span>
+                <span class="cia-chip cia-chip--superseded">Superseded</span>
+                <span style="font-size: 13px; color: var(--ink-meta)">Meeting 2 · 18 Mar</span>
+              </div>
+              <p style="margin: 8px 0 0; font-size: 15px; line-height: 23px; color: var(--ink-historical); text-decoration: line-through; text-decoration-thickness: 1px">Customers authenticate with an email address and password.</p>
+              <div style="margin-top: 8px; font-size: 13px; color: var(--ink-meta)">Replaced, not deleted. Its evidence is kept.</div>
+            </div>
+          </div>
+
+          <div style="display: flex; gap: 16px">
+            <div style="flex: 0 0 10px; display: flex; flex-direction: column; align-items: center; padding-top: 6px">
+              <span style="width: 10px; height: 10px; border-radius: 50%; border: 1px solid var(--ink-historical); box-sizing: border-box; display: block"></span>
+            </div>
+            <div style="flex: 999 1 auto; min-width: 0">
+              <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap">
+                <span class="cia-id">v1</span>
+                <span class="cia-relation">new</span>
+                <span style="font-size: 13px; color: var(--ink-meta)">Meeting 1 · 4 Mar</span>
+              </div>
+              <p style="margin: 8px 0; font-size: 15px; line-height: 23px; color: var(--ink-historical)">Customers authenticate with an email address and password.</p>
+              <div class="cia-evidence" style="margin-top: 10px">
+                <div class="cia-evidence__meta">
+                  <span class="cia-evidence__speaker">Client PO</span>
+                  <span class="cia-id">D1-M01:0003</span>
+                </div>
+                <p class="cia-evidence__quote"><span class="cia-evidence__span">Customers log in with their email address and a password</span><span class="cia-evidence__context">. That&#39;s what they&#39;re used to on the old system and we don&#39;t want to retrain anyone.</span></p>
+              </div>
+              <div style="margin-top: 10px; font-size: 13px; color: var(--ink-meta)">Confirmed by Priya Raman · 4 Mar, 14:22</div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <aside style="flex: 1 1 280px; min-width: 0">
+        <h2 style="margin: 0 0 14px; font-size: 11px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-meta)">Audit</h2>
+        <div style="background: var(--surface-raised); border: 1px solid var(--border-subtle); border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 14px">
+          <div>
+            <div style="font-size: 12px; color: var(--ink-meta)">Family created</div>
+            <div style="font-size: 14px">Meeting 1 · 4 Mar</div>
+          </div>
+          <div>
+            <div style="font-size: 12px; color: var(--ink-meta)">Events</div>
+            <div style="font-size: 14px">Create, Confirm, Supersede</div>
+          </div>
+          <div>
+            <div style="font-size: 12px; color: var(--ink-meta)">Prompt version</div>
+            <div class="cia-id">classify_v1 · 8dc01b2</div>
+          </div>
+          <div>
+            <div style="font-size: 12px; color: var(--ink-meta)">Model</div>
+            <div class="cia-id">pinned · temp 0</div>
+          </div>
+          <div style="border-top: 1px solid var(--border-subtle); padding-top: 14px">
+            <div style="font-size: 12px; color: var(--ink-meta)">Rejected proposals</div>
+            <div style="font-size: 14px">None</div>
+          </div>
+        </div>
+        <p style="margin: 14px 0 0; font-size: 13px; line-height: 20px; color: var(--ink-meta)">Every version keeps the evidence it was created from, so a reviewer can reconstruct why scope changed without opening the transcript.</p>
+      </aside>
+
+    </section>
+
+  </main>
+</div>
+</div>
+</body>
+</html>
