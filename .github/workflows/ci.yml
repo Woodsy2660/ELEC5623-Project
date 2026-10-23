@@ -13,6 +13,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - name: Build frontend for hosted API tests
+        run: |
+          npm --prefix web ci
+          npm --prefix web run build
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
