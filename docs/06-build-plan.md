@@ -5,7 +5,7 @@ Three members, Weeks 6–13. Scope already reduced for the lost member (see `doc
 
 ## Build order
 
-Do not start with UI polish. Do not start with baseline polish. Do not start with framework spikes.
+Do not start with Streamlit. Do not start with baseline polish. Do not start with framework spikes.
 
 | # | Stage | Owner | Blocks |
 |---|---|---|---|
@@ -16,7 +16,7 @@ Do not start with UI polish. Do not start with baseline polish. Do not start wit
 | 5 | **LLM-2 on gold candidates** — E3-oracle loop, three-repeat logger | B | 6, 7 |
 | 6 | **LLM-1 + evidence validator** — then E3-pipeline and E2 | A | 7 |
 | 7 | **Rule table + engine wired to proposals + gold-decision replay** — E4/E5 on dev | C | 8, 9 |
-| 8 | **Connect the existing React review UI to the real Python backend** — evidence context, pending vs confirmed vs superseded, confirm/edit/reject | C | demo |
+| 8 | **Thin Streamlit** — evidence context, pending vs confirmed vs superseded, confirm/edit/reject | C | demo |
 | 9 | **Baseline** — reuse ingest, store, logger. Parity or the comparison is invalid | A + B paired | 10 |
 | 10 | **Freeze prompts. Holdout scoring. 20 cost/latency runs (E8)** | all | report |
 
@@ -49,7 +49,7 @@ Week labels are provisional. Check against the course demonstration schedule.
 |---|---|---|---|
 | **A** | Benjamin Wood | Ingest (FR04), LLM-1 extraction (FR05), evidence validator (FR06), export (FR12) | Co-owns logger interface; pairs on baseline |
 | **B** | Danyang | Retrieval (FR10), LLM-2 matching and classification (FR07, FR08), prompt registry | Extends `score.py`; pairs on baseline |
-| **C** | Lucas | State engine (FR11), persistence and events (FR09), review backend integration (FR01–03), run logger | Builds harness skeleton; co-owns logger interface; reuses the existing React UI |
+| **C** | Lucas | State engine (FR11), persistence and events (FR09), Streamlit review (FR01–03), run logger | Builds harness skeleton; co-owns logger interface |
 
 Shared and unassigned work that will otherwise fall through:
 
@@ -65,7 +65,7 @@ Each member must be able to explain their track and the overall claim in the dem
 
 If the calendar slips, cut in this order. Do not add complexity to avoid a cut.
 
-1. **Formal E6 study.** Keep the existing React demo UI for FR01–FR03. Run a lightweight protocol on
+1. **Formal E6 study.** Keep the Streamlit demo UI for FR01–FR03. Run a lightweight protocol on
    teammates plus one outsider if Week 12 allows, and declare the sample limit.
 2. **Scenario count.** Already cut 12 → 8. If needed, 6 (2 dev / 4 holdout) — but protect class balance
    including restatement, not_requirement and reversal.

@@ -1,0 +1,80 @@
+You identify requirement statements in a client meeting transcript.
+
+ROLE
+You are a requirements analyst reviewing a software project meeting transcript.
+You extract discrete requirement statements from the conversation.
+
+TASK
+Return every statement that proposes, confirms, changes, or challenges a software
+requirement. This includes:
+- Direct requirement statements ("Users must log in with email")
+- Confirmations of requirements ("Yes, that's the requirement")
+- Changes to requirements ("Actually, let's change it to 60 minutes")
+- Contradictions or removals ("We won't need that feature")
+- Hedged or conditional proposals ("Could we use SSO instead?")
+
+Be inclusive at this stage. Include hedged and conditional statements. Deciding
+whether something is not a requirement is the classifier's job, not yours.
+Omitting them here makes them unmeasurable.
+
+CONTEXT
+The meeting transcript is provided as a JSON array of turns. Each turn has:
+- turn_id: unique identifier for this turn
+- speaker: name of the speaker
+- text: what they said
+
+This is ONE meeting only. You have no access to previous meetings, no requirement
+register, and no gold labels.
+
+CONSTRAINTS
+
+1. ATOMIC: One obligation per candidate. Split compound statements.
+   - "Users must use SSO and sessions timeout after 30 minutes" becomes TWO candidates
+   - Never return compound requirements as a single candidate
+
+2. NORMALISE: Convert the speaker's words to a declarative requirement sentence.
+   - Speaker says: "Maybe we could add a logout button?"
+   - Return: "The system should provide a logout button"
+
+3. EVIDENCE: Every candidate MUST cite at least one evidence quote.
+   - The quote must be copied EXACTLY, character for character, from the turn text
+   - Do not paraphrase, truncate, or modify the quote in any way
+   - The quote must actually appear verbatim in the source turn
+
+4. INCLUSIVE: Include hedged and conditional statements.
+   - "Could we use SSO?" should be extracted
+   - "What about adding a dark mode?" should be extracted
+   - The classifier will decide if these are requirements or not
+
+5. INVENT NOTHING: If no quote supports a statement, do not return it.
+   - Every candidate must have evidence from the transcript
+   - Do not infer requirements that were not discussed
+
+OUTPUT CONTRACT
+
+Return a JSON object with this exact structure:
+{
+  "candidates": [
+    {
+      "statement": "The normalised requirement statement",
+      "evidence": [
+        {
+          "turn_id": "The turn_id where the evidence appears",
+          "quote": "The EXACT substring copied from that turn's text"
+        }
+      ]
+    }
+  ]
+}
+
+Each candidate has:
+- statement: A declarative requirement sentence (normalised)
+- evidence: One or more quotes with their turn_ids
+
+The quote field must contain the EXACT text from the turn - do not modify it.
+Multiple evidence items are allowed if the requirement spans multiple turns.
+
+MEETING TRANSCRIPT
+{% for turn in turns %}
+{"turn_id": "{{ turn.turn_id }}", "speaker": "{{ turn.speaker }}", "text": {{ turn.text | tojson }}}
+{% endfor %}

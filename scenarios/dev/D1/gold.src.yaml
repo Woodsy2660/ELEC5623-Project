@@ -1,0 +1,118 @@
+# Gold evidence file for D1 scenario
+# Quotes are exact substrings from canonical JSONL files
+# Run tools/resolve_spans.py to generate gold.yaml with resolved offsets
+
+events:
+  # Meeting 1: Initial requirements (new)
+  - event_index: 0
+    meeting_ordinal: 1
+    requirement_id: "R01"
+    relation: "new"
+    evidence:
+      - turn_id: "D1-M01:0001"
+        quote: "Users must be able to log in using their email address and a password"
+
+  - event_index: 1
+    meeting_ordinal: 1
+    requirement_id: "R02"
+    relation: "new"
+    evidence:
+      - turn_id: "D1-M01:0005"
+        quote: "Passwords must be at least eight characters and include at least one number"
+
+  - event_index: 2
+    meeting_ordinal: 1
+    requirement_id: "R02"
+    relation: "refinement"
+    evidence:
+      - turn_id: "D1-M01:0007"
+        quote: "Passwords must include at least one special character"
+
+  - event_index: 3
+    meeting_ordinal: 1
+    requirement_id: "R03"
+    relation: "new"
+    evidence:
+      - turn_id: "D1-M01:0009"
+        quote: "The dashboard should display a summary of their recent orders and any pending shipments"
+
+  - event_index: 4
+    meeting_ordinal: 1
+    requirement_id: "R04"
+    relation: "new"
+    evidence:
+      - turn_id: "D1-M01:0011"
+        quote: "users need to see important notifications prominently displayed on the dashboard"
+
+  - event_index: 5
+    meeting_ordinal: 1
+    requirement_id: "R05"
+    relation: "new"
+    evidence:
+      - turn_id: "D1-M01:0013"
+        quote: "In-app notifications are sufficient for now"
+
+  - event_index: 6
+    meeting_ordinal: 1
+    requirement_id: "R06"
+    relation: "new"
+    evidence:
+      - turn_id: "D1-M01:0015"
+        quote: "Sessions should expire after thirty minutes of inactivity"
+
+  # Meeting 2: Refinements and supersessions
+  - event_index: 7
+    meeting_ordinal: 2
+    requirement_id: "R06"
+    relation: "supersession"
+    evidence:
+      - turn_id: "D1-M02:0001"
+        quote: "Let's change it to sixty minutes instead"
+
+  - event_index: 8
+    meeting_ordinal: 2
+    requirement_id: "R07"
+    relation: "new"
+    evidence:
+      - turn_id: "D1-M02:0004"
+        quote: "we need to add two-factor authentication"
+
+  - event_index: 9
+    meeting_ordinal: 2
+    requirement_id: "R07"
+    relation: "refinement"
+    evidence:
+      - turn_id: "D1-M02:0006"
+        quote: "Two-factor authentication must be mandatory for all users"
+
+  - event_index: 10
+    meeting_ordinal: 2
+    requirement_id: "R03"
+    relation: "refinement"
+    evidence:
+      - turn_id: "D1-M02:0008"
+        quote: "The dashboard should also show the user's account balance"
+
+  - event_index: 11
+    meeting_ordinal: 2
+    requirement_id: "R05"
+    relation: "supersession"
+    evidence:
+      - turn_id: "D1-M02:0012"
+        quote: "Users should receive email notifications for important updates in addition to in-app notifications"
+
+  - event_index: 12
+    meeting_ordinal: 2
+    requirement_id: "R08"
+    relation: "new"
+    evidence:
+      - turn_id: "D1-M02:0016"
+        quote: "Users need to be able to export their order history as a PDF file"
+
+  - event_index: 13
+    meeting_ordinal: 2
+    requirement_id: "R08"
+    relation: "refinement"
+    evidence:
+      - turn_id: "D1-M02:0018"
+        quote: "The PDF export should include order date, items, quantities, and total amounts in a clean table format"

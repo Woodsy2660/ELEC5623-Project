@@ -1,0 +1,56 @@
+[Mike Torres]
+Good morning everyone. Let's start by discussing the authentication requirements for the client portal.
+
+[Sarah Chen]
+Yes, absolutely. Users must be able to log in using their email address and a password. That's the baseline.
+
+[Jordan Kim]
+Should we consider social login options like Google or Microsoft?
+
+[Sarah Chen]
+Not for the initial release. Email and password only. We can revisit social login in phase two.
+
+[Mike Torres]
+Understood. What about password requirements?
+
+[Sarah Chen]
+Passwords must be at least eight characters and include at least one number. Standard security practice.
+
+[Jordan Kim]
+I'd recommend we also require at least one special character for stronger security.
+
+[Sarah Chen]
+Good point. Let's add that requirement. Passwords must include at least one special character.
+
+[Mike Torres]
+Moving on to the dashboard. What should users see when they first log in?
+
+[Sarah Chen]
+The dashboard should display a summary of their recent orders and any pending shipments.
+
+[Jordan Kim]
+Should we include notifications on the dashboard as well?
+
+[Sarah Chen]
+Yes, users need to see important notifications prominently displayed on the dashboard.
+
+[Mike Torres]
+What about the notification types? Push notifications, email, or in-app only?
+
+[Sarah Chen]
+In-app notifications are sufficient for now. Email notifications can be added later based on user feedback.
+
+[Jordan Kim]
+What's the session timeout policy?
+
+[Sarah Chen]
+Sessions should expire after thirty minutes of inactivity. Security is important for the portal.
+
+[Mike Torres]
+That covers the main points for today. We'll document these requirements and follow up next week.
+
+[Sarah Chen]
+Perfect. Thanks everyone for the productive discussion.
+
+[Jordan Kim]
+Thank you. I'll start working on the technical specifications.
