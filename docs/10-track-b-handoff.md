@@ -1,7 +1,8 @@
 # Track B handoff
 
-Owner: Danyang. Branch: `track-b-work`. Reviewed: 24 October 2026 against
-integrated main `997a0f7`.
+Owner: Danyang. Reviewed: 24 October 2026 against integrated main `997a0f7`.
+Compatibility branch: `track-b-work`; E3 scoring follow-up:
+`stage-e3-classification-scoring`.
 
 ## Integration status
 
@@ -25,14 +26,17 @@ evaluation. The existing HTTP models and `Classification` fields remain unchange
 | Hybrid retrieval | `src.retrieve.hybrid.retrieve` | BM25 and cosine rankings, family collapse, RRF, retained-version output |
 | Local embeddings | `src.retrieve.embeddings.LocalEmbedder` | Pinned MiniLM model, CPU, local-only encoding, explicit trace callback |
 | Retrieval evaluation | `src.eval.run_retrieval` and `src.eval.score --rankings` | Dev-only recall@3/@5/@8; labels read only by the scorer |
+| Classification evaluation | `src.eval.score --predictions` | Offline dev E3-oracle ID/no-match scores, four/six-class F1 and error diagnostics; see `docs/11-e3-classification-scoring.md` |
 | LLM-2 request | `src.classify.request.prepare_request` | Versioned prompt, evidence/history data, per-request ID enum |
 | LLM-2 output | `src.classify.output.decode_output` | Raw JSON validation; invalid predictions remain errors |
 | Track C adapter | `src.classify.output.assess_classification` | Calls Lucas's proposal rules; no confirmation or register write |
 | D2 corpus | `scenarios/dev/D2/` | Authoring draft only; dialogue, evidence offsets and semantic agreement pending |
 
-The local tests cover 105 new Track B cases: 31 retrieval, 9 encoder/trace,
-15 retrieval evaluation and 50 classification contracts. The combined repository
-suite has 221 passing test items after integrating the new upstream tests. These are software checks, not measured model
+The foundation tests cover 105 new Track B cases: 31 retrieval, 9 encoder/trace,
+15 retrieval evaluation and 50 classification contracts. The scoring follow-up
+adds 38 checks, including hand-calculated metrics and the real CLI. The combined
+repository suite has 259 passing test items after integrating the new upstream
+tests. These are software checks, not measured model
 accuracy or completed E3/E5 acceptance.
 
 Traceability follows the repository's FR07/FR08/FR10 and E3 labels. The submitted
@@ -48,9 +52,10 @@ From the repository root, install the base Python requirements first:
 python3.11 -m venv .venv
 .venv/bin/python -m pip install -r requirements.txt
 .venv/bin/python -m pytest src/engine tests/test_retrieval.py tests/test_local_embeddings.py tests/test_retrieval_evaluation.py tests/test_classification_contract.py
+.venv/bin/python -m pytest tests/test_classification_evaluation.py
 ```
 
-The command above checks 131 engine/Track B items without model downloads or
+The test commands above check 169 engine/Track B items without model downloads or
 Azure credentials. The upstream integration removed the old `demo` and
 `semantic_demo` entry points; use the tests and the supplied-input runner below.
 
@@ -134,7 +139,9 @@ label. This example is an integration sketch, not an executable cloud caller.
    delayed confirmation separately from a restatement label. D2 remains a draft
    until these are settled and the dialogue is reviewed.
 
-Next independent Track B work is E3 historical-ID/no-match/relationship scoring.
-The current scorer reports retrieval recall only. After live LLM-2 works on final
-dev candidates, compare top-k with full-history context and pair with Ben on the
-strong baseline. No holdout gold was inspected or used in prompts.
+Offline development E3 historical-ID/no-match/relationship scoring is now ready;
+its saved-output format and denominators are documented in
+`docs/11-e3-classification-scoring.md`. It still needs real logged predictions and
+reviewed dev labels. After live LLM-2 works on final dev candidates, compare top-k
+with full-history context and pair with Ben on the strong baseline. No holdout
+gold was inspected or used in prompts.
