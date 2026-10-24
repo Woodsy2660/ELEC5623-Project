@@ -2,6 +2,11 @@
 pydantic==2.9.2
 sqlalchemy==2.0.35
 
+# Integrated ingestion, extraction and shared model-call logger
+openai==1.109.1
+PyYAML==6.0.3
+Jinja2==3.1.6
+
 # Fixture API (no database). The state engine stays in Python.
 fastapi==0.142.2
 uvicorn==0.54.0

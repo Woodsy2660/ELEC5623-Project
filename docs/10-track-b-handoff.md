@@ -1,12 +1,22 @@
 # Track B handoff
 
-Owner: Danyang. Branch: `track-b-work`. Reviewed: 13 October 2026.
+Owner: Danyang. Branch: `track-b-work`. Reviewed: 24 October 2026 against
+integrated main `997a0f7`.
+
+## Integration status
+
+Main already contains the original four Track B commits through `df81ea3`.
+PR #3 is now a compatibility follow-up: frontend build in CI, declared runtime
+dependencies/lockfile, and mechanical lint/format fixes for integrated code.
+The E3 classification scorer is a separate follow-up in PR #4.
 
 This branch provides local hybrid retrieval, a development retrieval scorer, and
 LLM-2 request/output contracts. Retrieval runs with a real local embedding model.
-LLM-2 has not called Azure, and the real pipeline is not connected to persistence
-or the review API. The existing HTTP models and `Classification` output fields
-remain unchanged.
+LLM-2 has not called Azure. Main adds an extraction caller, shared logger and
+database/event helpers, but `run_pipeline.py` still has no extracted-candidate
+retrieval/classification path and the review API still uses fixtures. Its gold
+path directly supplies expected IDs/relations; it is not an E3-oracle classifier
+evaluation. The existing HTTP models and `Classification` fields remain unchanged.
 
 ## What is ready
 
@@ -22,7 +32,7 @@ remain unchanged.
 
 The local tests cover 105 new Track B cases: 31 retrieval, 9 encoder/trace,
 15 retrieval evaluation and 50 classification contracts. The combined repository
-suite has 158 passing test items. These are software checks, not measured model
+suite has 221 passing test items after integrating the new upstream tests. These are software checks, not measured model
 accuracy or completed E3/E5 acceptance.
 
 Traceability follows the repository's FR07/FR08/FR10 and E3 labels. The submitted
@@ -38,12 +48,11 @@ From the repository root, install the base Python requirements first:
 python3.11 -m venv .venv
 .venv/bin/python -m pip install -r requirements.txt
 .venv/bin/python -m pytest src/engine tests/test_retrieval.py tests/test_local_embeddings.py tests/test_retrieval_evaluation.py tests/test_classification_contract.py
-.venv/bin/python -m src.retrieve.demo
 ```
 
 The command above checks 131 engine/Track B items without model downloads or
-Azure credentials. `src.retrieve.demo` uses synthetic vectors and preconfigured
-historical states. It is not a semantic-model demonstration.
+Azure credentials. The upstream integration removed the old `demo` and
+`semantic_demo` entry points; use the tests and the supplied-input runner below.
 
 For the real local encoder, install the optional requirements and download the
 pinned public model once:
@@ -51,12 +60,13 @@ pinned public model once:
 ```bash
 .venv/bin/python -m pip install -r requirements-retrieval.txt
 .venv/bin/python -m src.retrieve.prepare_model
-.venv/bin/python -m src.retrieve.semantic_demo --query "Staff must authenticate via the corporate identity provider." --top-k 2
+.venv/bin/python -m src.eval.run_retrieval --inputs <label-free-dev-inputs.json> --repeat 1
 ```
 
 The fixed model/revision and encoder settings are in
 `src/retrieve/model_config.json`. Encoding keeps text on the laptop. The smoke
-demo records calls and results under ignored `runs/` directories. Model weights,
+runner records calls and results under ignored `runs/` directories. The input
+file must follow `RetrievalDataset`; the D2 draft is not runnable input. Model weights,
 run outputs, `.env` and database files are excluded from Git.
 
 For the complete repository suite, the existing hosted-API test also needs the
@@ -114,9 +124,10 @@ label. This example is an integration sketch, not an executable cloud caller.
 
 ## Decisions before live integration
 
-1. Ben/A/C: confirm the model deployment/version, endpoint/API, authentication,
-   supported settings, shared logger interface and budget. No Azure details or
-   credentials are committed in this branch.
+1. Ben/A/C: `docs/09-model-deployment.md`, `src/llm/config.py` and
+   `src/logging/calls.py` now define the proposed deployment/caller. Verify actual
+   access and settings, per-attempt failure logging and budget before live use.
+   No credentials are committed in this branch.
 2. Lucas: agree the history/current-head adapter and embedding metadata storage.
    This branch defines neither a new database schema nor a register write service.
 3. Team: settle same-family replacement versus a new replacement family, and
