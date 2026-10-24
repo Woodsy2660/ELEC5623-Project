@@ -62,7 +62,7 @@ class FakeCompletion:
 @pytest.fixture
 def db_session():
     """Create an in-memory database session with test data."""
-    from datetime import datetime, UTC
+    from datetime import UTC, datetime
 
     engine = create_engine("sqlite:///:memory:")
     Base.metadata.create_all(engine)
@@ -138,9 +138,7 @@ def temp_runs_dir():
 class TestExtractCandidates:
     """Tests for the extract_candidates function."""
 
-    def test_candidate_with_verbatim_quote_is_accepted(
-        self, db_session, temp_runs_dir
-    ):
+    def test_candidate_with_verbatim_quote_is_accepted(self, db_session, temp_runs_dir):
         """A candidate whose quote appears verbatim is accepted with correct offsets."""
         # Model returns a candidate with an exact quote from turn-001
         model_response = {
@@ -183,7 +181,10 @@ class TestExtractCandidates:
         assert candidate.candidate_id == "meet-001-C0000"
         assert candidate.project_id == "proj-001"
         assert candidate.meeting_id == "meet-001"
-        assert candidate.text_norm == "The system shall support SSO authentication for enterprise users."
+        assert (
+            candidate.text_norm
+            == "The system shall support SSO authentication for enterprise users."
+        )
 
         # Verify evidence span offsets are correct
         assert len(candidate.evidence) == 1
@@ -200,9 +201,7 @@ class TestExtractCandidates:
         assert len(db_candidates) == 1
         assert db_candidates[0].id == "meet-001-C0000"
 
-    def test_candidate_with_nonexistent_quote_is_rejected(
-        self, db_session, temp_runs_dir
-    ):
+    def test_candidate_with_nonexistent_quote_is_rejected(self, db_session, temp_runs_dir):
         """A candidate whose quote does not appear is rejected and counted in rejected_unresolvable."""
         # Model returns a candidate with a quote that doesn't exist in any turn
         model_response = {
@@ -243,9 +242,7 @@ class TestExtractCandidates:
         db_candidates = db_session.query(Candidate).all()
         assert len(db_candidates) == 0
 
-    def test_candidate_with_unknown_turn_id_is_rejected(
-        self, db_session, temp_runs_dir
-    ):
+    def test_candidate_with_unknown_turn_id_is_rejected(self, db_session, temp_runs_dir):
         """A candidate referencing an unknown turn_id is rejected."""
         model_response = {
             "candidates": [
@@ -279,9 +276,7 @@ class TestExtractCandidates:
         assert result.accepted == 0
         assert result.rejected_unresolvable == 1
 
-    def test_multiple_candidates_mixed_acceptance(
-        self, db_session, temp_runs_dir
-    ):
+    def test_multiple_candidates_mixed_acceptance(self, db_session, temp_runs_dir):
         """Multiple candidates can have mixed acceptance - some valid, some rejected."""
         model_response = {
             "candidates": [
@@ -341,9 +336,7 @@ class TestExtractCandidates:
         db_candidates = db_session.query(Candidate).all()
         assert len(db_candidates) == 2
 
-    def test_candidate_with_multiple_evidence_spans(
-        self, db_session, temp_runs_dir
-    ):
+    def test_candidate_with_multiple_evidence_spans(self, db_session, temp_runs_dir):
         """A candidate with multiple evidence quotes has all spans resolved."""
         model_response = {
             "candidates": [
@@ -397,9 +390,7 @@ class TestExtractCandidates:
 
         assert "not found" in str(exc_info.value)
 
-    def test_empty_response_returns_empty_result(
-        self, db_session, temp_runs_dir
-    ):
+    def test_empty_response_returns_empty_result(self, db_session, temp_runs_dir):
         """An empty response from the model returns zero candidates."""
         model_response = {"candidates": []}
 
@@ -422,14 +413,10 @@ class TestExtractCandidates:
         assert result.rejected_unresolvable == 0
         assert len(result.candidates) == 0
 
-    def test_invalid_json_response_counts_as_parse_failure(
-        self, db_session, temp_runs_dir
-    ):
+    def test_invalid_json_response_counts_as_parse_failure(self, db_session, temp_runs_dir):
         """Invalid JSON in model response counts as parse failure."""
         client = MagicMock()
-        client.chat.completions.create.return_value = FakeCompletion(
-            content="not valid json {{"
-        )
+        client.chat.completions.create.return_value = FakeCompletion(content="not valid json {{")
 
         result = extract_candidates(
             db_session,
@@ -443,9 +430,7 @@ class TestExtractCandidates:
         assert result.parse_failures == 1
         assert result.accepted == 0
 
-    def test_call_id_is_recorded_in_result(
-        self, db_session, temp_runs_dir
-    ):
+    def test_call_id_is_recorded_in_result(self, db_session, temp_runs_dir):
         """The call_id from the model call is recorded in the result."""
         model_response = {"candidates": []}
 
