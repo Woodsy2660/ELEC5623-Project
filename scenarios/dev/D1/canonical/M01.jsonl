@@ -1,0 +1,19 @@
+{"turn_index": 0, "turn_id": "D1-M01:0000", "speaker": "Mike Torres", "text": "Good morning everyone. Let's start by discussing the authentication requirements for the client portal."}
+{"turn_index": 1, "turn_id": "D1-M01:0001", "speaker": "Sarah Chen", "text": "Yes, absolutely. Users must be able to log in using their email address and a password. That's the baseline."}
+{"turn_index": 2, "turn_id": "D1-M01:0002", "speaker": "Jordan Kim", "text": "Should we consider social login options like Google or Microsoft?"}
+{"turn_index": 3, "turn_id": "D1-M01:0003", "speaker": "Sarah Chen", "text": "Not for the initial release. Email and password only. We can revisit social login in phase two."}
+{"turn_index": 4, "turn_id": "D1-M01:0004", "speaker": "Mike Torres", "text": "Understood. What about password requirements?"}
+{"turn_index": 5, "turn_id": "D1-M01:0005", "speaker": "Sarah Chen", "text": "Passwords must be at least eight characters and include at least one number. Standard security practice."}
+{"turn_index": 6, "turn_id": "D1-M01:0006", "speaker": "Jordan Kim", "text": "I'd recommend we also require at least one special character for stronger security."}
+{"turn_index": 7, "turn_id": "D1-M01:0007", "speaker": "Sarah Chen", "text": "Good point. Let's add that requirement. Passwords must include at least one special character."}
+{"turn_index": 8, "turn_id": "D1-M01:0008", "speaker": "Mike Torres", "text": "Moving on to the dashboard. What should users see when they first log in?"}
+{"turn_index": 9, "turn_id": "D1-M01:0009", "speaker": "Sarah Chen", "text": "The dashboard should display a summary of their recent orders and any pending shipments."}
+{"turn_index": 10, "turn_id": "D1-M01:0010", "speaker": "Jordan Kim", "text": "Should we include notifications on the dashboard as well?"}
+{"turn_index": 11, "turn_id": "D1-M01:0011", "speaker": "Sarah Chen", "text": "Yes, users need to see important notifications prominently displayed on the dashboard."}
+{"turn_index": 12, "turn_id": "D1-M01:0012", "speaker": "Mike Torres", "text": "What about the notification types? Push notifications, email, or in-app only?"}
+{"turn_index": 13, "turn_id": "D1-M01:0013", "speaker": "Sarah Chen", "text": "In-app notifications are sufficient for now. Email notifications can be added later based on user feedback."}
+{"turn_index": 14, "turn_id": "D1-M01:0014", "speaker": "Jordan Kim", "text": "What's the session timeout policy?"}
+{"turn_index": 15, "turn_id": "D1-M01:0015", "speaker": "Sarah Chen", "text": "Sessions should expire after thirty minutes of inactivity. Security is important for the portal."}
+{"turn_index": 16, "turn_id": "D1-M01:0016", "speaker": "Mike Torres", "text": "That covers the main points for today. We'll document these requirements and follow up next week."}
+{"turn_index": 17, "turn_id": "D1-M01:0017", "speaker": "Sarah Chen", "text": "Perfect. Thanks everyone for the productive discussion."}
+{"turn_index": 18, "turn_id": "D1-M01:0018", "speaker": "Jordan Kim", "text": "Thank you. I'll start working on the technical specifications."}

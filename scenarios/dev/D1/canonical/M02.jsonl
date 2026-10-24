@@ -1,0 +1,20 @@
+{"turn_index": 0, "turn_id": "D1-M02:0000", "speaker": "Mike Torres", "text": "Welcome back everyone. Let's review the requirements from last week and discuss any changes."}
+{"turn_index": 1, "turn_id": "D1-M02:0001", "speaker": "Sarah Chen", "text": "I've been thinking about the session timeout. Thirty minutes might be too short for some users. Let's change it to sixty minutes instead."}
+{"turn_index": 2, "turn_id": "D1-M02:0002", "speaker": "Jordan Kim", "text": "That makes sense. Users won't be interrupted as often during longer tasks."}
+{"turn_index": 3, "turn_id": "D1-M02:0003", "speaker": "Mike Torres", "text": "Noted. Any other changes to authentication?"}
+{"turn_index": 4, "turn_id": "D1-M02:0004", "speaker": "Sarah Chen", "text": "Actually, we need to add two-factor authentication. It's now a compliance requirement from our security team."}
+{"turn_index": 5, "turn_id": "D1-M02:0005", "speaker": "Jordan Kim", "text": "Should that be mandatory or optional?"}
+{"turn_index": 6, "turn_id": "D1-M02:0006", "speaker": "Sarah Chen", "text": "Two-factor authentication must be mandatory for all users. No exceptions."}
+{"turn_index": 7, "turn_id": "D1-M02:0007", "speaker": "Mike Torres", "text": "That's a significant addition. What about the dashboard requirements?"}
+{"turn_index": 8, "turn_id": "D1-M02:0008", "speaker": "Sarah Chen", "text": "The dashboard should also show the user's account balance. I forgot to mention that last time."}
+{"turn_index": 9, "turn_id": "D1-M02:0009", "speaker": "Jordan Kim", "text": "Where should the balance appear? Top of the dashboard?"}
+{"turn_index": 10, "turn_id": "D1-M02:0010", "speaker": "Sarah Chen", "text": "Yes, account balance should be prominently displayed at the top of the dashboard."}
+{"turn_index": 11, "turn_id": "D1-M02:0011", "speaker": "Mike Torres", "text": "Any updates to the notification system?"}
+{"turn_index": 12, "turn_id": "D1-M02:0012", "speaker": "Sarah Chen", "text": "I changed my mind about email notifications. Users should receive email notifications for important updates in addition to in-app notifications."}
+{"turn_index": 13, "turn_id": "D1-M02:0013", "speaker": "Jordan Kim", "text": "What counts as an important update?"}
+{"turn_index": 14, "turn_id": "D1-M02:0014", "speaker": "Sarah Chen", "text": "Order confirmations, shipping updates, and payment receipts should all trigger email notifications."}
+{"turn_index": 15, "turn_id": "D1-M02:0015", "speaker": "Mike Torres", "text": "Got it. Anything else for this week?"}
+{"turn_index": 16, "turn_id": "D1-M02:0016", "speaker": "Sarah Chen", "text": "One more thing. Users need to be able to export their order history as a PDF file."}
+{"turn_index": 17, "turn_id": "D1-M02:0017", "speaker": "Jordan Kim", "text": "That's straightforward to implement. Any specific format requirements?"}
+{"turn_index": 18, "turn_id": "D1-M02:0018", "speaker": "Sarah Chen", "text": "The PDF export should include order date, items, quantities, and total amounts in a clean table format."}
+{"turn_index": 19, "turn_id": "D1-M02:0019", "speaker": "Mike Torres", "text": "Perfect. That wraps up our discussion for today."}
