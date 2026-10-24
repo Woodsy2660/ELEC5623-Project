@@ -314,12 +314,7 @@ def replay_to_cutoff(
         raise ValueError(f"Run not found: {run_id}")
 
     # Get project ID from first event
-    first_event = (
-        session.query(Event)
-        .filter(Event.run_id == run_id)
-        .order_by(Event.ts)
-        .first()
-    )
+    first_event = session.query(Event).filter(Event.run_id == run_id).order_by(Event.ts).first()
     if first_event is None:
         session.close()
         raise ValueError(f"No events found for run: {run_id}")

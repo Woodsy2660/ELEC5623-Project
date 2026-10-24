@@ -89,11 +89,13 @@ def _build_gold_candidate(
     # Build evidence spans from gold evidence
     evidence = []
     for ev in gold_event.get("evidence", []):
-        evidence.append(EvidenceSpan(
-            turn_id=ev["turn_id"],
-            start=ev["start"],
-            end=ev["end"],
-        ))
+        evidence.append(
+            EvidenceSpan(
+                turn_id=ev["turn_id"],
+                start=ev["start"],
+                end=ev["end"],
+            )
+        )
 
     # For gold candidates, we use the evidence quote as the normalized text
     # or construct from evidence
@@ -133,11 +135,13 @@ def _get_corpus_versions(
         evidence = []
         if ver.evidence_json:
             for ev in json.loads(ver.evidence_json):
-                evidence.append(EvidenceSpan(
-                    turn_id=ev["turn_id"],
-                    start=ev["start"],
-                    end=ev["end"],
-                ))
+                evidence.append(
+                    EvidenceSpan(
+                        turn_id=ev["turn_id"],
+                        start=ev["start"],
+                        end=ev["end"],
+                    )
+                )
 
         # Parse embedding
         if ver.embedding_blob:
@@ -147,16 +151,18 @@ def _get_corpus_versions(
             # No embedding yet - skip this version for retrieval
             continue
 
-        corpus.append(RetrievalVersion(
-            project_id=project_id,
-            requirement_id=ver.requirement_id,
-            version=ver.version,
-            text=ver.text,
-            state=State(ver.state),
-            evidence=tuple(evidence),
-            embedding_model=embedding_model,
-            embedding=embedding,
-        ))
+        corpus.append(
+            RetrievalVersion(
+                project_id=project_id,
+                requirement_id=ver.requirement_id,
+                version=ver.version,
+                text=ver.text,
+                state=State(ver.state),
+                evidence=tuple(evidence),
+                embedding_model=embedding_model,
+                embedding=embedding,
+            )
+        )
 
     return corpus
 
@@ -180,11 +186,13 @@ def _get_current_heads(
                 .first()
             )
             if version:
-                heads.append(CurrentHead(
-                    requirement_id=req_id,
-                    version=version.version,
-                    state=State(current.state),
-                ))
+                heads.append(
+                    CurrentHead(
+                        requirement_id=req_id,
+                        version=version.version,
+                        state=State(current.state),
+                    )
+                )
     return heads
 
 
@@ -200,13 +208,15 @@ def _get_evidence_turns(
         if turn:
             meeting = session.get(Meeting, turn.meeting_id)
             if meeting:
-                turns.append(EvidenceTurn(
-                    project_id=meeting.project_id,
-                    meeting_id=turn.meeting_id,
-                    turn_id=turn.id,
-                    speaker_label=turn.speaker,
-                    text=turn.text,
-                ))
+                turns.append(
+                    EvidenceTurn(
+                        project_id=meeting.project_id,
+                        meeting_id=turn.meeting_id,
+                        turn_id=turn.id,
+                        speaker_label=turn.speaker,
+                        text=turn.text,
+                    )
+                )
     return turns
 
 
@@ -253,8 +263,7 @@ def _apply_event_to_register(
         "candidate_id": candidate.candidate_id,
         "text": candidate.text_norm,
         "evidence": [
-            {"turn_id": s.turn_id, "start": s.start, "end": s.end}
-            for s in candidate.evidence
+            {"turn_id": s.turn_id, "start": s.start, "end": s.end} for s in candidate.evidence
         ],
     }
     if classification:
@@ -292,10 +301,9 @@ def _apply_event_to_register(
 
     # Create new version
     version_id = f"{requirement_id}-v{new_version_num}"
-    evidence_json = json.dumps([
-        {"turn_id": s.turn_id, "start": s.start, "end": s.end}
-        for s in candidate.evidence
-    ])
+    evidence_json = json.dumps(
+        [{"turn_id": s.turn_id, "start": s.start, "end": s.end} for s in candidate.evidence]
+    )
 
     # Encode embedding as JSON blob if present
     embedding_blob = None
@@ -433,6 +441,7 @@ def run_pipeline(
 
         # Import meeting (idempotent)
         from src.ingest import import_meeting
+
         meeting = import_meeting(session, project.id, canonical_path, ordinal)
         session.commit()
 
@@ -493,9 +502,7 @@ def run_pipeline(
                 speaker_label = evidence_turns[0].speaker_label
 
                 # Check speaker authority (used for extracted candidates)
-                _speaker_can_confirm = _get_speaker_can_confirm(
-                    session, project.id, speaker_label
-                )
+                _speaker_can_confirm = _get_speaker_can_confirm(session, project.id, speaker_label)
 
                 # For gold candidates, we know the relation and requirement_id
                 if candidate_source == "gold" and hasattr(candidate, "_gold_event"):
@@ -549,23 +556,44 @@ def run_pipeline(
                     if relation == Relation.NEW and mode == "eval":
                         # First create as proposed
                         _apply_event_to_register(
-                            session, project.id, run_id, requirement_id,
-                            EventType.CREATE, candidate, classification,
-                            State.PROPOSED, None, None,
+                            session,
+                            project.id,
+                            run_id,
+                            requirement_id,
+                            EventType.CREATE,
+                            candidate,
+                            classification,
+                            State.PROPOSED,
+                            None,
+                            None,
                         )
                         # Then confirm
                         _apply_event_to_register(
-                            session, project.id, run_id, requirement_id,
-                            EventType.CONFIRM, candidate, classification,
-                            State.CONFIRMED, None, None,
+                            session,
+                            project.id,
+                            run_id,
+                            requirement_id,
+                            EventType.CONFIRM,
+                            candidate,
+                            classification,
+                            State.CONFIRMED,
+                            None,
+                            None,
                         )
                         stats["events_applied"] += 2
                     else:
                         # Apply the event directly
                         _apply_event_to_register(
-                            session, project.id, run_id, requirement_id,
-                            event_type, candidate, classification,
-                            resulting_state, None, None,
+                            session,
+                            project.id,
+                            run_id,
+                            requirement_id,
+                            event_type,
+                            candidate,
+                            classification,
+                            resulting_state,
+                            None,
+                            None,
                         )
                         stats["events_applied"] += 1
 
