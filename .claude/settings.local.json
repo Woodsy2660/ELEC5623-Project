@@ -9,7 +9,30 @@
       "Bash(ruff format:*)",
       "Bash(PYTHONPATH=. pytest:*)",
       "Bash(PYTHONPATH=. python:*)",
-      "Bash(PYTHONPATH=. python3:*)"
+      "Bash(PYTHONPATH=. python3:*)",
+      "Bash(git fetch:*)",
+      "Bash(git log:*)",
+      "Bash(git merge-base:*)",
+      "Bash(while read f)",
+      "Bash(do git diff --name-only main..origin/main)",
+      "Bash(echo:*)",
+      "Bash(done)",
+      "Bash(gh pr list:*)",
+      "Bash(ls:*)",
+      "Bash(wc:*)",
+      "Bash(npm run dev)",
+      "Bash(curl:*)",
+      "Bash(git merge:*)",
+      "Bash(git stash:*)",
+      "Bash(git checkout:*)",
+      "Bash(git add:*)",
+      "Bash(git hash-object:*)",
+      "Bash(grep:*)",
+      "Bash(python -m ruff check:*)",
+      "Bash(python -m src.eval.run_pipeline:*)",
+      "Bash(uv run python:*)",
+      "Bash(diff:*)",
+      "Bash(pkill:*)"
     ]
   }
 }

@@ -1,0 +1,22 @@
+id: D1
+name: "Client portal"
+client: "Northwind Logistics"
+
+speakers:
+  - label: "Sarah Chen"
+    role: "Product Owner"
+    can_confirm_scope: true
+  - label: "Mike Torres"
+    role: "Lead Consultant"
+    can_confirm_scope: false
+  - label: "Jordan Kim"
+    role: "Technical Lead"
+    can_confirm_scope: false
+
+meetings:
+  - ordinal: 1
+    title: "Initial requirements"
+    canonical: "canonical/M01.jsonl"
+  - ordinal: 2
+    title: "Feature refinement"
+    canonical: "canonical/M02.jsonl"

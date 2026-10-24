@@ -11,7 +11,7 @@
   /classify        LLM-2 call + enum construction                    FR07/08
   /engine          PURE. stdlib only. no I/O. state machine          FR11
   /persist         SQLAlchemy models, transactional writes           FR09
-  /review_ui       legacy namespace; no separate frontend            FR01/02/03
+  /review_ui       React/Vite in /web                                FR01/02/03
   /export          register + history serialisation                  FR12
   /logging         model_calls wrapper, runs table
   /eval            harness scripts, scoring
