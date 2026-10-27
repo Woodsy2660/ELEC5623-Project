@@ -17,7 +17,6 @@ import yaml
 from src.validate.resolve import (
     QuoteAmbiguous,
     QuoteNotFound,
-    ValidationResult,
     extract_quote,
     resolve_quote,
     validate_candidate,
@@ -272,14 +271,10 @@ class TestD1GoldSpans:
 
     def test_d1_has_14_gold_evidence_spans(self, d1_gold_events: list[dict]):
         """D1 has exactly 14 gold evidence spans."""
-        total_spans = sum(
-            len(event.get("evidence", [])) for event in d1_gold_events
-        )
+        total_spans = sum(len(event.get("evidence", [])) for event in d1_gold_events)
         assert total_spans == 14
 
-    def test_all_d1_gold_spans_resolve(
-        self, d1_turns: dict[str, str], d1_gold_events: list[dict]
-    ):
+    def test_all_d1_gold_spans_resolve(self, d1_turns: dict[str, str], d1_gold_events: list[dict]):
         """Every one of D1's 14 gold evidence spans resolves against canonical files."""
         for event in d1_gold_events:
             for evidence in event.get("evidence", []):
@@ -299,13 +294,11 @@ class TestD1GoldSpans:
                     f"expected {expected_start}, got {actual_start}"
                 )
                 assert actual_end == expected_end, (
-                    f"End mismatch for {turn_id}: "
-                    f"expected {expected_end}, got {actual_end}"
+                    f"End mismatch for {turn_id}: " f"expected {expected_end}, got {actual_end}"
                 )
 
                 # Resolved text must equal the authored quote exactly
                 resolved_text = turn_text[actual_start:actual_end]
                 assert resolved_text == quote, (
-                    f"Text mismatch for {turn_id}: "
-                    f"expected {quote!r}, got {resolved_text!r}"
+                    f"Text mismatch for {turn_id}: " f"expected {quote!r}, got {resolved_text!r}"
                 )

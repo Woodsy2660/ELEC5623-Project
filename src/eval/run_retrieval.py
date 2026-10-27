@@ -43,6 +43,8 @@ def run_retrieval(
                     state=v.state,
                     evidence=v.evidence,
                     embedding_model=vector.embedding_model,
+                    embedding_version=vector.embedding_version,
+                    embedding_dim=vector.embedding_dim,
                     embedding=vector.embedding,
                 )
                 for v, vector in zip(visible, vectors[:-1], strict=True)
@@ -52,6 +54,8 @@ def run_retrieval(
                 RetrievalRequest(
                     candidate=case.candidate,
                     embedding_model=query.embedding_model,
+                    embedding_version=query.embedding_version,
+                    embedding_dim=query.embedding_dim,
                     embedding=query.embedding,
                     top_k=8,
                 ),

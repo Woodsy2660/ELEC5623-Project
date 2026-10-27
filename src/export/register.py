@@ -58,9 +58,7 @@ def export_register(session: Session, project_id: str) -> dict[str, Any]:
     # Get all requirements for this project
     requirements = (
         session.execute(
-            select(Requirement)
-            .where(Requirement.project_id == project_id)
-            .order_by(Requirement.id)
+            select(Requirement).where(Requirement.project_id == project_id).order_by(Requirement.id)
         )
         .scalars()
         .all()
@@ -73,9 +71,7 @@ def export_register(session: Session, project_id: str) -> dict[str, Any]:
         # Get current version info
         current = (
             session.execute(
-                select(RequirementCurrent).where(
-                    RequirementCurrent.requirement_id == req.id
-                )
+                select(RequirementCurrent).where(RequirementCurrent.requirement_id == req.id)
             )
             .scalars()
             .first()
@@ -110,14 +106,16 @@ def export_register(session: Session, project_id: str) -> dict[str, Any]:
                     "payload": json.loads(event.payload_json) if event.payload_json else {},
                 }
 
-            versions_data.append({
-                "version_id": ver.id,
-                "version": ver.version,
-                "state": ver.state,
-                "text": ver.text,
-                "evidence": evidence,  # Contains turn_id, start, end
-                "created_event": created_event_data,
-            })
+            versions_data.append(
+                {
+                    "version_id": ver.id,
+                    "version": ver.version,
+                    "state": ver.state,
+                    "text": ver.text,
+                    "evidence": evidence,  # Contains turn_id, start, end
+                    "created_event": created_event_data,
+                }
+            )
 
         # Get decision history (all events that reference this requirement)
         decision_history = _get_decision_history(session, project_id, req.id)
@@ -134,9 +132,7 @@ def export_register(session: Session, project_id: str) -> dict[str, Any]:
 
         # Add current version number
         if current and versions:
-            current_ver = next(
-                (v for v in versions if v.id == current.current_version_id), None
-            )
+            current_ver = next((v for v in versions if v.id == current.current_version_id), None)
             if current_ver:
                 req_data["current_version_number"] = current_ver.version
 
@@ -159,11 +155,7 @@ def _get_decision_history(
     """
     # Query events for this project that reference the requirement
     events = (
-        session.execute(
-            select(Event)
-            .where(Event.project_id == project_id)
-            .order_by(Event.ts)
-        )
+        session.execute(select(Event).where(Event.project_id == project_id).order_by(Event.ts))
         .scalars()
         .all()
     )
@@ -274,9 +266,17 @@ def write_export_csv(session: Session, project_id: str, path: Path) -> None:
                     "text": ver["text"],
                     "is_current": ver["version_id"] == current_version_id,
                     "evidence_json": json.dumps(ver["evidence"]),
-                    "created_event_id": ver["created_event"]["event_id"] if ver["created_event"] else None,
-                    "created_event_type": ver["created_event"]["event_type"] if ver["created_event"] else None,
-                    "created_actor": ver["created_event"]["actor"] if ver["created_event"] else None,
-                    "created_timestamp": ver["created_event"]["timestamp"] if ver["created_event"] else None,
+                    "created_event_id": ver["created_event"]["event_id"]
+                    if ver["created_event"]
+                    else None,
+                    "created_event_type": ver["created_event"]["event_type"]
+                    if ver["created_event"]
+                    else None,
+                    "created_actor": ver["created_event"]["actor"]
+                    if ver["created_event"]
+                    else None,
+                    "created_timestamp": ver["created_event"]["timestamp"]
+                    if ver["created_event"]
+                    else None,
                 }
                 writer.writerow(row)

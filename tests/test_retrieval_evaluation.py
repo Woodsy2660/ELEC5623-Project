@@ -35,6 +35,8 @@ def observation(case_id: str, ranking: tuple[str, ...]) -> RetrievalObservation:
             candidate_id=case_id,
             project_id="P1",
             embedding_model="test-fixture",
+            embedding_version="v1",
+            embedding_dim=2,
             families=(),
             bm25_family_ids=ranking,
             dense_family_ids=tuple(reversed(ranking)),
@@ -171,7 +173,15 @@ def test_future_and_other_project_text_never_reaches_encoder() -> None:
 
     def encode(texts: list[str]) -> tuple[VectorRecord, ...]:
         batches.append(texts)
-        return tuple(VectorRecord(embedding_model="test-fixture", embedding=(1, 0)) for _ in texts)
+        return tuple(
+            VectorRecord(
+                embedding_model="test-fixture",
+                embedding_version="v1",
+                embedding_dim=2,
+                embedding=(1, 0),
+            )
+            for _ in texts
+        )
 
     outputs = run_retrieval(dataset, encode)
     assert batches == [["email login", "company single sign on", "email login"]]
@@ -187,7 +197,14 @@ def test_first_meeting_has_empty_history() -> None:
 
     def encode(texts: list[str]) -> tuple[VectorRecord, ...]:
         batches.append(texts)
-        return (VectorRecord(embedding_model="test-fixture", embedding=(1, 0)),)
+        return (
+            VectorRecord(
+                embedding_model="test-fixture",
+                embedding_version="v1",
+                embedding_dim=2,
+                embedding=(1, 0),
+            ),
+        )
 
     output = run_retrieval(RetrievalDataset.model_validate(data), encode)
     assert batches == [["email login"]]

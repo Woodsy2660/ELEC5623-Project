@@ -26,6 +26,7 @@ Coding agents: read `AGENTS.md` first.
 | [`docs/07-conventions.md`](docs/07-conventions.md) | Repo layout, code conventions, logging |
 | [`docs/11-remaining-implementation.md`](docs/11-remaining-implementation.md) | Current implementation status against Ben's draft |
 | [`docs/12-track-c-review.md`](docs/12-track-c-review.md) | SQLite review setup, behavior, validation and remaining work |
+| [`handover.md`](handover.md) | 27 Oct 2026 status for the report: what is wired, what is unmeasured, what D1 contains |
 
 ## Team
 
@@ -45,10 +46,10 @@ cp .env.example .env        # add your Azure Foundry deployment details
 # The state engine runs with no credentials and no database:
 pytest src/engine
 
-# Load a development scenario and score one metric:
-python -m src.eval.ingest_scenario --scenario scenarios/dev/D1
-python -m src.eval.run_pipeline --mode eval --candidate-source gold --repeat 1
-python -m src.eval.score --run <run_id>
+# Oracle run on D1, then score it. Use a fresh database per run.
+# ingest_scenario is still a stub. The pipeline loads the scenario itself.
+python -m src.eval.run_pipeline --scenario scenarios/dev/D1 --mode eval --candidate-source gold --repeat 1 --db sqlite:///runs/d1-oracle.db
+python -m src.eval.score --run <run_id> --scenario scenarios/dev/D1 --db sqlite:///runs/d1-oracle.db
 ```
 
 ## Pipeline

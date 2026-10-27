@@ -49,6 +49,13 @@ def database(tmp_path: Path) -> Iterator[Engine]:
 
 def test_initialization_creates_the_existing_schema(database: Engine) -> None:
     assert set(inspect(database).get_table_names()) == EXPECTED_TABLES
+    columns = {column["name"] for column in inspect(database).get_columns("requirement_versions")}
+    assert {
+        "embedding_blob",
+        "embedding_model",
+        "embedding_version",
+        "embedding_dim",
+    } <= columns
     with transaction(database) as session:
         assert session.scalars(select(Project)).all() == []
 

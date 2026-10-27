@@ -68,7 +68,7 @@ class FakeCompletion:
 @pytest.fixture
 def db_session():
     """Create an in-memory database session for testing."""
-    from datetime import datetime, UTC
+    from datetime import UTC, datetime
 
     engine = create_engine("sqlite:///:memory:")
     Base.metadata.create_all(engine)
@@ -111,9 +111,7 @@ def prompt_file(temp_runs_dir):
 class TestCallModel:
     """Tests for the call_model function."""
 
-    def test_successful_call_returns_parsed_response(
-        self, temp_runs_dir, prompt_file
-    ):
+    def test_successful_call_returns_parsed_response(self, temp_runs_dir, prompt_file):
         """A successful call returns ParsedResponse with all fields populated."""
         # Create fake client
         client = MagicMock()
@@ -148,15 +146,11 @@ class TestCallModel:
         assert parsed.latency_ms >= 0
         assert parsed.retries == 0
 
-    def test_successful_call_writes_raw_json_file(
-        self, temp_runs_dir, prompt_file
-    ):
+    def test_successful_call_writes_raw_json_file(self, temp_runs_dir, prompt_file):
         """A successful call writes raw JSON to disk at the recorded path."""
         client = MagicMock()
         response_content = json.dumps({"candidates": []})
-        client.chat.completions.create.return_value = FakeCompletion(
-            content=response_content
-        )
+        client.chat.completions.create.return_value = FakeCompletion(content=response_content)
 
         parsed, row_data = call_model(
             client,
@@ -263,9 +257,7 @@ class TestCallModel:
     def test_latency_is_populated_and_plausible(self, temp_runs_dir, prompt_file):
         """Latency_ms is populated and has a plausible value (>= 0)."""
         client = MagicMock()
-        client.chat.completions.create.return_value = FakeCompletion(
-            content='{"candidates": []}'
-        )
+        client.chat.completions.create.return_value = FakeCompletion(content='{"candidates": []}')
 
         parsed, row_data = call_model(
             client,
@@ -287,9 +279,7 @@ class TestCallModel:
 class TestCallLogger:
     """Tests for the CallLogger context manager."""
 
-    def test_successful_call_writes_model_calls_row(
-        self, db_session, temp_runs_dir, prompt_file
-    ):
+    def test_successful_call_writes_model_calls_row(self, db_session, temp_runs_dir, prompt_file):
         """A successful call writes exactly one model_calls row with all fields."""
         client = MagicMock()
         client.chat.completions.create.return_value = FakeCompletion(
