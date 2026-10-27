@@ -240,7 +240,8 @@ def test_confirm_persists_and_reopens_with_evidence_and_history(database):
         versions, heads = retrieval_snapshot(db, "P1")
         # A new requirement's Create and Confirm events share one retained version.
         assert len(versions) == 1 and heads[0].version == 1
-        assert {v.embedding_model for v in versions} == {"test-only@1"}
+        assert {v.embedding_model for v in versions} == {"test-only"}
+        assert {v.embedding_version for v in versions} == {"1"}
 
 
 def test_authentication_required_and_missing_configuration_blocks_writes(database):
