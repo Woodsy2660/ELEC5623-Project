@@ -2,7 +2,7 @@
 
 import math
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from src.engine.state_machine import State
 from src.extract.schemas import Candidate
@@ -10,11 +10,13 @@ from src.validate.schemas import EvidenceSpan
 
 
 class VectorRecord(BaseModel):
-    """A nonzero embedding with an explicit model/revision identifier."""
+    """A nonzero embedding with an explicit model, version, and dimension."""
 
     model_config = ConfigDict(extra="forbid", frozen=True)
 
     embedding_model: str = Field(min_length=1)
+    embedding_version: str = Field(min_length=1)
+    embedding_dim: int = Field(gt=0)
     embedding: tuple[float, ...] = Field(min_length=1)
 
     @field_validator("embedding")
@@ -26,6 +28,17 @@ class VectorRecord(BaseModel):
         if not any(value):
             raise ValueError("Embedding must be nonzero")
         return value
+
+    @model_validator(mode="after")
+    def declared_dim_matches_vector(self) -> "VectorRecord":
+        """A declared dim that disagrees with the vector is already a bad write."""
+        if len(self.embedding) != self.embedding_dim:
+            raise ValueError(
+                f"embedding_dim {self.embedding_dim} does not match vector length "
+                f"{len(self.embedding)} for {self.embedding_model} "
+                f"version {self.embedding_version}"
+            )
+        return self
 
 
 class RequirementVersion(VectorRecord):
@@ -66,6 +79,8 @@ class RetrievalResult(BaseModel):
     candidate_id: str
     project_id: str
     embedding_model: str
+    embedding_version: str
+    embedding_dim: int
     families: tuple[RetrievedFamily, ...]
     bm25_family_ids: tuple[str, ...]
     dense_family_ids: tuple[str, ...]

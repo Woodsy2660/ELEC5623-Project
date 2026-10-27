@@ -183,6 +183,70 @@ def call_model(
     raise ModelCallError(f"Model call failed: {last_error}")
 
 
+def _write_embed_response(
+    run_id: str,
+    call_id: str,
+    payload: dict[str, Any],
+    runs_dir: Path,
+) -> str:
+    run_dir = runs_dir / run_id
+    run_dir.mkdir(parents=True, exist_ok=True)
+    raw_path = run_dir / f"{call_id}.json"
+    raw_path.write_text(json.dumps(payload, indent=2, ensure_ascii=False), encoding="utf-8")
+    return str(raw_path)
+
+
+def call_embedding(
+    client: AzureOpenAI,
+    *,
+    run_id: str,
+    deployment_name: str,
+    texts: list[str],
+    runs_dir: Path = Path("runs"),
+) -> tuple[list[tuple[float, ...]], dict[str, Any]]:
+    """Embed a batch. This is the only ``embeddings.create`` call site.
+
+    The row uses stage ``embed`` so E8 can see it beside chat calls.
+    """
+    from src.llm.config import FOUNDRY_EMBED_MODEL, FOUNDRY_EMBED_VERSION
+
+    if not texts or any(not text.strip() for text in texts):
+        raise ModelCallError("Embedding input must be a nonempty batch of nonblank texts")
+    call_id = str(uuid.uuid4())
+    identity = f"{deployment_name}|{FOUNDRY_EMBED_MODEL}|{FOUNDRY_EMBED_VERSION}".encode()
+    prompt_hash = hashlib.sha1(f"blob {len(identity)}\0".encode() + identity).hexdigest()
+    start_time = time.perf_counter()
+    try:
+        response = client.embeddings.create(model=deployment_name, input=list(texts))
+    except Exception as exc:
+        raise ModelCallError(f"Embedding call failed: {exc}") from exc
+    latency_ms = int((time.perf_counter() - start_time) * 1000)
+    ordered = sorted(response.data, key=lambda item: item.index)
+    vectors = [tuple(float(value) for value in item.embedding) for item in ordered]
+    usage = response.usage
+    input_tokens = usage.prompt_tokens if usage else 0
+    served_model = response.model or deployment_name
+    raw_json_path = _write_embed_response(run_id, call_id, response.model_dump(), runs_dir)
+    cost = compute_cost(served_model, input_tokens, 0)
+    row_data = {
+        "id": call_id,
+        "run_id": run_id,
+        "stage": "embed",
+        "deployment_name": deployment_name,
+        "served_model": served_model,
+        "prompt_hash": prompt_hash,
+        "temperature": 0.0,
+        "seed": None,
+        "input_tokens": input_tokens,
+        "output_tokens": 0,
+        "latency_ms": latency_ms,
+        "retries": 0,
+        "cost": cost,
+        "raw_json_path": raw_json_path,
+    }
+    return vectors, row_data
+
+
 class CallLogger:
     """Context manager for logging model calls to the database.
 
@@ -257,3 +321,19 @@ class CallLogger:
         self.session.flush()
 
         return parsed
+
+    def embed(self, *, run_id: str, texts: list[str]) -> list[tuple[float, ...]]:
+        """Log one embedding batch against cia-embed, not the chat deployment."""
+        from src.llm.config import FOUNDRY_EMBED_DEPLOYMENT
+        from src.persist.models import ModelCall
+
+        vectors, row_data = call_embedding(
+            self.client,
+            run_id=run_id,
+            deployment_name=FOUNDRY_EMBED_DEPLOYMENT,
+            texts=texts,
+            runs_dir=self.runs_dir,
+        )
+        self.session.add(ModelCall(**row_data))
+        self.session.flush()
+        return vectors

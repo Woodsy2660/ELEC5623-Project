@@ -28,6 +28,8 @@ class Classification(BaseModel):
     relation: Relation
     rationale: str
     retrieved_ids: list[str]  # what was actually offered
+    # The model's own claim. A soft downgrade may change relation and leave this false.
+    replacement_stated: bool = False
 
 
 class EvidenceTurn(BaseModel):
