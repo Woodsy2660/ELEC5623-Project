@@ -75,8 +75,14 @@ def prepare_request(
             },
             "relation": {"type": "string", "enum": [relation.value for relation in Relation]},
             "rationale": {"type": "string"},
+            "replacement_stated": {"type": "boolean"},
         },
-        "required": ["matched_requirement_id", "relation", "rationale"],
+        "required": [
+            "matched_requirement_id",
+            "relation",
+            "rationale",
+            "replacement_stated",
+        ],
         "additionalProperties": False,
     }
     return PreparedClassificationRequest(

@@ -16,12 +16,33 @@ class ModelRates:
     output_rate: float  # USD per 1M output tokens
 
 
-# Pricing per 1M tokens - update when rates change
+# Pricing per 1M tokens - update when rates change.
+# cia-chat serves gpt-4o 2024-11-20. Cost is looked up from the served model
+# name, and also from the deployment name when that is what the response returns.
 MODEL_RATES: dict[str, ModelRates] = {
     "gpt-4o-mini": ModelRates(input_rate=0.15, output_rate=0.60),
-    "gpt-4o": ModelRates(input_rate=2.50, output_rate=10.00),
     "gpt-4o-mini-2024-07-18": ModelRates(input_rate=0.15, output_rate=0.60),
+    "gpt-4o": ModelRates(input_rate=2.50, output_rate=10.00),
+    "gpt-4o-2024-11-20": ModelRates(input_rate=2.50, output_rate=10.00),
+    "cia-chat": ModelRates(input_rate=2.50, output_rate=10.00),
+    # Azure OpenAI list price for text-embedding-3-small. Embeddings have no output tokens.
+    "text-embedding-3-small": ModelRates(input_rate=0.02, output_rate=0.0),
+    "cia-embed": ModelRates(input_rate=0.02, output_rate=0.0),
 }
+
+# Pinned chat deployment. See docs/09-model-deployment.md.
+PINNED_API_VERSION = "2024-10-21"
+CHAT_DEPLOYMENT = "cia-chat"
+CHAT_MODEL = "gpt-4o"
+CHAT_MODEL_VERSION = "2024-11-20"
+
+# cia-embed is deployed and is not the encoder that retrieval scores.
+# The active encoder is the 384-dim local model in src/retrieve/model_config.json.
+# Mixing that space with text-embedding-3-small (1536) is an error in retrieve().
+FOUNDRY_EMBED_DEPLOYMENT = "cia-embed"
+FOUNDRY_EMBED_MODEL = "text-embedding-3-small"
+FOUNDRY_EMBED_VERSION = "1"
+FOUNDRY_EMBED_DIM = 1536
 
 # Default rates if model not in table
 DEFAULT_RATES = ModelRates(input_rate=0.15, output_rate=0.60)
@@ -47,8 +68,8 @@ def get_deployment_config() -> DeploymentConfig:
     """
     endpoint = os.environ.get("AZURE_OPENAI_ENDPOINT", "")
     api_key = os.environ.get("AZURE_OPENAI_API_KEY", "")
-    deployment = os.environ.get("AZURE_OPENAI_DEPLOYMENT", "gpt-4o-mini")
-    api_version = os.environ.get("AZURE_OPENAI_API_VERSION", "2024-08-01-preview")
+    deployment = os.environ.get("AZURE_OPENAI_DEPLOYMENT", CHAT_DEPLOYMENT)
+    api_version = os.environ.get("AZURE_OPENAI_API_VERSION", PINNED_API_VERSION)
 
     if not endpoint:
         raise ValueError("AZURE_OPENAI_ENDPOINT environment variable is required")

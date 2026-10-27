@@ -89,6 +89,10 @@ preview still uses its original in-memory fixture store.
 - **`create_all` is not a migration tool.** Editing a model does not alter an existing
   table. Back up any data worth keeping and implement an explicit migration when
   columns or constraints change. No destructive reset command is supplied.
+- `requirement_versions` now also stores `embedding_model`, `embedding_version`, and
+  `embedding_dim` beside `embedding_blob`. A local database created before that change
+  does not gain the columns on the next `python -m src.persist`. Recreate that file.
+  The three identity columns are null together when a version has no vector yet.
 - Schema constraints still need review before real writes: source-hash uniqueness,
   family/version uniqueness, project-consistent references, deletion rules, and
   event-payload/logging contracts. Initialization does not silently add them.

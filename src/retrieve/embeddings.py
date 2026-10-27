@@ -38,12 +38,15 @@ class LocalEmbedder:
 
         config_bytes = CONFIG_PATH.read_bytes()
         config = json.loads(config_bytes)
-        self.model_id = f"{config['model_id']}@{config['revision']}"
+        self.embedding_model = config["model_id"]
+        self.embedding_version = config["revision"]
+        self.embedding_dim = config["dimensions"]
+        self.model_id = f"{self.embedding_model}@{self.embedding_version}"
         self.config_hash = hashlib.sha1(
             f"blob {len(config_bytes)}\0".encode() + config_bytes
         ).hexdigest()
         self._record_call = record_call
-        self._dimensions = config["dimensions"]
+        self._dimensions = self.embedding_dim
         self._max_tokens = config["max_tokens"]
         self._model = SentenceTransformer(
             config["model_id"],
@@ -88,7 +91,13 @@ class LocalEmbedder:
             ):
                 raise ValueError("Encoder returned an unexpected vector shape")
             return tuple(
-                VectorRecord(embedding_model=self.model_id, embedding=vector) for vector in vectors
+                VectorRecord(
+                    embedding_model=self.embedding_model,
+                    embedding_version=self.embedding_version,
+                    embedding_dim=self.embedding_dim,
+                    embedding=vector,
+                )
+                for vector in vectors
             )
         except Exception as exc:
             error = f"{type(exc).__name__}: {exc}"

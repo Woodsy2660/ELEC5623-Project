@@ -18,6 +18,13 @@ These paths describe files supplied by the future logged caller/harness, not
 evaluation data shipped by this PR. Output goes into an existing directory.
 The tests create temporary software-check inputs; they are not model results.
 
+Ben's database-backed `score.py --run --scenario ... --db ...` remains available.
+That mode reads completed run rows and uses `src/eval/metrics.py`; this PR does
+not replace it or export those rows into the aligned file format. Its macro-F1
+excludes zero-support classes, whereas `--predictions` keeps the fixed label set.
+Both policies are explicit in their output and must not be mixed in a results
+table without declaring the denominator difference.
+
 ## Saved prediction format
 
 `src/eval/classification_schemas.py` defines the label-free run and observation
@@ -50,8 +57,10 @@ must be preserved by the caller, and must not be invented by the model.
 ```
 
 This is a format example, not an actual prediction. `raw_content` must preserve
-the model's per-candidate JSON string before human correction. Its three fields
-match the current LLM-2 output schema. No fence removal, field extraction,
+the model's per-candidate JSON string before human correction. The original three-field records remain supported. Current LLM-2 raw outputs
+also carry the strict boolean `replacement_stated`, which is accepted without
+changing the raw predicted relation. The offline scorer does not apply the live
+caller's supersession-to-contradiction downgrade. No fence removal, field extraction,
 defaulting or other JSON repair is performed. A future baseline/harness exporter
 must supply compatible per-candidate outputs with original logged provenance;
 this scorer does not transform an arbitrary baseline register response.
@@ -124,7 +133,7 @@ or the future database `gold_events` format. Keep labels out of inference inputs
 The output records denominators, coverage, error categories, per-class counts,
 per-case results, prompt/input identity, and prediction/gold file SHA-256 hashes.
 Hashes make source changes detectable; caller-supplied metadata is not verified
-against Azure or a database by this offline command.
+against Azure or a database by this offline file-scoring command.
 
 ## Verification and integration boundary
 

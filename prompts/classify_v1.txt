@@ -32,6 +32,11 @@ Do not infer confirmation authority from names, confident wording or roles.
 Classification does not grant approval; the configured authority and lifecycle
 rules are checked separately. Do not return state transitions or approval fields.
 
+Return replacement_stated as a boolean. Set it true only when the source states
+an explicit replacement obligation that would stand in place of the matched
+requirement. A hedge, a question, or a suggestion that something might change
+is false. Do not invent a replacement to make a supersession label consistent.
+
 Return only the JSON object required by the supplied schema. Give a short rationale
 identifying the relevant evidence and the decisive distinction. Do not provide
 hidden reasoning steps. If evidence is insufficient, do not assert an explicit

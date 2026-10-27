@@ -113,6 +113,42 @@ def test_four_and_six_class_f1_include_control_false_positives(tmp_path: Path) -
     assert result["matching"]["joint_id_relation_accuracy"] == pytest.approx(5 / 6)
 
 
+@pytest.mark.parametrize("replacement_stated", [False, True])
+def test_current_four_field_response_scores_the_raw_relation(
+    tmp_path: Path, replacement_stated: bool
+) -> None:
+    gold = write_gold(tmp_path, [("P1", "replace", "R1", "supersession")])
+    item = prediction("replace", "supersession")
+    content = json.loads(item["raw_content"])
+    content["replacement_stated"] = replacement_stated
+    item["raw_content"] = json.dumps(content)
+
+    result = score(run_data([item]), gold)
+
+    assert result["coverage"] == 1.0
+    assert result["matching"]["joint_id_relation_accuracy"] == 1.0
+    # Offline raw-output scoring must not apply the runtime's soft downgrade.
+    assert result["cases"][0]["predicted_relation"] == "supersession"
+
+
+@pytest.mark.parametrize("replacement_stated", [None, "false", 0, 1, [], {}])
+def test_current_replacement_flag_is_not_coerced_or_dropped(
+    tmp_path: Path, replacement_stated: object
+) -> None:
+    gold = write_gold(tmp_path, [("P1", "replace", "R1", "supersession")])
+    item = prediction("replace", "supersession")
+    content = json.loads(item["raw_content"])
+    content["replacement_stated"] = replacement_stated
+    item["raw_content"] = json.dumps(content)
+
+    result = score(run_data([item]), gold)
+
+    assert result["errors"]["invalid"] == 1
+    assert result["coverage"] == 0.0
+    assert result["matching"]["joint_id_relation_accuracy"] == 0.0
+    assert result["relationships"]["confusion_matrix"]["supersession"]["error"] == 1
+
+
 def test_failures_are_not_dropped_or_reinterpreted_as_no_match(tmp_path: Path) -> None:
     gold = write_gold(
         tmp_path,

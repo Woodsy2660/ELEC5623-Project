@@ -58,7 +58,10 @@ def test_encoding_provenance_and_batch_trace(monkeypatch: pytest.MonkeyPatch) ->
     vectors = embedder.encode(["email login", "password reset"])
     assert len(vectors) == 2
     assert len(vectors[0].embedding) == 384
-    assert vectors[0].embedding_model == embedder.model_id
+    assert vectors[0].embedding_model == "sentence-transformers/all-MiniLM-L6-v2"
+    assert vectors[0].embedding_version == embedder.embedding_version
+    assert vectors[0].embedding_dim == 384
+    assert embedder.model_id == f"{vectors[0].embedding_model}@{vectors[0].embedding_version}"
     assert len(calls) == 1
     assert calls[0].input_tokens == 8
     assert calls[0].error is None
