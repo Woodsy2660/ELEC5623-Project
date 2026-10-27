@@ -17,6 +17,7 @@ from src.eval.metrics import (
     DRIVING_LABELS,
     NULL_RESULT_PROTOCOL,
     SIX_LABELS,
+    _relation_pairs,
     align_by_span,
     e8_from_calls,
     extraction_report,
@@ -30,11 +31,19 @@ from src.eval.metrics import (
     register_accuracy,
     relation_report,
     retrieval_recall,
-    _relation_pairs,
 )
 from src.eval.retrieval_schemas import RetrievalObservation
 from src.persist.database import create_database_engine
-from src.persist.models import Candidate, Event, Meeting, ModelCall, Proposal, Requirement, RequirementVersion, Run
+from src.persist.models import (
+    Candidate,
+    Event,
+    Meeting,
+    ModelCall,
+    Proposal,
+    Requirement,
+    RequirementVersion,
+    Run,
+)
 
 
 class RetrievalGoldCase(BaseModel):
@@ -165,20 +174,26 @@ def _load_scenario_gold(scenario_dir: Path) -> list[dict[str, Any]]:
         raise ValueError("This development scorer does not open holdout files")
     data = yaml.safe_load(gold_path.read_text(encoding="utf-8")) or {}
     events = list(data.get("events") or [])
-    return sorted(events, key=lambda event: (event.get("meeting_ordinal", 0), event.get("event_index", 0)))
+    return sorted(
+        events, key=lambda event: (event.get("meeting_ordinal", 0), event.get("event_index", 0))
+    )
 
 
-def _prediction_records(session, run_id: str) -> tuple[list[dict[str, Any]], list[dict[str, Any]], dict[int, dict[str, dict[str, Any]]]]:
+def _prediction_records(
+    session, run_id: str
+) -> tuple[list[dict[str, Any]], list[dict[str, Any]], dict[int, dict[str, dict[str, Any]]]]:
     proposals = session.query(Proposal).filter(Proposal.run_id == run_id).all()
     candidate_ids = [row.candidate_id for row in proposals]
-    candidates = {
-        row.id: row
-        for row in session.query(Candidate).filter(Candidate.id.in_(candidate_ids)).all()
-    } if candidate_ids else {}
-    meetings = {row.id: row for row in session.query(Meeting).all()}
-    events = (
-        session.query(Event).filter(Event.run_id == run_id).order_by(Event.ts).all()
+    candidates = (
+        {
+            row.id: row
+            for row in session.query(Candidate).filter(Candidate.id.in_(candidate_ids)).all()
+        }
+        if candidate_ids
+        else {}
     )
+    meetings = {row.id: row for row in session.query(Meeting).all()}
+    events = session.query(Event).filter(Event.run_id == run_id).order_by(Event.ts).all()
     created_by_candidate: dict[str, str] = {}
     event_rows = []
     version_events: dict[str, dict[str, Any]] = {}
@@ -193,13 +208,19 @@ def _prediction_records(session, run_id: str) -> tuple[list[dict[str, Any]], lis
                 "meeting_ordinal": payload.get("meeting_ordinal"),
             }
         )
-        if event.event_type == "create" and payload.get("candidate_id") and payload.get("requirement_id"):
+        if (
+            event.event_type == "create"
+            and payload.get("candidate_id")
+            and payload.get("requirement_id")
+        ):
             created_by_candidate.setdefault(payload["candidate_id"], payload["requirement_id"])
         version_events[event.id] = payload
     predictions = []
     for proposal in proposals:
         candidate = candidates.get(proposal.candidate_id)
-        evidence = json.loads(candidate.evidence_json) if candidate and candidate.evidence_json else []
+        evidence = (
+            json.loads(candidate.evidence_json) if candidate and candidate.evidence_json else []
+        )
         rankings = json.loads(proposal.rankings_json) if proposal.rankings_json else {}
         meeting = meetings.get(candidate.meeting_id) if candidate else None
         predictions.append(
@@ -222,7 +243,13 @@ def _prediction_records(session, run_id: str) -> tuple[list[dict[str, Any]], lis
         .join(Requirement, Requirement.id == RequirementVersion.requirement_id)
         .all()
     )
-    ordinals = sorted({row["meeting_ordinal"] for row in event_rows if isinstance(row.get("meeting_ordinal"), int)})
+    ordinals = sorted(
+        {
+            row["meeting_ordinal"]
+            for row in event_rows
+            if isinstance(row.get("meeting_ordinal"), int)
+        }
+    )
     actual_at: dict[int, dict[str, dict[str, Any]]] = {}
     for ordinal in ordinals:
         chosen: dict[str, dict[str, Any]] = {}
@@ -233,7 +260,10 @@ def _prediction_records(session, run_id: str) -> tuple[list[dict[str, Any]], lis
                 continue
             current = chosen.get(version.requirement_id)
             if current is None or version.version >= current["version"]:
-                chosen[version.requirement_id] = {"state": version.state, "version": version.version}
+                chosen[version.requirement_id] = {
+                    "state": version.state,
+                    "version": version.version,
+                }
         actual_at[ordinal] = chosen
     return predictions, event_rows, actual_at
 
@@ -304,7 +334,8 @@ def score_run(
         "headline": "four-class macro-F1 over new, refinement, contradiction, supersession",
         "four_class_macro_f1": e3["relation_four_class"]["macro_f1"],
         "four_class_support": {
-            label: e3["relation_four_class"]["per_class"][label]["support"] for label in DRIVING_LABELS
+            label: e3["relation_four_class"]["per_class"][label]["support"]
+            for label in DRIVING_LABELS
         },
         "four_class_excluded_zero_support": e3["relation_four_class"]["excluded_zero_support"],
         "six_class_macro_f1": e3["relation_six_class"]["macro_f1"],
@@ -323,7 +354,9 @@ def score_run(
             "gold_events": len(gold_events),
             "predictions": len(predictions),
             "aligned": sum(prediction is not None for _, prediction in aligned),
-            "classify_errors": sum(item.get("predicted_relation") == "error" for item in predictions),
+            "classify_errors": sum(
+                item.get("predicted_relation") == "error" for item in predictions
+            ),
         },
         "null_result_protocol": NULL_RESULT_PROTOCOL,
         "notes": (
@@ -353,8 +386,10 @@ def _print_summary(report: dict[str, Any]) -> None:
     print(f"Historical-id accuracy: {report['e3']['historical_id_accuracy']}")
     print(f"No-match: {report['e3']['no_match']}")
     print(f"Joint id and label: {report['e3']['joint_correct_id_and_label']}")
-    print(f"E4 illegal-transition rate: {report['e4_illegal_transition_rate']['rate']} "
-          f"({report['e4_illegal_transition_rate']['illegal']}/{report['e4_illegal_transition_rate']['events']})")
+    print(
+        f"E4 illegal-transition rate: {report['e4_illegal_transition_rate']['rate']} "
+        f"({report['e4_illegal_transition_rate']['illegal']}/{report['e4_illegal_transition_rate']['events']})"
+    )
     e5 = report["e5"]
     for ordinal, meeting in e5["per_meeting"].items():
         print(f"E5 meeting {ordinal}: accuracy={meeting['accuracy']} support={meeting['support']}")
@@ -378,7 +413,9 @@ def main() -> None:
     )
     source.add_argument("--rankings", type=Path, help="Retrieval-only rankings.json")
     parser.add_argument("--gold", type=Path, help="Dev-only retrieval match labels")
-    parser.add_argument("--scenario", type=Path, help="Scenario directory; gold.yaml is read only here")
+    parser.add_argument(
+        "--scenario", type=Path, help="Scenario directory; gold.yaml is read only here"
+    )
     parser.add_argument("--db", type=str, default="sqlite:///pipeline.db")
     parser.add_argument("--output", type=Path, help="Optional metrics JSON output")
     args = parser.parse_args()

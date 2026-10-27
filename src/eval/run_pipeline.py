@@ -20,9 +20,9 @@ from sqlalchemy.orm import Session, sessionmaker
 from src.classify.classify import ClassificationOutcome, classify_candidate
 from src.classify.output import assess_classification
 from src.classify.request import PROMPT_PATH as CLASSIFY_PROMPT_PATH
-from src.classify.schemas import ClassificationInput
+from src.classify.schemas import ClassificationInput, CurrentHead, EvidenceTurn
 from src.engine.proposal_rules import Verdict
-from src.engine.state_machine import EventType
+from src.engine.state_machine import EventType, State
 from src.eval.gold_candidates import gold_candidate_from_event
 from src.extract.extractor import PROMPT_PATH as EXTRACT_PROMPT_PATH
 from src.extract.schemas import Candidate
@@ -32,7 +32,6 @@ from src.logging.calls import CallLogger
 from src.persist.database import create_database_engine
 from src.persist.models import (
     Base,
-    Candidate as CandidateRow,
     Meeting,
     ModelCall,
     Proposal,
@@ -43,14 +42,15 @@ from src.persist.models import (
     Speaker,
     Turn,
 )
+from src.persist.models import (
+    Candidate as CandidateRow,
+)
 from src.persist.register import confirm_current, next_requirement_id, write_version
 from src.retrieve.embedder import Embedder, get_embedder
 from src.retrieve.embeddings import EmbeddingCall
 from src.retrieve.hybrid import retrieve
 from src.retrieve.schemas import RequirementVersion as RetrievalVersion
 from src.retrieve.schemas import RetrievalRequest
-from src.classify.schemas import CurrentHead, EvidenceTurn
-from src.engine.state_machine import State
 from src.validate.schemas import EvidenceSpan
 
 
@@ -109,8 +109,14 @@ def _get_corpus_versions(session: Session, project_id: str) -> list[RetrievalVer
                 )
         if not ver.embedding_blob:
             continue
-        if ver.embedding_model is None or ver.embedding_version is None or ver.embedding_dim is None:
-            raise ValueError(f"Requirement version {ver.id} has an embedding without encoder identity")
+        if (
+            ver.embedding_model is None
+            or ver.embedding_version is None
+            or ver.embedding_dim is None
+        ):
+            raise ValueError(
+                f"Requirement version {ver.id} has an embedding without encoder identity"
+            )
         embedding = tuple(json.loads(ver.embedding_blob.decode("utf-8")))
         if len(embedding) != ver.embedding_dim:
             raise ValueError(
@@ -184,7 +190,9 @@ def _get_speaker_can_confirm(session: Session, project_id: str, speaker_label: s
     return bool(speaker.can_confirm_scope) if speaker is not None else False
 
 
-def _human_decision(mode: str, event_action: str | None, verdict: Verdict, proposed: EventType | None) -> str:
+def _human_decision(
+    mode: str, event_action: str | None, verdict: Verdict, proposed: EventType | None
+) -> str:
     """Eval confirms an allowed proposal unless the gold file says reject.
 
     The action is confirm or reject only. A lifecycle name in that field is ignored
@@ -642,7 +650,9 @@ def run_pipeline(
 
     for meeting_info in sorted(manifest.get("meetings", []), key=lambda item: item["ordinal"]):
         ordinal = meeting_info["ordinal"]
-        meeting = import_meeting(session, project_id, scenario_dir / meeting_info["canonical"], ordinal)
+        meeting = import_meeting(
+            session, project_id, scenario_dir / meeting_info["canonical"], ordinal
+        )
         session.commit()
         meeting_id = meeting.id
         stats["meetings_processed"] += 1

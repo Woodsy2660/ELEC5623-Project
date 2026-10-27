@@ -215,7 +215,9 @@ def test_default_encoder_is_local(monkeypatch: pytest.MonkeyPatch) -> None:
         encoder_kind()
 
 
-def test_register_write_requires_encoder_identity_and_confirm_does_not_add_a_version(tmp_path: Path) -> None:
+def test_register_write_requires_encoder_identity_and_confirm_does_not_add_a_version(
+    tmp_path: Path,
+) -> None:
     engine = create_database_engine(f"sqlite:///{tmp_path / 'reg.db'}")
     Base.metadata.create_all(engine)
     session = sessionmaker(bind=engine)()
@@ -301,7 +303,9 @@ def test_register_write_requires_encoder_identity_and_confirm_does_not_add_a_ver
 
 
 def test_d1_expected_register_follows_the_gold_file() -> None:
-    events = yaml.safe_load(Path("scenarios/dev/D1/gold.yaml").read_text(encoding="utf-8"))["events"]
+    events = yaml.safe_load(Path("scenarios/dev/D1/gold.yaml").read_text(encoding="utf-8"))[
+        "events"
+    ]
     register = expected_register(events, 2)
     assert register["R01"] == {"state": "confirmed", "version": 1}
     assert register["R03"] == {"state": "confirmed", "version": 2}
@@ -329,8 +333,16 @@ def test_span_alignment_does_not_use_statement_text() -> None:
         {"relation": "new", "evidence": [{"turn_id": "T", "start": 10, "end": 15}]},
     ]
     predictions = [
-        {"candidate_id": "a", "evidence": [{"turn_id": "T", "start": 12, "end": 18}], "predicted_relation": "new"},
-        {"candidate_id": "b", "evidence": [{"turn_id": "T", "start": 0, "end": 2}], "predicted_relation": "refinement"},
+        {
+            "candidate_id": "a",
+            "evidence": [{"turn_id": "T", "start": 12, "end": 18}],
+            "predicted_relation": "new",
+        },
+        {
+            "candidate_id": "b",
+            "evidence": [{"turn_id": "T", "start": 0, "end": 2}],
+            "predicted_relation": "refinement",
+        },
     ]
     aligned, spurious = align_by_span(gold, predictions)
     assert spurious == []
@@ -410,14 +422,22 @@ def test_gold_run_does_not_copy_labels_and_retrieval_sees_earlier_versions(tmp_p
     proposals = session.query(Proposal).all()
     assert proposals
     assert {row.predicted_relation for row in proposals} == {"new"}
-    assert all(json.loads(row.retrieved_ids_json) == json.loads(row.rankings_json)["offered"] for row in proposals)
+    assert all(
+        json.loads(row.retrieved_ids_json) == json.loads(row.rankings_json)["offered"]
+        for row in proposals
+    )
     versions = session.query(RequirementVersion).all()
     assert len(versions) == 14
-    assert all(row.embedding_model and row.embedding_version and row.embedding_dim for row in versions)
+    assert all(
+        row.embedding_model and row.embedding_version and row.embedding_dim for row in versions
+    )
     assert session.query(Requirement).count() == 14
     later = max(proposals, key=lambda row: len(json.loads(row.rankings_json)["fused"]))
     assert "R01" in json.loads(later.rankings_json)["fused"]
-    assert session.query(RequirementCurrent).filter(RequirementCurrent.state == "confirmed").count() == 14
+    assert (
+        session.query(RequirementCurrent).filter(RequirementCurrent.state == "confirmed").count()
+        == 14
+    )
     session.close()
     engine.dispose()
     report = score_run(
@@ -431,7 +451,12 @@ def test_gold_run_does_not_copy_labels_and_retrieval_sees_earlier_versions(tmp_p
     assert report["e4_illegal_transition_rate"]["rate"] == 0
     assert report["e5"]["per_meeting"]["2"]["support"] == 8
     assert report["e5"]["per_meeting"]["2"]["accuracy"] != 1
-    assert set(report["four_class_support"]) == {"new", "refinement", "contradiction", "supersession"}
+    assert set(report["four_class_support"]) == {
+        "new",
+        "refinement",
+        "contradiction",
+        "supersession",
+    }
 
 
 def test_baseline_writes_an_illegal_supersession_without_the_engine(tmp_path: Path) -> None:
@@ -489,7 +514,11 @@ def test_sdk_calls_stay_inside_the_logger() -> None:
 
 
 def test_pipeline_modules_do_not_read_gold_labels() -> None:
-    for relative in ("src/eval/run_pipeline.py", "src/eval/run_baseline.py", "src/eval/gold_candidates.py"):
+    for relative in (
+        "src/eval/run_pipeline.py",
+        "src/eval/run_baseline.py",
+        "src/eval/gold_candidates.py",
+    ):
         text = Path(relative).read_text(encoding="utf-8")
         assert '.get("relation")' not in text
         assert '.get("requirement_id")' not in text

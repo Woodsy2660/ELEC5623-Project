@@ -28,7 +28,6 @@ from src.logging.calls import CallLogger, ModelCallError
 from src.persist.database import create_database_engine
 from src.persist.models import (
     Base,
-    Candidate as CandidateRow,
     Proposal,
     Requirement,
     RequirementCurrent,
@@ -36,6 +35,9 @@ from src.persist.models import (
     Run,
     Speaker,
     Turn,
+)
+from src.persist.models import (
+    Candidate as CandidateRow,
 )
 from src.persist.register import confirm_current, next_requirement_id, write_version
 from src.validate.resolve import QuoteAmbiguous, QuoteNotFound, resolve_quote
@@ -171,7 +173,9 @@ def _offered_ids(session, project_id: str) -> list[str]:
     return sorted(requirement_id for (requirement_id,) in rows)
 
 
-def _resolve(change: _Change, turns: dict[str, str], meeting_id: str) -> tuple[list[EvidenceSpan], str | None]:
+def _resolve(
+    change: _Change, turns: dict[str, str], meeting_id: str
+) -> tuple[list[EvidenceSpan], str | None]:
     spans = []
     for item in change.evidence:
         text = turns.get(item.turn_id)
@@ -221,7 +225,12 @@ def run_baseline(
         "scenario": scenario_note,
         "split": "dev" if "dev" in Path(scenario_note).parts else "unspecified",
         "system": "baseline",
-        "extraction": {"returned": 0, "accepted": 0, "rejected_unresolvable": 0, "parse_failures": 0},
+        "extraction": {
+            "returned": 0,
+            "accepted": 0,
+            "rejected_unresolvable": 0,
+            "parse_failures": 0,
+        },
     }
     session.add(
         Run(
@@ -245,7 +254,9 @@ def run_baseline(
     gold_events = []
     gold_path = scenario_dir / "gold.yaml"
     if gold_path.exists():
-        gold_events = (yaml.safe_load(gold_path.read_text(encoding="utf-8")) or {}).get("events") or []
+        gold_events = (yaml.safe_load(gold_path.read_text(encoding="utf-8")) or {}).get(
+            "events"
+        ) or []
     logger = None
     if responder is None:
         logger = CallLogger(
@@ -267,12 +278,17 @@ def run_baseline(
     system_prompt = PROMPT_PATH.read_text(encoding="utf-8")
     for meeting_info in sorted(manifest.get("meetings", []), key=lambda item: item["ordinal"]):
         ordinal = meeting_info["ordinal"]
-        meeting = import_meeting(session, project_id, scenario_dir / meeting_info["canonical"], ordinal)
+        meeting = import_meeting(
+            session, project_id, scenario_dir / meeting_info["canonical"], ordinal
+        )
         session.commit()
         meeting_id = meeting.id
         stats["meetings_processed"] += 1
         turns = (
-            session.query(Turn).filter(Turn.meeting_id == meeting_id).order_by(Turn.turn_index).all()
+            session.query(Turn)
+            .filter(Turn.meeting_id == meeting_id)
+            .order_by(Turn.turn_index)
+            .all()
         )
         register, announced_next = _register_payload(session, project_id)
         user = {
@@ -281,7 +297,9 @@ def run_baseline(
             "next_requirement_id": announced_next,
             "speakers": _speakers(session, project_id),
             "register": register,
-            "turns": [{"turn_id": turn.id, "speaker": turn.speaker, "text": turn.text} for turn in turns],
+            "turns": [
+                {"turn_id": turn.id, "speaker": turn.speaker, "text": turn.text} for turn in turns
+            ],
         }
         messages = [
             {"role": "system", "content": system_prompt},
@@ -337,7 +355,9 @@ def run_baseline(
                 stats["errors"].append(f"{candidate_id}: {error or 'no evidence'}")
                 continue
             if change.relation not in _WRITE:
-                stats["errors"].append(f"{candidate_id}: relation {change.relation} is not a driving label")
+                stats["errors"].append(
+                    f"{candidate_id}: relation {change.relation} is not a driving label"
+                )
                 continue
             candidate = Candidate(
                 candidate_id=candidate_id,
@@ -466,7 +486,9 @@ def run_baseline(
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Run the baseline system (no retrieval, no state engine).")
+    parser = argparse.ArgumentParser(
+        description="Run the baseline system (no retrieval, no state engine)."
+    )
     parser.add_argument("--scenario", type=str, required=True)
     parser.add_argument("--mode", type=str, choices=["demo", "eval"], required=True)
     parser.add_argument("--repeat", type=int, choices=[1, 2, 3], required=True)

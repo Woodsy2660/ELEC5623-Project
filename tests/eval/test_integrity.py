@@ -124,9 +124,7 @@ class TestImportExportRoundTrip:
         baseline_export = export_register(db_session, "D1")
 
         # Create a malformed file
-        with tempfile.NamedTemporaryFile(
-            mode="w", suffix=".jsonl", delete=False
-        ) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".jsonl", delete=False) as f:
             malformed_path = Path(f.name)
             f.write("not valid json {{{")
 
@@ -409,10 +407,12 @@ class TestExportStructure:
             ts=datetime.now(UTC),
             actor="reviewer",
             event_type="reject",
-            payload_json=json.dumps({
-                "requirement_id": "REQ-003",
-                "reason": "Does not meet acceptance criteria",
-            }),
+            payload_json=json.dumps(
+                {
+                    "requirement_id": "REQ-003",
+                    "reason": "Does not meet acceptance criteria",
+                }
+            ),
         )
         db_session.add(event)
         db_session.flush()

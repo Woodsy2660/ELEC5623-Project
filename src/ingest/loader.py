@@ -172,14 +172,11 @@ def import_meeting(
 
     # Verify project_id is part of meeting_id
     if not meeting_id.startswith(project_id):
-        raise MeetingError(
-            f"Meeting ID '{meeting_id}' does not match project '{project_id}'"
-        )
+        raise MeetingError(f"Meeting ID '{meeting_id}' does not match project '{project_id}'")
 
     # Check speaker labels exist in project
     project_speakers = {
-        s.speaker_label
-        for s in session.query(Speaker).filter(Speaker.project_id == project_id)
+        s.speaker_label for s in session.query(Speaker).filter(Speaker.project_id == project_id)
     }
 
     for record in turns_data:
@@ -230,9 +227,7 @@ def _validate_turns(turns_data: list[dict], project_id: str, path: Path) -> None
         # Check required keys
         missing = required_keys - record.keys()
         if missing:
-            raise MeetingError(
-                f"Turn {idx} missing required keys: {sorted(missing)} in {path}"
-            )
+            raise MeetingError(f"Turn {idx} missing required keys: {sorted(missing)} in {path}")
 
         # Validate turn_index is contiguous from 0
         expected_index = idx
@@ -263,9 +258,7 @@ def _validate_turns(turns_data: list[dict], project_id: str, path: Path) -> None
         # Validate turn_id format matches expected pattern
         expected_turn_id = f"{meeting_part}:{expected_index:04d}"
         if turn_id != expected_turn_id:
-            raise MeetingError(
-                f"turn_id format error: expected {expected_turn_id}, got {turn_id}"
-            )
+            raise MeetingError(f"turn_id format error: expected {expected_turn_id}, got {turn_id}")
 
 
 def load_scenario_meetings(session: Session, scenario_dir: Path) -> list[Meeting]:

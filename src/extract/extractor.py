@@ -190,10 +190,7 @@ def extract_candidates(
 
     # Load turns in order, scoped to the meeting
     turns = (
-        session.query(Turn)
-        .filter(Turn.meeting_id == meeting_id)
-        .order_by(Turn.turn_index)
-        .all()
+        session.query(Turn).filter(Turn.meeting_id == meeting_id).order_by(Turn.turn_index).all()
     )
 
     if not turns:
@@ -201,8 +198,7 @@ def extract_candidates(
 
     # Build turns data for the prompt
     turns_data = [
-        {"turn_id": turn.id, "speaker": turn.speaker, "text": turn.text}
-        for turn in turns
+        {"turn_id": turn.id, "speaker": turn.speaker, "text": turn.text} for turn in turns
     ]
 
     # Build turns lookup for resolution

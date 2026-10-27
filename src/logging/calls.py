@@ -177,9 +177,7 @@ def call_model(
                 continue
             else:
                 # Second failure - raise
-                raise ModelCallError(
-                    f"Model call failed after retry: {e}"
-                ) from e
+                raise ModelCallError(f"Model call failed after retry: {e}") from e
 
     # Should never reach here, but for type safety
     raise ModelCallError(f"Model call failed: {last_error}")

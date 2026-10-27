@@ -10,7 +10,6 @@ No network, no API key. These run in CI.
 """
 
 import json
-import tempfile
 from pathlib import Path
 
 import pytest
@@ -162,9 +161,7 @@ class TestImportMeeting:
         manifest = {
             "id": "TEST",
             "name": "Test",
-            "speakers": [
-                {"label": "Speaker1", "role": "Role1", "can_confirm_scope": True}
-            ],
+            "speakers": [{"label": "Speaker1", "role": "Role1", "can_confirm_scope": True}],
         }
         (scenario_dir / "scenario.yaml").write_text(
             f"id: {manifest['id']}\nname: {manifest['name']}\n"
@@ -177,9 +174,30 @@ class TestImportMeeting:
         # Create JSONL with gap (0, 1, 3 - missing 2)
         jsonl_path = scenario_dir / "canonical" / "M01.jsonl"
         lines = [
-            json.dumps({"turn_index": 0, "turn_id": "TEST-M01:0000", "speaker": "Speaker1", "text": "First"}),
-            json.dumps({"turn_index": 1, "turn_id": "TEST-M01:0001", "speaker": "Speaker1", "text": "Second"}),
-            json.dumps({"turn_index": 3, "turn_id": "TEST-M01:0003", "speaker": "Speaker1", "text": "Fourth"}),
+            json.dumps(
+                {
+                    "turn_index": 0,
+                    "turn_id": "TEST-M01:0000",
+                    "speaker": "Speaker1",
+                    "text": "First",
+                }
+            ),
+            json.dumps(
+                {
+                    "turn_index": 1,
+                    "turn_id": "TEST-M01:0001",
+                    "speaker": "Speaker1",
+                    "text": "Second",
+                }
+            ),
+            json.dumps(
+                {
+                    "turn_index": 3,
+                    "turn_id": "TEST-M01:0003",
+                    "speaker": "Speaker1",
+                    "text": "Fourth",
+                }
+            ),
         ]
         jsonl_path.write_text("\n".join(lines))
 
@@ -215,7 +233,9 @@ class TestImportMeeting:
         # Create JSONL with unknown speaker
         jsonl_path = scenario_dir / "canonical" / "M01.jsonl"
         lines = [
-            json.dumps({"turn_index": 0, "turn_id": "TEST-M01:0000", "speaker": "Unknown", "text": "Hello"}),
+            json.dumps(
+                {"turn_index": 0, "turn_id": "TEST-M01:0000", "speaker": "Unknown", "text": "Hello"}
+            ),
         ]
         jsonl_path.write_text("\n".join(lines))
 
@@ -266,12 +286,14 @@ class TestCrossProjectIsolation:
 
             jsonl_path = scenario_dir / "canonical" / "M01.jsonl"
             lines = [
-                json.dumps({
-                    "turn_index": 0,
-                    "turn_id": f"{project_id}-M01:0000",
-                    "speaker": "Speaker1",
-                    "text": f"Text for {project_id}"
-                }),
+                json.dumps(
+                    {
+                        "turn_index": 0,
+                        "turn_id": f"{project_id}-M01:0000",
+                        "speaker": "Speaker1",
+                        "text": f"Text for {project_id}",
+                    }
+                ),
             ]
             jsonl_path.write_text("\n".join(lines))
 
@@ -282,20 +304,14 @@ class TestCrossProjectIsolation:
 
         # Query turns for PROJ_A only
         proj_a_turns = (
-            db_session.query(Turn)
-            .join(Meeting)
-            .filter(Meeting.project_id == "PROJ_A")
-            .all()
+            db_session.query(Turn).join(Meeting).filter(Meeting.project_id == "PROJ_A").all()
         )
         assert len(proj_a_turns) == 1
         assert "PROJ_A" in proj_a_turns[0].id
 
         # Query turns for PROJ_B only
         proj_b_turns = (
-            db_session.query(Turn)
-            .join(Meeting)
-            .filter(Meeting.project_id == "PROJ_B")
-            .all()
+            db_session.query(Turn).join(Meeting).filter(Meeting.project_id == "PROJ_B").all()
         )
         assert len(proj_b_turns) == 1
         assert "PROJ_B" in proj_b_turns[0].id
@@ -343,12 +359,14 @@ class TestTextPreservation:
 
         jsonl_path = scenario_dir / "canonical" / "M01.jsonl"
         lines = [
-            json.dumps({
-                "turn_index": 0,
-                "turn_id": "TEST-M01:0000",
-                "speaker": "Speaker1",
-                "text": original_text
-            }),
+            json.dumps(
+                {
+                    "turn_index": 0,
+                    "turn_id": "TEST-M01:0000",
+                    "speaker": "Speaker1",
+                    "text": original_text,
+                }
+            ),
         ]
         jsonl_path.write_text("\n".join(lines))
 

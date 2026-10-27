@@ -189,7 +189,11 @@ def historical_id_accuracy(
         gold_id = _gold_requirement_id(gold)
         expected = mapping.get(gold_id) if gold_id else None
         predicted = None if prediction is None else prediction.get("predicted_id")
-        if expected is not None and predicted == expected and prediction.get("predicted_relation") != "error":
+        if (
+            expected is not None
+            and predicted == expected
+            and prediction.get("predicted_relation") != "error"
+        ):
             correct += 1
     return {"accuracy": _div(correct, len(cases)), "support": len(cases), "correct": correct}
 
@@ -263,7 +267,9 @@ def invented_id_rate(predictions: list[dict]) -> dict:
 
 
 def false_supersession(aligned: list[tuple[dict, dict | None]]) -> dict:
-    eligible = [(gold, prediction) for gold, prediction in aligned if gold.get("relation") != "supersession"]
+    eligible = [
+        (gold, prediction) for gold, prediction in aligned if gold.get("relation") != "supersession"
+    ]
     applied = 0
     labelled = 0
     for _, prediction in eligible:
@@ -457,7 +463,10 @@ def illegal_transition_rate(events: list[dict]) -> dict:
     state: dict[str, State] = {}
     illegal = 0
     details = []
-    ordered = sorted(events, key=lambda event: (event.get("seq") is None, event.get("seq") or 0, event.get("ts") or ""))
+    ordered = sorted(
+        events,
+        key=lambda event: (event.get("seq") is None, event.get("seq") or 0, event.get("ts") or ""),
+    )
     for event in ordered:
         requirement_id = event.get("requirement_id")
         if not isinstance(requirement_id, str):
@@ -499,7 +508,14 @@ def e8_from_calls(calls: list[dict]) -> dict:
         stage = str(call.get("stage") or "unknown")
         bucket = by_stage.setdefault(
             stage,
-            {"calls": 0, "input_tokens": 0, "output_tokens": 0, "retries": 0, "cost": 0.0, "latency_ms": 0},
+            {
+                "calls": 0,
+                "input_tokens": 0,
+                "output_tokens": 0,
+                "retries": 0,
+                "cost": 0.0,
+                "latency_ms": 0,
+            },
         )
         bucket["calls"] += 1
         bucket["input_tokens"] += int(call.get("input_tokens") or 0)

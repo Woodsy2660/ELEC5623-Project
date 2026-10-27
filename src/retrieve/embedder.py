@@ -82,9 +82,7 @@ class AzurePipelineEmbedder:
     def encode(self, texts: list[str]) -> list[tuple[float, ...]]:
         vectors = self._logger.embed(run_id=self._run_id, texts=texts)
         if len(vectors) != len(texts) or any(len(vector) != self.dim for vector in vectors):
-            raise ValueError(
-                f"cia-embed returned an unexpected shape; expected dim {self.dim}"
-            )
+            raise ValueError(f"cia-embed returned an unexpected shape; expected dim {self.dim}")
         return [_l2_normalize(vector) for vector in vectors]
 
     def fingerprint(self) -> str:
