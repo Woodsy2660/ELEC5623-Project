@@ -11,8 +11,14 @@ MODEL_CACHE = REPO_ROOT / ".venv" / "embedding-cache"
 def main() -> None:
     """Download only the pinned safe weights, tokenizer and SentenceTransformer config."""
     from huggingface_hub import snapshot_download
+    from huggingface_hub.file_download import are_symlinks_supported
 
     config = json.loads(CONFIG_PATH.read_text())
+    # huggingface_hub records symlink support as true before the probe finishes.
+    # A threaded snapshot then creates links and raises WinError 1314 on Windows
+    # without Developer Mode. Probe the repo folder once, up front.
+    repo_folder = MODEL_CACHE / f"models--{config['model_id'].replace('/', '--')}"
+    are_symlinks_supported(repo_folder)
     path = snapshot_download(
         repo_id=config["model_id"],
         revision=config["revision"],
