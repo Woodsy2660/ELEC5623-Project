@@ -3,6 +3,10 @@
 **Owner:** Lucas / Track C. **Traceability:** FR09, with storage primitives for
 E4 and future E1/E7 work. This is not the full persistence or review implementation.
 
+**2026-10-27 status:** The original note below describes the database foundation
+at creation. The current SQLite review service and its remaining limits are in
+[`docs/12-track-c-review.md`](12-track-c-review.md).
+
 ## Decisions already specified
 
 - `docs/02-architecture.md` specifies SQLite, events plus current rows, retained
@@ -47,6 +51,9 @@ automatically; copying the template alone does not configure the process.
 | Audit | `events` |
 | Runs and model-call records | `runs`, `model_calls` |
 | Scoring only | `gold_events` |
+
+`proposal_reviews` is now an additive table for per-proposal review context. It
+does not backfill old proposals; those are left visible and fail closed until+regenerated through the staging adapter.
 
 Initialization creates all 13 tables but does not read, seed, or join gold labels.
 Only `src/eval/score.py` may read `gold_events` when scoring is implemented.

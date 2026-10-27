@@ -18,7 +18,7 @@ import yaml
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from src.engine.state_machine import State
+from src.engine.state_machine import EventType, State, validate_transition
 from src.persist.models import (
     Base,
     Event,
@@ -155,6 +155,11 @@ def _compute_actual_state(
         payload = json.loads(event.payload_json) if event.payload_json else {}
         req_id = payload.get("requirement_id")
 
+        # Track C review events carry the actual meeting ID and immutable version
+        # number. Do not infer a cutoff from a display-name suffix.
+        if "meeting_id" in payload and payload["meeting_id"] not in meeting_ids:
+            continue
+
         # Check if this event's evidence is from meetings we're considering
         evidence = payload.get("evidence", [])
         if evidence:
@@ -178,6 +183,22 @@ def _compute_actual_state(
 
         event_type = event.event_type
         text = payload.get("text", "")
+
+        if "version" in payload:
+            previous = state_map.get(req_id)
+            from_state = previous.state if previous else None
+            state = validate_transition(from_state, EventType(event_type))
+            number = (previous.version if previous else 0) + 1
+            if (
+                state is None
+                or payload["version"] != number
+                or payload.get("from_state") != (from_state.value if from_state else None)
+                or payload.get("to_state") != state.value
+            ):
+                raise ValueError(f"Invalid lifecycle snapshot in event {event.id}")
+            state_map[req_id] = RequirementState(req_id, state, number, text)
+            version_counters[req_id] = number
+            continue
 
         if event_type == "create":
             version_counters[req_id] = 1
@@ -314,12 +335,7 @@ def replay_to_cutoff(
         raise ValueError(f"Run not found: {run_id}")
 
     # Get project ID from first event
-    first_event = (
-        session.query(Event)
-        .filter(Event.run_id == run_id)
-        .order_by(Event.ts)
-        .first()
-    )
+    first_event = session.query(Event).filter(Event.run_id == run_id).order_by(Event.ts).first()
     if first_event is None:
         session.close()
         raise ValueError(f"No events found for run: {run_id}")

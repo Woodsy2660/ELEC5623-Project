@@ -24,6 +24,7 @@ EXPECTED_TABLES = {
     "requirements_current",
     "candidates",
     "proposals",
+    "proposal_reviews",
     "events",
     "runs",
     "model_calls",

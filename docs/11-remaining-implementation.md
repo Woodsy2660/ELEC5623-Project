@@ -445,3 +445,22 @@ After implementation, verify:
 - [ ] Confirm/reject actions persist to database
 - [ ] Register reflects confirmed changes
 - [ ] E1 round-trip test passes with real data
+
+---
+
+## Status update — 2026-10-27
+
+This document's implementation steps above are Ben's planning draft, not the current source of truth. The key former blocker, connecting the local API to SQLite, is implemented for the existing API contract. Track C has also added authenticated review decisions, evidence and state revalidation, versioned writes, transcript import, register export, speaker settings, and review-aware event replay. See [`docs/12-track-c-review.md`](12-track-c-review.md) for startup, behavior, validation, and limits.
+
+| Draft item | Current state |
+|---|---|
+| API to database | Local API reads the configured SQLite database by default. Hosted Vercel explicitly retains fixture mode. |
+| Transcript import | Existing meeting API stores byte-faithful turns and rejects unmapped speakers. The current Import page still has a disabled processing button. |
+| Register export | Local API exports the persisted register and history as JSON. CSV export remains open. |
+| Extracted-candidate pipeline | Still open. Track B's retrieval and classification contracts exist, but `run_pipeline.py` does not call retrieval/classification for extracted candidates. |
+| Speaker role editing | Local authenticated settings route persists roles and authority. The Import page's separate Assign button remains a static preview. |
+| Project deletion | Not implemented. |
+| Full E3/E5/E8 harness and baseline | Not complete. The legacy gold path is not a model classification result and must not be reported as one. |
+| Calendar or live meeting integration | Deferred by the existing cut list and project constraints. |
+
+The ingest command loads scenario metadata and canonical transcripts only. It does not read gold label files. `create_all` adds the new `proposal_reviews` table to an older database without clearing rows or changing existing columns. Database schemas that later change still need explicit migrations.

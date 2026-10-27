@@ -9,13 +9,13 @@ import json
 import pytest
 from fastapi.testclient import TestClient
 
-from src.api.app import app
+from src.api.app import create_app
 from src.api.decisions import confirmation_gate
 from src.api.schemas import EvidenceQuote
 from src.api.store import reset_store
 from src.engine.state_machine import EventType, State
 
-client = TestClient(app)
+client = TestClient(create_app(use_fixtures=True))
 
 EVIDENCE_KEYS = {"turn_id", "speaker", "before", "span", "after"}
 TURN_KEYS = EVIDENCE_KEYS | {"partial"}

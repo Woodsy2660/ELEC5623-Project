@@ -1,6 +1,7 @@
-import type { ReactNode } from 'react'
+import { useState, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { CountBadge } from './CountBadge.tsx'
+import { setReviewerToken } from '../api/client.ts'
 
 export type NavKey = 'home' | 'meetings' | 'register' | 'review' | 'capture' | 'settings'
 
@@ -96,16 +97,32 @@ export function AppShell({
               Settings
             </NavLink>
             <div style={{ padding: '12px 14px', borderTop: '1px solid var(--border-subtle)', marginTop: 8 }}>
-              <div style={{ fontSize: 13 }}>Ben Wood</div>
-              <div className="cia-authority" style={{ fontSize: 12 }}>
-                Cannot confirm scope
-              </div>
+              <ReviewerAccess />
             </div>
           </div>
         </nav>
         {children}
       </div>
     </div>
+  )
+}
+
+function ReviewerAccess() {
+  const [token, setToken] = useState('')
+  const [notice, setNotice] = useState('')
+  return (
+    <details>
+      <summary style={{ fontSize: 13 }}>Reviewer access</summary>
+      <label htmlFor="reviewer-token" style={{ display: 'block', marginTop: 12, fontSize: 12 }}>Access token</label>
+      <input id="reviewer-token" className="fld" type="password" autoComplete="off"
+        value={token} onChange={(event) => setToken(event.target.value)} style={{ width: '100%' }} />
+      <button type="button" className="cia-btn" style={{ marginTop: 8 }} onClick={() => {
+        setReviewerToken(token)
+        setNotice(token ? 'Token set for this tab. The server checks each save.' : 'Reviewer token cleared.')
+        setToken('')
+      }}>Apply</button>
+      {notice && <p role="status" style={{ fontSize: 12 }}>{notice}</p>}
+    </details>
   )
 }
 

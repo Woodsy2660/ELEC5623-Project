@@ -11,6 +11,6 @@ change lasts only as long as that instance does.
 
 from src.api.app import create_app
 
-app = create_app(api_prefix="/api")
+app = create_app(api_prefix="/api", use_fixtures=True)
 # A string literal, so the Vercel builder can see the Vite output directory.
 app.frontend("/", directory="web/dist", fallback="index.html", check_dir=False)

@@ -24,6 +24,8 @@ Coding agents: read `AGENTS.md` first.
 | [`docs/05-annotation-and-corpus.md`](docs/05-annotation-and-corpus.md) | Label definitions, authoring protocol |
 | [`docs/06-build-plan.md`](docs/06-build-plan.md) | Build order, schedule, three-way split, cut list |
 | [`docs/07-conventions.md`](docs/07-conventions.md) | Repo layout, code conventions, logging |
+| [`docs/11-remaining-implementation.md`](docs/11-remaining-implementation.md) | Current implementation status against Ben's draft |
+| [`docs/12-track-c-review.md`](docs/12-track-c-review.md) | SQLite review setup, behavior, validation and remaining work |
 
 ## Team
 

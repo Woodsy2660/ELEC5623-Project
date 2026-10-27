@@ -176,9 +176,8 @@ export function ReviewRoute() {
           <p style={{ margin: '28px 0 0', color: 'var(--ink-meta)' }}>No proposals in this queue.</p>
         )}
         <p style={{ margin: '20px 0 0', maxWidth: 760, fontSize: 13, lineHeight: '20px', color: 'var(--ink-meta)' }}>
-          Rank 2 is the near-duplicate. Both are emails the system sends and both were discussed in adjacent turns;
-          showing what the classifier considered and did not pick is how a reviewer catches a wrong match rather than
-          trusting one.
+          Check the transcript evidence and retrieved alternatives before confirming a change. A model proposal is
+          not client approval. If the requirement has changed since this proposal, reload the queue and regenerate it.
         </p>
       </main>
     </AppShell>

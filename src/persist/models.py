@@ -154,6 +154,20 @@ class Event(Base):
     run_id: Mapped[str | None] = mapped_column(ForeignKey("runs.id"), nullable=True)
 
 
+class ProposalReview(Base):
+    """Additive review metadata; old proposals are never silently backfilled."""
+
+    __tablename__ = "proposal_reviews"
+
+    proposal_id: Mapped[str] = mapped_column(ForeignKey("proposals.id"), primary_key=True)
+    expected_version_id: Mapped[str | None] = mapped_column(String, nullable=True)
+    expected_retrieval_heads_json: Mapped[str | None] = mapped_column(Text, nullable=True)
+    speaker_label: Mapped[str] = mapped_column(String, nullable=False)
+    rationale: Mapped[str] = mapped_column(Text, nullable=False)
+    embedding_json: Mapped[str | None] = mapped_column(Text, nullable=True)
+    decision_event_id: Mapped[str | None] = mapped_column(ForeignKey("events.id"), nullable=True)
+
+
 # Run management
 
 

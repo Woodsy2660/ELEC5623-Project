@@ -2,7 +2,12 @@
 pydantic==2.9.2
 sqlalchemy==2.0.35
 
-# Fixture API (no database). The state engine stays in Python.
+# Integrated Track A modules, also pinned by the Track B compatibility branch.
+openai==1.109.1
+PyYAML==6.0.3
+Jinja2==3.1.6
+
+# Local SQLite review API. The state engine stays in Python.
 fastapi==0.142.2
 uvicorn==0.54.0
 

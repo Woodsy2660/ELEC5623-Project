@@ -61,3 +61,16 @@ def transaction(engine: Engine) -> Iterator[Session]:
     """
     with Session(engine) as session, session.begin():
         yield session
+
+
+@contextmanager
+def review_transaction(engine: Engine) -> Iterator[Session]:
+    """Serialize SQLite review writers before reading the current pointer."""
+    with Session(engine) as session:
+        try:
+            session.connection().exec_driver_sql("BEGIN IMMEDIATE")
+            yield session
+            session.commit()
+        except BaseException:
+            session.rollback()
+            raise

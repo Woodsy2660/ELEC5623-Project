@@ -2,10 +2,16 @@ import type { components } from './schema'
 
 export type Schemas = components['schemas']
 
-// Dev talks to the local fixture API. A production build calls `/api` on the
+// Dev talks to the local API. A production build calls `/api` on the
 // same host. Set VITE_API_BASE to override either one.
 const baseUrl =
   import.meta.env.VITE_API_BASE ?? (import.meta.env.DEV ? 'http://127.0.0.1:8000' : '/api')
+
+// Kept in this tab's memory only; never included in a build or browser storage.
+let reviewerToken = ''
+export function setReviewerToken(value: string) {
+  reviewerToken = value
+}
 
 export class ApiError extends Error {
   readonly status: number
@@ -24,6 +30,8 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     headers: {
       Accept: 'application/json',
       ...(init?.body ? { 'Content-Type': 'application/json' } : {}),
+      ...(reviewerToken && init?.method && init.method !== 'GET'
+        ? { Authorization: `Bearer ${reviewerToken}` } : {}),
       ...init?.headers,
     },
   })
@@ -40,6 +48,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 }
 
 export const api = {
+  exportUrl: (projectId: string) => `${baseUrl}/projects/${encodeURIComponent(projectId)}/export`,
   projects: () => request<Schemas['ProjectOut'][]>('/projects'),
   requirements: (projectId: string) =>
     request<Schemas['RegisterRow'][]>(`/projects/${projectId}/requirements`),

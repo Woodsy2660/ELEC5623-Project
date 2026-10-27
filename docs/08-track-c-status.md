@@ -8,6 +8,10 @@ interfaces offered to other tracks, and decisions that still require agreement.
 
 **Last reviewed:** 2026-10-13, after merging upstream `219a5a4` into `lucas-track-c`.
 
+> **Current status:** The dated section below records the earlier hand-off. The
+> 2026-10-27 implementation, local setup, verified behavior, and remaining work are
+> maintained in [`docs/12-track-c-review.md`](12-track-c-review.md).
+
 ## Implemented now
 
 - The existing upstream `src/engine/state_machine.py` is a pure, standard-library
