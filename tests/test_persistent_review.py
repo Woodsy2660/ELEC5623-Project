@@ -11,6 +11,7 @@ from sqlalchemy import event, func, select
 from sqlalchemy.orm import Session
 
 from src.api.app import create_app
+from src.api.queries import proposals as query_proposals
 from src.classify.schemas import Classification
 from src.eval.replay_to_cutoff import _compute_actual_state
 from src.persist.database import (
@@ -49,7 +50,12 @@ AUTH = {"Authorization": "Bearer synthetic-test-token"}
 
 def synthetic_embedding(text: str) -> VectorRecord:
     """Deliberately synthetic vectors for transaction tests, not retrieval quality."""
-    return VectorRecord(embedding_model="test-only@1", embedding=(float(len(text)), 1.0))
+    return VectorRecord(
+        embedding_model="test-only",
+        embedding_version="1",
+        embedding_dim=2,
+        embedding=(float(len(text)), 1.0),
+    )
 
 
 @pytest.fixture
@@ -213,17 +219,17 @@ def test_confirm_persists_and_reopens_with_evidence_and_history(database):
         )
         assert response.status_code == 200, response.text
         assert response.json()["to_state"] == "confirmed"
-    assert counts(engine) == (3, 1, 2, 1)  # Create, Confirm, review audit; two immutable versions.
+    assert counts(engine) == (3, 1, 1, 1)  # Create, Confirm, review audit; one current version.
     with api(url) as reopened:
         rows = reopened.get("/projects/P1/requirements").json()
         assert len(rows) == 1 and rows[0]["state"] == "confirmed"
         rid = rows[0]["requirement_id"]
         detail = reopened.get(f"/projects/P1/requirements/{rid}").json()
-        assert [v["state"] for v in detail["timeline"]] == ["proposed", "confirmed"]
+        assert [v["state"] for v in detail["timeline"]] == ["confirmed"]
         assert reopened.get("/projects/P2/requirements").json() == []
         assert reopened.get(f"/projects/P2/requirements/{rid}").status_code == 404
         exported = reopened.get("/projects/P1/export").json()
-        assert len(exported["requirements"][0]["versions"]) == 2
+        assert len(exported["requirements"][0]["versions"]) == 1
         duplicate = reopened.post(
             f"/proposals/{pid}/decision", headers=AUTH, json={"action": "confirm"}
         )
@@ -287,7 +293,7 @@ def test_supersession_preserves_old_text_and_creates_linked_confirmed_replacemen
             == rid
         )
         versions, _ = retrieval_snapshot(db, "P1")
-        assert len(versions) == 5
+        assert len(versions) == 3
 
 
 @pytest.mark.parametrize(
@@ -324,6 +330,18 @@ def test_reject_and_no_op_are_audited_without_mutating_register(database):
     assert counts(engine) == (before[0] + 1, *before[1:])
 
 
+def test_queue_does_not_resurface_legacy_decisions_after_schema_upgrade(database):
+    engine, _ = database
+    pid = stage(engine)
+    decide(engine, pid)
+    with transaction(engine) as db:
+        # The old C schema stored the decision only on ProposalReview.
+        db.get(Proposal, pid).decision = None
+        queue = query_proposals(db, "P1")
+        assert queue.proposals == []
+        assert queue.queue_label == "0 pending proposals"
+
+
 def test_refine_edits_reembed_and_preserve_original_prediction(database):
     engine, _ = database
     rid = family(engine)
@@ -341,7 +359,7 @@ def test_refine_edits_reembed_and_preserve_original_prediction(database):
         p = db.get(Proposal, pid)
         assert db.get(Candidate, p.candidate_id).text_norm == "Longer sessions."
         assert db.get(RequirementCurrent, rid).text == "Sessions expire after 30 minutes."
-        assert len(db.scalars(select(RequirementVersion)).all()) == 3
+        assert len(db.scalars(select(RequirementVersion)).all()) == 2
 
 
 def test_stale_proposal_and_revoked_authority_are_rechecked(database):
@@ -369,6 +387,17 @@ def test_stale_proposal_and_revoked_authority_are_rechecked(database):
             ).status_code
             == 409
         )
+
+
+def test_new_family_invalidates_a_staged_no_match_proposal(database):
+    engine, _ = database
+    first = stage(engine, text="Users can sign in.")
+    stale = stage(engine, text="Users can access invoices.")
+    decide(engine, first)
+    before = counts(engine)
+    with pytest.raises(ReviewConflict, match="Project requirements or states changed"):
+        decide(engine, stale)
+    assert counts(engine) == before
 
 
 @pytest.mark.parametrize(
@@ -442,7 +471,7 @@ def test_two_reviewers_cannot_commit_the_same_proposal(database):
 
     with ThreadPoolExecutor(max_workers=2) as pool:
         assert sorted(pool.map(attempt, range(2))) == [False, True]
-    assert counts(engine) == (3, 1, 2, 1)
+    assert counts(engine) == (3, 1, 1, 1)
 
 
 def test_embedding_failure_prevents_all_register_writes(database):
@@ -454,6 +483,27 @@ def test_embedding_failure_prevents_all_register_writes(database):
 
     with pytest.raises(ReviewConflict, match="Model unavailable"):
         decide(engine, pid, embed=fail)
+    assert counts(engine) == (0, 0, 0, 0)
+
+
+def test_edited_text_cannot_switch_the_proposal_embedding_contract(database):
+    engine, _ = database
+    pid = stage(engine)
+    with transaction(engine) as db:
+        db.get(ProposalReview, pid).embedding_json = synthetic_embedding(
+            "Users can sign in."
+        ).model_dump_json()
+
+    def incompatible_embedding(_text):
+        return VectorRecord(
+            embedding_model="other-model",
+            embedding_version="1",
+            embedding_dim=2,
+            embedding=(1.0, 1.0),
+        )
+
+    with pytest.raises(ReviewConflict, match="does not match the Track B proposal encoder"):
+        decide(engine, pid, "edit", "Users sign in with SSO.", incompatible_embedding)
     assert counts(engine) == (0, 0, 0, 0)
 
 
@@ -528,4 +578,4 @@ def test_precomputed_candidate_embedding_is_saved_without_a_model_call(database)
     decide(engine, pid, embed=unexpected)
     with Session(engine) as db:
         versions, _ = retrieval_snapshot(db, "P1")
-        assert len(versions) == 2
+        assert len(versions) == 1

@@ -18,7 +18,8 @@ from sqlalchemy.orm import Session
 
 from src.classify.schemas import Classification
 from src.engine.proposal_rules import RuleVerdict, Verdict, assess_proposal
-from src.engine.state_machine import EventType, State, validate_transition
+from src.engine.state_machine import EventType, State
+from src.extract.schemas import Candidate as CandidateData
 from src.persist.models import (
     Candidate,
     Event,
@@ -31,6 +32,8 @@ from src.persist.models import (
     Speaker,
     Turn,
 )
+from src.persist.register import confirm_current, write_supersession_replacement, write_version
+from src.persist.retrieval import vector_record_from_version
 from src.retrieve.schemas import VectorRecord
 from src.validate.resolve import validate_candidate
 from src.validate.schemas import EvidenceSpan
@@ -122,10 +125,50 @@ def current_head(session: Session, project_id: str, requirement_id: str) -> Requ
     return head
 
 
+ProjectHeadSnapshot = dict[str, dict[str, str | int]]
+
+
+def project_head_snapshot(session: Session, project_id: str) -> ProjectHeadSnapshot:
+    """Capture version and state for every family so later proposals detect all changes."""
+    rows = session.execute(
+        select(
+            Requirement.id,
+            RequirementCurrent.current_version_id,
+            RequirementCurrent.state,
+            RequirementCurrent.text,
+            RequirementVersion.version,
+            RequirementVersion.state,
+            RequirementVersion.text,
+        )
+        .outerjoin(RequirementCurrent, RequirementCurrent.requirement_id == Requirement.id)
+        .outerjoin(
+            RequirementVersion,
+            RequirementVersion.id == RequirementCurrent.current_version_id,
+        )
+        .where(Requirement.project_id == project_id)
+        .order_by(Requirement.id)
+    )
+    snapshot = {}
+    for family_id, version_id, head_state, head_text, version, version_state, version_text in rows:
+        if (
+            version_id is None
+            or version is None
+            or head_state != version_state
+            or head_text != version_text
+        ):
+            raise ReviewConflict(f"Requirement {family_id} has an invalid current pointer")
+        snapshot[family_id] = {
+            "version_id": version_id,
+            "version": version,
+            "state": head_state,
+        }
+    return snapshot
+
+
 def require_project_embedding_contract(
     session: Session, project_id: str, vector: VectorRecord
 ) -> None:
-    """Keep retained versions retrieval-compatible; fail closed on legacy blobs."""
+    """Keep every retained version aligned with B's model/version/dimension contract."""
     rows = session.scalars(
         select(RequirementVersion)
         .join(Requirement, Requirement.id == RequirementVersion.requirement_id)
@@ -133,17 +176,33 @@ def require_project_embedding_contract(
     )
     for version in rows:
         try:
-            previous = VectorRecord.model_validate_json(version.embedding_blob)
-        except (ValueError, TypeError) as exc:
+            previous = vector_record_from_version(version)
+        except ValueError as exc:
             raise ReviewConflict(
                 f"Version {version.id} has no verifiable embedding metadata; migrate it before writing"
             ) from exc
-        if previous.embedding_model != vector.embedding_model or len(previous.embedding) != len(
-            vector.embedding
+        if (
+            previous.embedding_model != vector.embedding_model
+            or previous.embedding_version != vector.embedding_version
+            or previous.embedding_dim != vector.embedding_dim
         ):
             raise ReviewConflict(
-                "New vector does not match this project's retrieval model and dimensions"
+                "New vector does not match this project's retrieval model, version, and dimensions"
             )
+
+
+def _next_event_seq(session: Session, run_id: str) -> int:
+    """Allocate the next replay order for events written after a proposal is reviewed."""
+    largest = 0
+    for event in session.scalars(select(Event).where(Event.run_id == run_id)):
+        try:
+            payload = json.loads(event.payload_json)
+        except (TypeError, ValueError):
+            continue
+        value = payload.get("seq")
+        if isinstance(value, int) and value > largest:
+            largest = value
+    return largest + 1
 
 
 def assess_stored_proposal(session: Session, proposal: Proposal) -> RuleVerdict:
@@ -156,7 +215,7 @@ def assess_stored_proposal(session: Session, proposal: Proposal) -> RuleVerdict:
         raise ReviewConflict(
             "Proposal has no review snapshot; regenerate it through stage_proposal"
         )
-    if context.decision_event_id:
+    if context.decision_event_id or proposal.decision is not None:
         raise ReviewConflict("Proposal already decided")
     evidence_speakers = {turns[s.turn_id].speaker for s in spans}
     if evidence_speakers != {context.speaker_label}:
@@ -177,6 +236,16 @@ def assess_stored_proposal(session: Session, proposal: Proposal) -> RuleVerdict:
         raise ReviewConflict("Proposal has invalid retrieval snapshot") from exc
     if expected_heads is None or expected_heads != heads:
         raise ReviewConflict("Retrieved requirements changed since this proposal; regenerate it")
+    if context.expected_project_heads_json is None:
+        raise ReviewConflict("Proposal has no project snapshot; regenerate it before review")
+    try:
+        expected_project_heads = json.loads(context.expected_project_heads_json)
+    except (TypeError, ValueError) as exc:
+        raise ReviewConflict("Proposal has an invalid project snapshot") from exc
+    if expected_project_heads != project_head_snapshot(session, meeting.project_id):
+        raise ReviewConflict(
+            "Project requirements or states changed since this proposal; regenerate it"
+        )
     head = None
     if proposal.predicted_id is not None:
         head = current_head(session, meeting.project_id, proposal.predicted_id)
@@ -201,6 +270,9 @@ def stage_proposal(
     classification: Classification,
     speaker_label: str,
     embedding: VectorRecord | None = None,
+    rankings: dict[str, object] | None = None,
+    downgraded: bool = False,
+    expected_project_heads: ProjectHeadSnapshot | None = None,
 ) -> Proposal:
     """A/B integration entry point. Staging never creates a register row or event.
 
@@ -211,13 +283,24 @@ def stage_proposal(
     if candidate is None:
         raise ReviewConflict("Unknown candidate")
     meeting, _, _ = candidate_evidence(session, candidate)
-    heads = {
-        rid: current_head(session, meeting.project_id, rid).current_version_id
-        for rid in classification.retrieved_ids
-    }
+    project_heads = (
+        expected_project_heads
+        if expected_project_heads is not None
+        else project_head_snapshot(session, meeting.project_id)
+    )
+    heads = {}
+    for rid in classification.retrieved_ids:
+        snapshot = project_heads.get(rid)
+        if snapshot is None or not isinstance(snapshot.get("version_id"), str):
+            raise ReviewConflict(
+                f"Retrieved requirement {rid} is missing from the project snapshot"
+            )
+        heads[rid] = snapshot["version_id"]
     expected = None
     if classification.matched_requirement_id:
-        expected = current_head(session, meeting.project_id, classification.matched_requirement_id)
+        expected = project_heads.get(classification.matched_requirement_id)
+        if expected is None or not isinstance(expected.get("version_id"), str):
+            raise ReviewConflict("Matched requirement is missing from the project snapshot")
     proposal = Proposal(
         id=str(uuid4()),
         run_id=candidate.run_id,
@@ -227,17 +310,22 @@ def stage_proposal(
         predicted_relation=classification.relation.value,
         proposed_event="none",
         engine_verdict=Verdict.REJECTED.value,
+        rankings_json=json.dumps(rankings) if rankings is not None else None,
+        decision=None,
+        downgraded=downgraded,
     )
     session.add(proposal)
     session.flush()
     session.add(
         ProposalReview(
             proposal_id=proposal.id,
-            expected_version_id=expected.current_version_id if expected else None,
+            expected_version_id=expected["version_id"] if expected else None,
             expected_retrieval_heads_json=json.dumps(heads, sort_keys=True),
+            expected_project_heads_json=json.dumps(project_heads, sort_keys=True),
             speaker_label=speaker_label,
             rationale=classification.rationale,
             embedding_json=embedding.model_dump_json() if embedding is not None else None,
+            classifier_replacement_stated=classification.replacement_stated,
         )
     )
     session.flush()
@@ -250,85 +338,6 @@ def stage_proposal(
         proposal.engine_verdict = Verdict.REJECTED.value
     session.flush()
     return proposal
-
-
-def _append_version(
-    session: Session,
-    *,
-    proposal: Proposal,
-    project_id: str,
-    requirement_id: str,
-    event_type: EventType,
-    text: str,
-    evidence: list[EvidenceSpan],
-    vector: VectorRecord,
-    actor: str,
-    links: dict[str, str] | None = None,
-) -> Event:
-    head = session.get(RequirementCurrent, requirement_id)
-    from_state = State(head.state) if head else None
-    state = validate_transition(from_state, event_type)
-    if state is None:
-        raise ReviewConflict(f"Illegal transition from {from_state} via {event_type.value}")
-    if head:
-        current_head(session, project_id, requirement_id)
-    else:
-        if session.get(Requirement, requirement_id):
-            raise ReviewConflict("Requirement has no current pointer")
-        session.add(Requirement(id=requirement_id, project_id=project_id))
-        session.flush()
-    previous = session.get(RequirementVersion, head.current_version_id) if head else None
-    number = previous.version + 1 if previous else 1
-    event = Event(
-        id=str(uuid4()),
-        project_id=project_id,
-        ts=datetime.now(UTC),
-        actor=actor,
-        event_type=event_type.value,
-        run_id=proposal.run_id,
-        payload_json=json.dumps(
-            {
-                "requirement_id": requirement_id,
-                "proposal_id": proposal.id,
-                "candidate_id": proposal.candidate_id,
-                "meeting_id": session.get(Candidate, proposal.candidate_id).meeting_id,
-                "text": text,
-                "version": number,
-                "from_state": from_state.value if from_state else None,
-                "to_state": state.value,
-                "evidence": [s.model_dump() for s in evidence],
-                "relation": proposal.predicted_relation,
-                **(links or {}),
-            }
-        ),
-    )
-    session.add(event)
-    session.flush()
-    version = RequirementVersion(
-        id=str(uuid4()),
-        requirement_id=requirement_id,
-        version=number,
-        text=text,
-        state=state.value,
-        evidence_json=json.dumps([s.model_dump() for s in evidence]),
-        embedding_blob=vector.model_dump_json().encode(),
-        created_event_id=event.id,
-    )
-    session.add(version)
-    session.flush()
-    if head is None:
-        session.add(
-            RequirementCurrent(
-                requirement_id=requirement_id,
-                current_version_id=version.id,
-                state=state.value,
-                text=text,
-            )
-        )
-    else:
-        head.current_version_id, head.state, head.text = version.id, state.value, text
-    session.flush()
-    return event
 
 
 def commit_decision(
@@ -347,13 +356,17 @@ def commit_decision(
     if proposal is None:
         raise ReviewConflict("Unknown proposal")
     candidate = session.get(Candidate, proposal.candidate_id)
+    if candidate is None:
+        raise ReviewConflict("Proposal candidate is missing")
     meeting = session.get(Meeting, candidate.meeting_id)
+    if meeting is None:
+        raise ReviewConflict("Proposal meeting is missing")
     context = session.get(ProposalReview, proposal.id)
     if context is None:
         raise ReviewConflict(
             "Proposal has no review snapshot; regenerate it through stage_proposal"
         )
-    if context.decision_event_id:
+    if context.decision_event_id or proposal.decision is not None:
         raise ReviewConflict("Proposal already decided")
     head = None
     if proposal.predicted_id:
@@ -374,57 +387,100 @@ def commit_decision(
             raise ReviewConflict("A no-op cannot change requirement text")
         if verdict.verdict == Verdict.ALLOWED:
             _, spans, _ = candidate_evidence(session, candidate)
+            proposal_vector = None
+            if context.embedding_json is not None:
+                try:
+                    proposal_vector = VectorRecord.model_validate_json(context.embedding_json)
+                except (TypeError, ValueError) as exc:
+                    raise ReviewConflict("Proposal embedding is invalid") from exc
             vector = (
-                VectorRecord.model_validate_json(context.embedding_json)
-                if context.embedding_json is not None and text == candidate.text_norm
+                proposal_vector
+                if proposal_vector is not None and text == candidate.text_norm
                 else embed_text(text)
             )
             if not isinstance(vector, VectorRecord):
                 raise ReviewConflict("Embedding provider must return a validated VectorRecord")
+            if proposal_vector is not None and text != candidate.text_norm:
+                if (
+                    vector.embedding_model != proposal_vector.embedding_model
+                    or vector.embedding_version != proposal_vector.embedding_version
+                    or vector.embedding_dim != proposal_vector.embedding_dim
+                ):
+                    raise ReviewConflict(
+                        "Edited text embedding does not match the Track B proposal encoder"
+                    )
             require_project_embedding_contract(session, meeting.project_id, vector)
             event_type = verdict.proposed_event
             rid = proposal.predicted_id or str(uuid4())
-            args = dict(
-                session=session,
-                proposal=proposal,
-                project_id=meeting.project_id,
-                evidence=spans,
-                actor=decision.actor,
+            classification = Classification(
+                matched_requirement_id=proposal.predicted_id,
+                relation=proposal.predicted_relation,
+                rationale=context.rationale,
+                retrieved_ids=_IDS.validate_json(proposal.retrieved_ids_json, strict=True),
+                replacement_stated=context.classifier_replacement_stated is True,
             )
+            candidate_data = CandidateData(
+                candidate_id=candidate.id,
+                project_id=meeting.project_id,
+                meeting_id=meeting.id,
+                text_norm=text,
+                evidence=spans,
+                atomic=True,
+            )
+            seq = _next_event_seq(session, proposal.run_id)
             if event_type == EventType.SUPERSEDE:
                 replacement_id = str(uuid4())
-                # Preserve the old statement; the new statement belongs to the replacement family.
-                old_vector = embed_text(head.text)
-                _append_version(
-                    **args,
+                write_supersession_replacement(
+                    session,
+                    project_id=meeting.project_id,
+                    run_id=proposal.run_id,
                     requirement_id=rid,
-                    event_type=event_type,
-                    text=head.text,
-                    vector=old_vector,
-                    links={"replacement_requirement_id": replacement_id},
+                    replacement_requirement_id=replacement_id,
+                    candidate=candidate_data,
+                    classification=classification,
+                    meeting_ordinal=meeting.ordinal,
+                    seq=seq,
+                    embedding=vector.embedding,
+                    embedding_model=vector.embedding_model,
+                    embedding_version=vector.embedding_version,
+                    embedding_dim=vector.embedding_dim,
+                    actor=decision.actor,
+                    proposal_id=proposal.id,
                 )
-                for transition in (EventType.CREATE, EventType.CONFIRM):
-                    _append_version(
-                        **args,
-                        requirement_id=replacement_id,
-                        event_type=transition,
-                        text=text,
-                        vector=vector,
-                        links={"replaces_requirement_id": rid},
-                    )
                 final_state = State.SUPERSEDED
             else:
-                _append_version(
-                    **args, requirement_id=rid, event_type=event_type, text=text, vector=vector
+                event_links = {"proposal_id": proposal.id}
+                write_version(
+                    session,
+                    project_id=meeting.project_id,
+                    run_id=proposal.run_id,
+                    requirement_id=rid,
+                    event_type=event_type,
+                    resulting_state=verdict.resulting_state,
+                    candidate=candidate_data,
+                    classification=classification,
+                    meeting_ordinal=meeting.ordinal,
+                    seq=seq,
+                    embedding=vector.embedding,
+                    embedding_model=vector.embedding_model,
+                    embedding_version=vector.embedding_version,
+                    embedding_dim=vector.embedding_dim,
+                    actor=decision.actor,
+                    event_links=event_links,
                 )
                 final_state = verdict.resulting_state
                 if event_type == EventType.CREATE:
-                    _append_version(
-                        **args,
+                    confirm_current(
+                        session,
+                        project_id=meeting.project_id,
+                        run_id=proposal.run_id,
                         requirement_id=rid,
-                        event_type=EventType.CONFIRM,
-                        text=text,
-                        vector=vector,
+                        candidate=candidate_data,
+                        classification=classification,
+                        meeting_ordinal=meeting.ordinal,
+                        seq=seq + 1,
+                        actor=decision.actor,
+                        event_links=event_links,
                     )
                     event_type, final_state = EventType.CONFIRM, State.CONFIRMED
             changed = True
@@ -453,6 +509,7 @@ def commit_decision(
         )
     )
     session.flush()
+    proposal.decision = decision.action
     context.decision_event_id = result.id
     session.flush()
     return result

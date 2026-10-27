@@ -26,21 +26,32 @@ contracts already present in Tracks A and B.
 - `stage_proposal` is the A/B adapter boundary. It persists the candidate, offered
   requirement IDs, prediction, rationale, speaker and the expected current version.
   It does not create or update a requirement.
+- `run_pipeline --mode demo --candidate-source extracted` uses Track B retrieval and
+  classification, then stages each valid result through `stage_proposal`. The review
+  API can read that same SQLite database. Demo mode rejects `gold` as its candidate
+  source. Eval mode remains separate; see the open decision-gate issue below before
+  using it for measurements.
+- The database review queue reports A's `rejected_unresolvable` count from runs with
+  a recorded project ID. Older run notes have no project ID, so their extraction
+  rejects cannot be attributed safely.
 - The decision service re-reads the candidate and transcript, checks exact evidence
   offsets against the source turn, confirms the evidence belongs to the same project
   and meeting, reads configured speaker authority, verifies every offered ID belongs
-  to that project, and checks the matched ID was actually offered. It snapshots and
-  rechecks the current version of every offered family, so a no-match decision also
-  expires when its retrieval context changes. It then calls the standard-library `assess_proposal` rules and
-  lifecycle engine again while holding the SQLite write lock.
+  to that project, and checks the matched ID was actually offered. It snapshots the
+  full project register as well as every offered family. A new family, changed version
+  or changed lifecycle state makes a pending decision stale, including a previous
+  no-match. It then calls the standard-library `assess_proposal` rules and lifecycle
+  engine again while holding the SQLite write lock.
 - Confirm, reject and text edit decisions append a review audit. A confirmed state
-  change, new version, current-row pointer and review record commit in one transaction.
+  change, version row, current-row pointer and review record commit in one transaction.
   A failed embedding or write leaves the register unchanged; invalid decisions return
   409 and append a blocked-review audit.
-- A new requirement writes Create then Confirm. A supersession preserves the old text
-  and history, marks its family Superseded, creates a new replacement family as
-  Proposed then Confirmed, and records both family IDs on the related events. No-op
-  and reject decisions create an audit event without changing requirements.
+- A new requirement writes Create then Confirm events against one version row; Confirm
+  updates that version's state in place, matching Track B's register writer. A
+  supersession preserves the old text and history, marks its family Superseded, creates
+  a separate replacement family through Create then Confirm events, and records both
+  family IDs on the related events. No-op and reject decisions create an audit event
+  without changing requirements.
 - The existing cutoff replay reads these versioned events and validates their state
   and version sequence. Legacy unversioned events retain their old replay path.
 - The lifecycle transition test oracle is now an independent table copied from the
@@ -58,30 +69,80 @@ unresolved. This small rule is a safety filter; it does not claim general natura
 language understanding.
 
 The `proposal_reviews` table is additive and never backfills earlier proposal rows.
-Proposals lacking this review context stay visible but cannot be confirmed. B may pass
-the candidate's validated `VectorRecord` to `stage_proposal` so a reviewer can reuse
-it without another model call. Edited text uses the local pinned embedder and its trace
+Old pending proposals without the new full-project snapshot stay visible but cannot be
+confirmed; stage them again against the current register. Old completed decisions are
+recognized through `decision_event_id` and stay out of the pending queue. B passes the
+candidate's validated `VectorRecord` to `stage_proposal` so a reviewer can reuse it
+without another model call. Edited text uses the local pinned embedder and its trace
 adapter. Embedding weights must already be cached; review never downloads a model or
-calls Azure. Invalid, missing or inconsistent vectors fail closed.
+calls Azure. An edit is blocked if its encoder identity differs from B's proposal
+vector or any retained project vector.
 
-## Local startup
+Track B stores vectors as JSON arrays and records `embedding_model`,
+`embedding_version` and `embedding_dim` in columns. Initialization adds the missing
+columns to existing SQLite tables. A legacy full `VectorRecord` blob is converted
+only when its model identity validates; a bare vector without provenance remains
+unverified and blocks retrieval or writes until explicitly migrated.
 
-From the repository root, install `requirements.txt` into this repository's virtual
-environment. `.env` is not loaded automatically; set the variables in the process
-environment:
+Pipeline-local embedding calls are written to the same run's `model_calls` table in
+their own transaction, so a later candidate failure cannot roll back their trace.
+Text edits made in the review API use Track B's isolated local trace database.
+
+## Local demo on Windows PowerShell
+
+Run these commands from the repository root. `requirements-retrieval.txt` includes
+the pinned Python dependencies and the local embedding runtime. The embedding weights
+download once from Hugging Face and are then loaded from the local cache. The demo uses
+Azure `cia-chat` for extraction and classification; it does not call the `cia-embed`
+deployment. Azure chat usage may incur project costs.
 
 ```powershell
-$env:DATABASE_URL = "sqlite:///consulting_intelligence.db"
-$env:REVIEWER_TOKEN = "set-a-local-demo-token"
-python -m src.persist
-python -m src.eval.ingest_scenario --scenario scenarios/dev/D1
+if (-not (Test-Path .venv)) { py -m venv .venv }
+.\.venv\Scripts\Activate.ps1
+python -m pip install -r requirements-retrieval.txt
+npm.cmd --prefix web ci
+python -m src.retrieve.prepare_model
+
+# Use a fresh demo DB so it stays separate from any existing project database.
+$env:DATABASE_URL = "sqlite:///track-c-demo.db"
+$env:REVIEWER_TOKEN = "local-demo-token-change-me"
+$env:AZURE_OPENAI_ENDPOINT = "https://consulting-agent-system.openai.azure.com/"
+$env:AZURE_OPENAI_DEPLOYMENT = "cia-chat"
+$env:AZURE_OPENAI_API_VERSION = "2024-10-21"
+
+# Run this line by itself. At the hidden prompt, paste Key 1 and press Enter.
+$secureKey = Read-Host "Azure OpenAI API key" -AsSecureString; $keyPointer = [Runtime.InteropServices.Marshal]::SecureStringToBSTR($secureKey); try { $env:AZURE_OPENAI_API_KEY = [Runtime.InteropServices.Marshal]::PtrToStringBSTR($keyPointer) } finally { [Runtime.InteropServices.Marshal]::ZeroFreeBSTR($keyPointer) }
+
+# These commands must run in the same PowerShell window as the key prompt above.
+python -m src.persist --database-url $env:DATABASE_URL
+python -m src.eval.run_pipeline --scenario scenarios/dev/D1 --mode demo --candidate-source extracted --repeat 1 --db "sqlite:///track-c-demo.db"
 python -m src.api
 ```
 
-In another terminal, run `npm --prefix web run dev`. Browse to the Vite address and
-enter the same token under **Reviewer access** before saving decisions. The front end
-keeps it in memory for that tab. Do not put it in `VITE_*`, source control, or a hosted
-build.
+Leave that terminal running. In another PowerShell terminal, start the UI:
+
+```powershell
+cd "D:\Git Repo\ELEC5623-Project"
+npm.cmd --prefix web run dev -- --host 127.0.0.1
+```
+
+Open `http://localhost:5173/`, choose project **D1**, then open **Review queue**.
+Expand **Reviewer access**, enter the same local token, and save it for this browser
+tab. Review the transcript evidence and retrieved alternatives before confirming,
+rejecting, or editing a proposal. A confirmation changes the register; a rejection
+only records the decision. Editing text reuses the local embedding model.
+
+The CLI imports D1 from its authored transcripts and speaker settings; it does not
+seed gold labels. The runner also imports the meetings itself, so the explicit
+`ingest_scenario` command is optional. Check the CLI's `Errors` section if the queue is
+empty. Run the demo once per database: each run creates a new set of proposals, so a
+repeat in the same database can add duplicate pending items. Use a new database
+filename for a clean repeat.
+
+The eval CLI loads `.env`, but the database initializer and API read process
+environment variables. The commands above set those variables in the PowerShell
+session so all three tools use the same database and reviewer token. Never put the
+Azure key in `VITE_*`, source control, or a hosted build.
 
 `ingest_scenario` imports only scenario metadata and canonical transcript files. It
 does not read or seed `gold.yaml` or `gold.src.yaml`. The sample D1 files are authored
@@ -91,22 +152,25 @@ the transaction unchanged.
 
 ## Validation and limits
 
-The persistent-review tests use temporary SQLite databases, synthetic calls and
-injected vectors. They do not call a provider or report classification accuracy. The
-verified run before the final replay-call correction collected 286 tests: 285 passed;
-the one failure exposed positional arguments in the new replay check. The arguments
-now use the helper's named parameters, but that full suite has not been rerun in this
-turn. The frontend TypeScript/Vite production build passed. Earlier focused lint on
-the API, persistence, engine and review test files passed; the scenario CLI and replay
-format check still need a fresh lint pass.
+The focused database, evaluation and pipeline checks use temporary SQLite databases,
+synthetic model outputs and injected embeddings. They do not call a provider or report
+classification accuracy. The full Track C tests that start FastAPI's `TestClient` could
+not be completed in this Windows sandbox: its asyncio test server blocks while opening
+a local socket pair. Direct persistence, replay, state-gate and demo-pipeline checks
+are run separately. The hosted preview still serves fixtures, and the reviewer token
+is one local shared write credential rather than a multi-user access-control system.
 
-The following remain open: integrating a real logged A/B proposal producer into
-`stage_proposal`, the extracted-candidate full pipeline, parity baseline, complete
-run/metric harness, test-set results, project-scoped identity and read permissions,
-project deletion, integration settings beyond speaker roles, and E1/E4/E7/E8
-acceptance. The reviewer token is one local shared write credential; it is not a
-multi-user access-control system. The hosted preview still serves fixtures.
+Project-scoped identity/read permissions, project deletion, integration settings
+beyond speaker roles, and E1/E4/E7/E8 acceptance remain open. Calendar and live meeting
+integration remain deferred by the build-plan cut list.
 
-`create_all` adds `proposal_reviews` when needed and never alters existing columns.
-Existing rows in `consulting_intelligence.db` are not cleared or migrated. Make an
-explicit migration before any future change to an existing table.
+The current eval runner auto-confirms an engine-allowed proposal when its gold input
+has no explicit `event_action`; D1 currently has no such action fields. This conflicts
+with `AGENTS.md`'s gold-decision gate. The team needs an explicit decision file and
+aligned runner behavior before eval writes can be considered compliant. The shared
+model logger also misses a database row when both attempts of an Azure call fail.
+
+Database initialization preserves rows and applies the additive SQLite migration
+needed for Track B's vector metadata and proposal fields. It does not infer metadata
+for legacy bare vectors. Keep a backup before running the local app against an older
+database.

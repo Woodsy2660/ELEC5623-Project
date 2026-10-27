@@ -1,16 +1,17 @@
 # 11 — Remaining Implementation
 
-This document tracks what remains to be implemented and provides step-by-step guidance for each task.
+This document preserves Ben's original implementation draft and records its current status.
+The numbered implementation steps are historical and may describe work that is already
+complete or deferred. Use the status table at the end and [`docs/12-track-c-review.md`](12-track-c-review.md)
+for the current local review workflow.
 
 ## Overview
 
-The system has complete implementations for:
-- Ingestion, extraction, validation (Track A)
-- Retrieval, classification schemas (Track B)
-- State engine, persistence, logging (Track C)
-- React frontend with all screens
-
-**The critical gap is connecting the working backend pipeline to the API layer.** The API currently serves hardcoded fixtures instead of reading from the SQLite database.
+The local API-to-SQLite connection and the first human-review flow are implemented.
+The interactive extraction path requires an Azure chat key and the local embedding
+model cache. The whole assessed experiment is not complete: the eval decision gate,
+full evaluation acceptance, project deletion and end-to-end HTTP verification remain
+open. The planning text below predates those changes.
 
 ---
 
@@ -450,17 +451,17 @@ After implementation, verify:
 
 ## Status update — 2026-10-27
 
-This document's implementation steps above are Ben's planning draft, not the current source of truth. The key former blocker, connecting the local API to SQLite, is implemented for the existing API contract. Track C has also added authenticated review decisions, evidence and state revalidation, versioned writes, transcript import, register export, speaker settings, and review-aware event replay. See [`docs/12-track-c-review.md`](12-track-c-review.md) for startup, behavior, validation, and limits.
+The numbered steps above are Ben's planning draft, not current task instructions. The former blocker, connecting the local API to SQLite, is implemented for the existing API contract. Track C has also added authenticated review decisions, evidence and state revalidation, versioned writes, transcript import, register export, speaker settings, and review-aware event replay. See [`docs/12-track-c-review.md`](12-track-c-review.md) for startup, behavior, validation, and limits.
 
 | Draft item | Current state |
 |---|---|
 | API to database | Local API reads the configured SQLite database by default. Hosted Vercel explicitly retains fixture mode. |
 | Transcript import | Existing meeting API stores byte-faithful turns and rejects unmapped speakers. The current Import page still has a disabled processing button. |
 | Register export | Local API exports the persisted register and history as JSON. CSV export remains open. |
-| Extracted-candidate pipeline | Still open. Track B's retrieval and classification contracts exist, but `run_pipeline.py` does not call retrieval/classification for extracted candidates. |
+| Extracted-candidate pipeline | Track B retrieval and classification run for extracted candidates. In demo mode, valid proposals are staged into Track C's database-backed review queue. Eval currently auto-confirms allowed proposals when `event_action` is absent; this conflicts with the required explicit gold-decision gate and must be resolved before eval writes are compliant. |
 | Speaker role editing | Local authenticated settings route persists roles and authority. The Import page's separate Assign button remains a static preview. |
 | Project deletion | Not implemented. |
 | Full E3/E5/E8 harness and baseline | Not complete. The legacy gold path is not a model classification result and must not be reported as one. |
 | Calendar or live meeting integration | Deferred by the existing cut list and project constraints. |
 
-The ingest command loads scenario metadata and canonical transcripts only. It does not read gold label files. `create_all` adds the new `proposal_reviews` table to an older database without clearing rows or changing existing columns. Database schemas that later change still need explicit migrations.
+The ingest command loads scenario metadata and canonical transcripts only. It does not read gold label files. Database initialization adds the Track B columns required by current Track C integration and preserves existing rows. Full `VectorRecord` blobs are split only when their encoder identity validates; untagged vectors are left unverified. See `docs/12-track-c-review.md` for the current migration and run details.

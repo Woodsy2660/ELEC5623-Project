@@ -9,8 +9,10 @@ from pathlib import Path
 
 import pytest
 import yaml
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import Session, sessionmaker
 
+import src.extract
+from src.api.queries import proposals as query_proposals
 from src.classify.classify import ClassificationOutcome, apply_soft_downgrade, classify_candidate
 from src.classify.schemas import Classification, Relation
 from src.engine.state_machine import EventType, State
@@ -23,24 +25,32 @@ from src.eval.metrics import (
     relation_report,
 )
 from src.eval.run_baseline import run_baseline
-from src.eval.run_pipeline import run_pipeline
+from src.eval.run_pipeline import _log_local_embedding, run_pipeline
 from src.eval.score import score_run
+from src.extract import ExtractionResult
 from src.extract.schemas import Candidate
 from src.logging.calls import ModelCallError, ParsedResponse
 from src.persist.database import create_database_engine
 from src.persist.models import (
     Base,
     Event,
+    Meeting,
     ModelCall,
     Project,
     Proposal,
+    ProposalReview,
     Requirement,
     RequirementCurrent,
     RequirementVersion,
     Run,
+    Turn,
+)
+from src.persist.models import (
+    Candidate as CandidateRow,
 )
 from src.persist.register import confirm_current, write_version
 from src.retrieve.embedder import encoder_kind, get_embedder
+from src.retrieve.embeddings import EmbeddingCall
 from src.validate.schemas import EvidenceSpan
 from tests.test_classification_contract import make_inputs
 
@@ -374,6 +384,144 @@ class _Embedder:
 
     def fingerprint(self) -> str:
         return "fake"
+
+
+def test_local_embedding_call_log_survives_later_pipeline_rollback(tmp_path: Path) -> None:
+    db_url = f"sqlite:///{tmp_path / 'local-call-log.db'}"
+    engine = create_database_engine(db_url)
+    Base.metadata.create_all(engine)
+    run_id = "local-embed-run"
+    with Session(engine) as session:
+        session.add(
+            Run(
+                id=run_id,
+                mode="demo",
+                candidate_source="extracted",
+                repeat_index=1,
+                prompt_hash="prompt-hash",
+                model_deployment="local",
+                temp=0,
+                started_at=datetime.now(UTC),
+                notes="{}",
+            )
+        )
+        session.commit()
+        _log_local_embedding(
+            session,
+            run_id,
+            EmbeddingCall(
+                model_id="local-model@revision",
+                config_hash="encoder-hash",
+                texts=("candidate",),
+                input_tokens=2,
+                latency_ms=4,
+                vectors=((1.0, 0.0),),
+            ),
+            tmp_path / "runs",
+        )
+        session.rollback()
+
+    with Session(engine) as session:
+        rows = session.query(ModelCall).filter(ModelCall.run_id == run_id).all()
+        assert len(rows) == 1
+        assert rows[0].stage == "embed"
+        assert rows[0].prompt_hash == "encoder-hash"
+    engine.dispose()
+
+
+def test_demo_extracted_pipeline_stages_track_b_output_without_register_writes(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    def fake_extract(session, client, *, run_id, meeting_id, **kwargs):
+        turn = session.query(Turn).filter(Turn.meeting_id == meeting_id).first()
+        assert turn is not None
+        candidate_id = f"{meeting_id}-C0000"
+        candidate = Candidate(
+            candidate_id=candidate_id,
+            project_id=session.get(Meeting, meeting_id).project_id,
+            meeting_id=meeting_id,
+            text_norm=turn.text,
+            evidence=[EvidenceSpan(turn_id=turn.id, start=0, end=len(turn.text))],
+            atomic=True,
+        )
+        session.add(
+            CandidateRow(
+                id=candidate_id,
+                meeting_id=meeting_id,
+                run_id=run_id,
+                text_norm=candidate.text_norm,
+                evidence_json=json.dumps([{"turn_id": turn.id, "start": 0, "end": len(turn.text)}]),
+                extract_call_id=None,
+            )
+        )
+        return ExtractionResult(
+            candidates=[candidate], returned=3, accepted=1, rejected_unresolvable=2
+        )
+
+    def fake_classify(client, *, inputs, **kwargs):
+        classification = Classification(
+            matched_requirement_id=None,
+            relation=Relation.NEW,
+            rationale="Synthetic pipeline integration check.",
+            retrieved_ids=list(inputs.retrieval.retrieved_ids),
+        )
+        return ClassificationOutcome(
+            retrieved_ids=tuple(classification.retrieved_ids),
+            classification=classification,
+            downgraded=False,
+            model_relation="new",
+            error=None,
+            call_ids=(),
+        )
+
+    monkeypatch.setattr(src.extract, "extract_candidates", fake_extract)
+    db_url = f"sqlite:///{tmp_path / 'demo.db'}"
+    stats = run_pipeline(
+        scenario_dir=Path("scenarios/dev/D1"),
+        mode="demo",
+        candidate_source="extracted",
+        repeat_index=1,
+        db_url=db_url,
+        runs_dir=tmp_path / "runs",
+        client=object(),
+        config=type("Cfg", (), {"deployment_name": "stub", "temperature": 0, "seed": 1})(),
+        embedder=_Embedder(),
+        classifier=fake_classify,
+    )
+    engine = create_database_engine(db_url)
+    session = sessionmaker(bind=engine)()
+    try:
+        proposals = session.query(Proposal).filter(Proposal.run_id == stats["run_id"]).all()
+        assert stats["errors"] == []
+        assert stats["events_applied"] == 0
+        assert len(proposals) == stats["proposals_created"] > 0
+        assert all(proposal.decision is None for proposal in proposals)
+        assert all(
+            session.get(ProposalReview, proposal.id).embedding_json for proposal in proposals
+        )
+        queue = query_proposals(session, stats["project_id"])
+        assert len(queue.proposals) == len(proposals)
+        assert queue.discarded_candidates == 4
+        assert all(
+            item.can_confirm and item.classification.relation == Relation.NEW
+            for item in queue.proposals
+        )
+        assert session.query(Requirement).count() == 0
+        assert session.query(RequirementVersion).count() == 0
+        assert session.query(Event).count() == 0
+    finally:
+        session.close()
+        engine.dispose()
+
+
+def test_demo_pipeline_rejects_gold_candidates() -> None:
+    with pytest.raises(ValueError, match="gold is eval-only"):
+        run_pipeline(
+            scenario_dir=Path("unused"),
+            mode="demo",
+            candidate_source="gold",
+            repeat_index=1,
+        )
 
 
 def test_gold_run_does_not_copy_labels_and_retrieval_sees_earlier_versions(tmp_path: Path) -> None:

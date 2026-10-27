@@ -173,9 +173,11 @@ class ProposalReview(Base):
     proposal_id: Mapped[str] = mapped_column(ForeignKey("proposals.id"), primary_key=True)
     expected_version_id: Mapped[str | None] = mapped_column(String, nullable=True)
     expected_retrieval_heads_json: Mapped[str | None] = mapped_column(Text, nullable=True)
+    expected_project_heads_json: Mapped[str | None] = mapped_column(Text, nullable=True)
     speaker_label: Mapped[str] = mapped_column(String, nullable=False)
     rationale: Mapped[str] = mapped_column(Text, nullable=False)
     embedding_json: Mapped[str | None] = mapped_column(Text, nullable=True)
+    classifier_replacement_stated: Mapped[bool | None] = mapped_column(Boolean, nullable=True)
     decision_event_id: Mapped[str | None] = mapped_column(ForeignKey("events.id"), nullable=True)
 
 

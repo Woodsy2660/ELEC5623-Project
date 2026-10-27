@@ -157,6 +157,9 @@ def proposal_out(session: Session, proposal: Proposal) -> ProposalOut:
             relation=proposal.predicted_relation,
             rationale=context.rationale if context else "Review metadata unavailable",
             retrieved_ids=ids,
+            replacement_stated=(
+                context.classifier_replacement_stated is True if context else False
+            ),
         ),
         proposed_event=verdict.proposed_event if verdict else None,
         from_state=chosen.state if chosen else None,
@@ -180,17 +183,39 @@ def proposals(session: Session, project_id: str) -> ProposalList:
         select(Proposal)
         .join(Candidate, Candidate.id == Proposal.candidate_id)
         .join(Meeting, Meeting.id == Candidate.meeting_id)
-        .where(Meeting.project_id == project_id)
+        .outerjoin(ProposalReview, ProposalReview.proposal_id == Proposal.id)
+        .where(
+            Meeting.project_id == project_id,
+            Proposal.decision.is_(None),
+            ProposalReview.decision_event_id.is_(None),
+            Proposal.predicted_relation != "error",
+        )
         .order_by(Meeting.ordinal, Proposal.id)
     )
     items = [proposal_out(session, row) for row in rows]
-    pending = [p for p in items if p.decision is None]
+    discarded_candidates = 0
+    for run in session.scalars(select(Run).where(Run.candidate_source == "extracted")):
+        try:
+            run_notes = json.loads(run.notes or "{}")
+        except (TypeError, ValueError) as exc:
+            raise ValueError(f"Run {run.id} has invalid notes") from exc
+        if not isinstance(run_notes, dict):
+            raise ValueError(f"Run {run.id} has invalid notes")
+        if run_notes.get("project_id") != project_id:
+            continue
+        extraction = run_notes.get("extraction", {})
+        if not isinstance(extraction, dict):
+            raise ValueError(f"Run {run.id} has invalid extraction metrics")
+        rejected = extraction.get("rejected_unresolvable", 0)
+        if isinstance(rejected, bool) or not isinstance(rejected, int) or rejected < 0:
+            raise ValueError(f"Run {run.id} has an invalid rejected-evidence count")
+        discarded_candidates += rejected
     return ProposalList(
         project_id=project_id,
-        meeting_id=pending[0].meeting_id if pending else None,
-        queue_label=f"{len(pending)} pending proposals",
+        meeting_id=items[0].meeting_id if items else None,
+        queue_label=f"{len(items)} pending proposals",
         scope_count_label=f"{len(register_rows(session, project_id))} requirements",
-        discarded_candidates=0,
+        discarded_candidates=discarded_candidates,
         proposals=items,
     )
 

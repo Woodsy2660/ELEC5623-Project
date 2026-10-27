@@ -15,6 +15,7 @@ from src.classify.schemas import Classification
 from src.engine.state_machine import EventType, State, validate_transition
 from src.extract.schemas import Candidate
 from src.persist.models import Event, Requirement, RequirementCurrent, RequirementVersion
+from src.persist.retrieval import vector_record_from_version
 
 
 def next_requirement_id(session: Session, project_id: str) -> str:
@@ -47,6 +48,7 @@ def _add_event(
     meeting_ordinal: int,
     seq: int,
     actor: str,
+    event_links: dict[str, str] | None,
 ) -> str:
     event_id = str(uuid4())
     payload: dict[str, object] = {
@@ -63,6 +65,8 @@ def _add_event(
         payload["rationale"] = classification.rationale
         payload["retrieved_ids"] = list(classification.retrieved_ids)
         payload["replacement_stated"] = classification.replacement_stated
+    if event_links:
+        payload.update(event_links)
     session.add(
         Event(
             id=event_id,
@@ -103,6 +107,7 @@ def write_version(
     embedding_dim: int | None,
     actor: str = "pipeline",
     enforce: bool = True,
+    event_links: dict[str, str] | None = None,
 ) -> str:
     """Append one version and point the current row at it.
 
@@ -111,6 +116,9 @@ def write_version(
     and may omit the vector: that is the missing validator, not a forgotten column.
     """
     from_state = _current_state(session, requirement_id)
+    existing = session.get(Requirement, requirement_id)
+    if existing is not None and existing.project_id != project_id:
+        raise ValueError(f"Requirement {requirement_id} belongs to a different project")
     if enforce:
         legal = validate_transition(from_state, event_type)
         if legal is None:
@@ -143,6 +151,7 @@ def write_version(
         meeting_ordinal=meeting_ordinal,
         seq=seq,
         actor=actor,
+        event_links=event_links,
     )
     requirement = session.get(Requirement, requirement_id)
     if requirement is None:
@@ -220,6 +229,7 @@ def confirm_current(
     seq: int,
     actor: str = "pipeline",
     enforce: bool = True,
+    event_links: dict[str, str] | None = None,
 ) -> str:
     """Confirm the current version in place. Does not write a second embedding."""
     current = session.get(RequirementCurrent, requirement_id)
@@ -246,8 +256,104 @@ def confirm_current(
         meeting_ordinal=meeting_ordinal,
         seq=seq,
         actor=actor,
+        event_links=event_links,
     )
     version.state = resulting.value
     current.state = resulting.value
     session.flush()
     return event_id
+
+
+def write_supersession_replacement(
+    session: Session,
+    *,
+    project_id: str,
+    run_id: str,
+    requirement_id: str,
+    replacement_requirement_id: str,
+    candidate: Candidate,
+    classification: Classification,
+    meeting_ordinal: int,
+    seq: int,
+    embedding: tuple[float, ...],
+    embedding_model: str,
+    embedding_version: str,
+    embedding_dim: int,
+    actor: str,
+    proposal_id: str | None = None,
+    enforce: bool = True,
+) -> tuple[str, str, str]:
+    """Supersede an old family and create a confirmed replacement family atomically.
+
+    The old family's text and vector remain intact in its new Superseded version.
+    The replacement has its own family ID and a single Confirmed version.
+    """
+    if replacement_requirement_id == requirement_id:
+        raise ValueError("A replacement must use a separate requirement family")
+    head = session.get(RequirementCurrent, requirement_id)
+    family = session.get(Requirement, requirement_id)
+    if head is None or family is None or family.project_id != project_id:
+        raise ValueError("Supersession requires a current requirement in this project")
+    old_version = session.get(RequirementVersion, head.current_version_id)
+    if old_version is None:
+        raise ValueError("Supersession source has no current version")
+    old_vector = vector_record_from_version(old_version)
+    links = {"replacement_requirement_id": replacement_requirement_id}
+    if proposal_id is not None:
+        links["proposal_id"] = proposal_id
+    superseded_candidate = candidate.model_copy(update={"text_norm": head.text})
+    superseded_event_id = write_version(
+        session,
+        project_id=project_id,
+        run_id=run_id,
+        requirement_id=requirement_id,
+        event_type=EventType.SUPERSEDE,
+        resulting_state=State.SUPERSEDED,
+        candidate=superseded_candidate,
+        classification=classification,
+        meeting_ordinal=meeting_ordinal,
+        seq=seq,
+        embedding=old_vector.embedding,
+        embedding_model=old_vector.embedding_model,
+        embedding_version=old_vector.embedding_version,
+        embedding_dim=old_vector.embedding_dim,
+        actor=actor,
+        enforce=enforce,
+        event_links=links,
+    )
+    replacement_links = {"replaces_requirement_id": requirement_id}
+    if proposal_id is not None:
+        replacement_links["proposal_id"] = proposal_id
+    create_event_id = write_version(
+        session,
+        project_id=project_id,
+        run_id=run_id,
+        requirement_id=replacement_requirement_id,
+        event_type=EventType.CREATE,
+        resulting_state=State.PROPOSED,
+        candidate=candidate,
+        classification=classification,
+        meeting_ordinal=meeting_ordinal,
+        seq=seq + 1,
+        embedding=embedding,
+        embedding_model=embedding_model,
+        embedding_version=embedding_version,
+        embedding_dim=embedding_dim,
+        actor=actor,
+        enforce=enforce,
+        event_links=replacement_links,
+    )
+    confirm_event_id = confirm_current(
+        session,
+        project_id=project_id,
+        run_id=run_id,
+        requirement_id=replacement_requirement_id,
+        candidate=candidate,
+        classification=classification,
+        meeting_ordinal=meeting_ordinal,
+        seq=seq + 2,
+        actor=actor,
+        enforce=enforce,
+        event_links=replacement_links,
+    )
+    return superseded_event_id, create_event_id, confirm_event_id

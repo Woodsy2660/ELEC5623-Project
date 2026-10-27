@@ -29,9 +29,11 @@ from src.extract.schemas import Candidate
 from src.ingest import import_meeting, load_scenario
 from src.llm.config import get_deployment_config
 from src.logging.calls import CallLogger
-from src.persist.database import create_database_engine
+from src.persist.database import create_database_engine, initialize_database
 from src.persist.models import (
-    Base,
+    Candidate as CandidateRow,
+)
+from src.persist.models import (
     Meeting,
     ModelCall,
     Proposal,
@@ -42,15 +44,18 @@ from src.persist.models import (
     Speaker,
     Turn,
 )
-from src.persist.models import (
-    Candidate as CandidateRow,
-)
 from src.persist.register import confirm_current, next_requirement_id, write_version
+from src.persist.review import (
+    ProjectHeadSnapshot,
+    explicit_replacement,
+    project_head_snapshot,
+    stage_proposal,
+)
 from src.retrieve.embedder import Embedder, get_embedder
 from src.retrieve.embeddings import EmbeddingCall
 from src.retrieve.hybrid import retrieve
 from src.retrieve.schemas import RequirementVersion as RetrievalVersion
-from src.retrieve.schemas import RetrievalRequest
+from src.retrieve.schemas import RetrievalRequest, VectorRecord
 from src.validate.schemas import EvidenceSpan
 
 
@@ -237,26 +242,26 @@ def _log_local_embedding(
     call: EmbeddingCall,
     runs_dir: Path,
 ) -> None:
-    """Record a local encode in model_calls. Failures here must not hide an encode error."""
-    try:
-        call_id = str(uuid4())
-        run_dir = runs_dir / run_id
-        run_dir.mkdir(parents=True, exist_ok=True)
-        raw_path = run_dir / f"{call_id}.json"
-        raw_path.write_text(
-            json.dumps(
-                {
-                    "model_id": call.model_id,
-                    "config_hash": call.config_hash,
-                    "input_tokens": call.input_tokens,
-                    "latency_ms": call.latency_ms,
-                    "error": call.error,
-                    "text_count": len(call.texts),
-                }
-            ),
-            encoding="utf-8",
-        )
-        session.add(
+    """Persist a local encode in its own transaction so later pipeline rollback cannot erase it."""
+    call_id = str(uuid4())
+    run_dir = runs_dir / run_id
+    run_dir.mkdir(parents=True, exist_ok=True)
+    raw_path = run_dir / f"{call_id}.json"
+    raw_path.write_text(
+        json.dumps(
+            {
+                "model_id": call.model_id,
+                "config_hash": call.config_hash,
+                "input_tokens": call.input_tokens,
+                "latency_ms": call.latency_ms,
+                "error": call.error,
+                "text_count": len(call.texts),
+            }
+        ),
+        encoding="utf-8",
+    )
+    with Session(bind=session.get_bind()) as trace_session, trace_session.begin():
+        trace_session.add(
             ModelCall(
                 id=call_id,
                 run_id=run_id,
@@ -274,9 +279,6 @@ def _log_local_embedding(
                 raw_json_path=str(raw_path),
             )
         )
-        session.flush()
-    except Exception:
-        return
 
 
 def _add_proposal(
@@ -330,8 +332,10 @@ def _process_candidate(
     """Retrieve, classify, assess, and maybe commit. Identical for both candidate sources."""
     retrieved_ids: list[str] = []
     rankings: dict[str, Any] = {"bm25": [], "dense": [], "fused": [], "offered": [], "error": None}
+    project_heads: ProjectHeadSnapshot | None = None
     try:
         vector = embedder.encode([candidate.text_norm])[0]
+        project_heads = project_head_snapshot(session, project_id)
         corpus = _get_corpus_versions(session, project_id)
         retrieval = retrieve(
             RetrievalRequest(
@@ -374,6 +378,14 @@ def _process_candidate(
             current_heads=tuple(_get_current_heads(session, retrieved_ids)),
             speaker_label=speaker_label,
         )
+        for head in inputs.current_heads:
+            snapshot = project_heads.get(head.requirement_id)
+            if (
+                snapshot is None
+                or snapshot.get("version") != head.version
+                or snapshot.get("state") != head.state.value
+            ):
+                raise ValueError("Project register changed while building the classification input")
         outcome: ClassificationOutcome = classifier(
             client,
             session=session,
@@ -440,10 +452,31 @@ def _process_candidate(
         inputs,
         classification,
         speaker_can_confirm_scope=can_confirm,
-        replacement_stated=classification.replacement_stated,
+        replacement_stated=explicit_replacement(
+            [by_id[span.turn_id].text[span.start : span.end] for span in candidate.evidence]
+        ),
     )
     decision = _human_decision(mode, event_action, verdict.verdict, verdict.proposed_event)
     try:
+        if mode == "demo":
+            stage_proposal(
+                session,
+                candidate_id=candidate.candidate_id,
+                classification=classification,
+                speaker_label=inputs.speaker_label,
+                embedding=VectorRecord(
+                    embedding_model=embedder.model,
+                    embedding_version=embedder.version,
+                    embedding_dim=embedder.dim,
+                    embedding=tuple(vector),
+                ),
+                rankings=rankings,
+                downgraded=outcome.downgraded,
+                expected_project_heads=project_heads,
+            )
+            session.commit()
+            stats["proposals_created"] += 1
+            return
         if (
             decision == "confirm"
             and verdict.verdict == Verdict.ALLOWED
@@ -545,8 +578,12 @@ def run_pipeline(
     classifier=None,
 ) -> dict[str, Any]:
     """Run retrieval, classification, and the engine. Gold does not supply labels."""
+    if mode not in {"demo", "eval"}:
+        raise ValueError("mode must be demo or eval")
+    if mode == "demo" and candidate_source != "extracted":
+        raise ValueError("Demo inference requires extracted candidates; gold is eval-only")
     engine = create_database_engine(db_url)
-    Base.metadata.create_all(engine)
+    initialize_database(engine)
     session = sessionmaker(bind=engine)()
     if classifier is None:
         classifier = classify_candidate
@@ -608,6 +645,7 @@ def run_pipeline(
         "scenario": scenario_note,
         "split": split,
         "system": "pipeline",
+        "project_id": project_id,
         "encoder_model": embedder.model,
         "encoder_version": embedder.version,
         "encoder_dim": embedder.dim,
@@ -736,7 +774,7 @@ def run_pipeline(
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Run the pipeline in evaluation mode.")
+    parser = argparse.ArgumentParser(description="Run the pipeline in demo or evaluation mode.")
     parser.add_argument("--scenario", type=str, required=True)
     parser.add_argument("--mode", type=str, choices=["demo", "eval"], required=True)
     parser.add_argument(

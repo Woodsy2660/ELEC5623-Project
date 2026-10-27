@@ -38,18 +38,15 @@ Coding agents: read `AGENTS.md` first.
 
 ## Quickstart
 
+For the local human-review demo on Windows, follow the step-by-step instructions in
+[`docs/12-track-c-review.md`](docs/12-track-c-review.md#local-demo-on-windows-powershell).
+It needs an Azure chat key and the pinned local embedding model. Do not use eval mode
+as the interactive demo: its missing-decision behavior is being reconciled with the
+project's gold-decision gate requirement.
+
 ```bash
-python -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt
-cp .env.example .env        # add your Azure Foundry deployment details
-
-# The state engine runs with no credentials and no database:
+# The deterministic state engine runs without credentials or a database:
 pytest src/engine
-
-# Oracle run on D1, then score it. Use a fresh database per run.
-# ingest_scenario is still a stub. The pipeline loads the scenario itself.
-python -m src.eval.run_pipeline --scenario scenarios/dev/D1 --mode eval --candidate-source gold --repeat 1 --db sqlite:///runs/d1-oracle.db
-python -m src.eval.score --run <run_id> --scenario scenarios/dev/D1 --db sqlite:///runs/d1-oracle.db
 ```
 
 ## Pipeline
