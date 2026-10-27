@@ -44,12 +44,16 @@ speakers(project_id, speaker_label, role, can_confirm_scope)   -- see Authority 
 
 requirements(id, project_id)                                    -- stable family ID
 requirement_versions(id, requirement_id, version, text, state,
-                     evidence_json, embedding_blob, created_event_id)
+                     evidence_json, embedding_blob, embedding_model,
+                     embedding_version, embedding_dim, created_event_id)
 requirements_current(requirement_id, current_version_id, state, text)
 
 candidates(id, meeting_id, run_id, text_norm, evidence_json, extract_call_id)
+          -- extract_call_id is null for gold candidates; an oracle run has no extract call
 proposals(id, run_id, candidate_id, retrieved_ids_json, predicted_id,
-          predicted_relation, proposed_event, engine_verdict)
+          predicted_relation, proposed_event, engine_verdict,
+          rankings_json, decision, downgraded)
+          -- rankings_json keeps bm25, dense and fused family orders for E3
 events(id, project_id, ts, actor, event_type, payload_json, run_id)   -- append only
 
 runs(id, mode, candidate_source, repeat_index, prompt_hash,
@@ -155,6 +159,15 @@ Only after a measured failure, in this order:
 2. Embed statement plus actor/object keywords.
 3. Local cross-encoder rerank over the BM25 ∪ dense union.
 4. Foundry embedding API — last resort, breaks offline determinism.
+
+**Active encoder.** Retrieval scores the local model in `src/retrieve/model_config.json`:
+`sentence-transformers/all-MiniLM-L6-v2` revision `1110a243fdf4706b3f48f1d95db1a4f5529b4d41`,
+384 dimensions. `cia-embed` (`text-embedding-3-small` version `1`, 1536 dimensions) is deployed
+on `Consulting-Agent-System` and is not this encoder. No recall@k has been measured on authored
+dev scenarios, so there is no number to preserve and no measured failure that would justify step 4.
+Every stored version records `embedding_model`, `embedding_version`, and `embedding_dim`. A query
+that disagrees on any of the three is an error. A 1536-dim Foundry vector and a 384-dim local
+vector are not scored against each other.
 
 ## LLM stages
 

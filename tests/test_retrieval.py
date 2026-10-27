@@ -22,6 +22,7 @@ def version(
     project: str = "P1",
     state: State = State.CONFIRMED,
     model: str = MODEL,
+    revision: str = "v1",
 ) -> RequirementVersion:
     return RequirementVersion(
         project_id=project,
@@ -30,18 +31,27 @@ def version(
         text=text,
         state=state,
         embedding_model=model,
+        embedding_version=revision,
+        embedding_dim=len(embedding),
         embedding=embedding,
     )
 
 
 def request(
-    text: str = "email login", embedding: tuple[float, ...] = (1, 0), top_k: int = 5
+    text: str = "email login",
+    embedding: tuple[float, ...] = (1, 0),
+    top_k: int = 5,
+    *,
+    model: str = MODEL,
+    revision: str = "v1",
 ) -> RetrievalRequest:
     return RetrievalRequest(
         candidate=Candidate(
             candidate_id="C1", project_id="P1", meeting_id="M3", text_norm=text, evidence=[]
         ),
-        embedding_model=MODEL,
+        embedding_model=model,
+        embedding_version=revision,
+        embedding_dim=len(embedding),
         embedding=embedding,
         top_k=top_k,
     )
@@ -162,13 +172,37 @@ def test_invalid_top_k_is_an_error(top_k: int) -> None:
 
 
 def test_model_mismatch_is_an_error() -> None:
-    with pytest.raises(ValueError, match="model/revision"):
+    with pytest.raises(ValueError, match="different encoders"):
         retrieve(request(), [version("R1", "email login", model="different-revision")])
 
 
+def test_version_mismatch_is_an_error() -> None:
+    with pytest.raises(ValueError, match="different encoders"):
+        retrieve(request(), [version("R1", "email login", revision="other-revision")])
+
+
 def test_dimension_mismatch_is_an_error() -> None:
-    with pytest.raises(ValueError, match="dimensions"):
+    with pytest.raises(ValueError, match="different encoders"):
         retrieve(request(), [version("R1", "email login", (1, 0, 0))])
+
+
+def test_foundry_1536_and_local_384_cannot_be_mixed() -> None:
+    local = version(
+        "R1",
+        "email login",
+        (1.0, 0.0),
+        model="sentence-transformers/all-MiniLM-L6-v2",
+        revision="1110a243fdf4706b3f48f1d95db1a4f5529b4d41",
+    )
+    # Declared dim is 1536; the vector only needs to be that length and nonzero.
+    foundry = (1.0,) + (0.0,) * 1535
+    query = request(
+        embedding=foundry,
+        model="text-embedding-3-small",
+        revision="1",
+    )
+    with pytest.raises(ValueError, match="1536-dim Foundry vector and a 384-dim local vector"):
+        retrieve(query, [local])
 
 
 def test_duplicate_version_is_an_error() -> None:

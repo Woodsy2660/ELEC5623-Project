@@ -23,6 +23,8 @@ class _Prediction(BaseModel):
     matched_requirement_id: str | None = Field(..., min_length=1, strict=True)
     relation: Relation
     rationale: str = Field(min_length=1, strict=True)
+    # Absent only for fixtures written before the field existed. The live schema requires it.
+    replacement_stated: bool = Field(default=False, strict=True)
 
 
 def _unique_keys(pairs: list[tuple[str, object]]) -> dict[str, object]:
@@ -66,6 +68,7 @@ def decode_output(
         relation=relation,
         rationale=prediction.rationale,
         retrieved_ids=list(request.retrieved_ids),
+        replacement_stated=prediction.replacement_stated,
     )
 
 

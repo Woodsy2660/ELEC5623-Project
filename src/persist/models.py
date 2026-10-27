@@ -93,6 +93,12 @@ class RequirementVersion(Base):
     state: Mapped[str] = mapped_column(String, nullable=False)
     evidence_json: Mapped[str] = mapped_column(Text, nullable=False)
     embedding_blob: Mapped[bytes | None] = mapped_column(LargeBinary, nullable=True)
+    # Encoder identity is stored beside the vector. Retrieval refuses a query
+    # whose model, version, or dim disagrees with these columns. All three are
+    # null together when the version has no embedding yet.
+    embedding_model: Mapped[str | None] = mapped_column(String, nullable=True)
+    embedding_version: Mapped[str | None] = mapped_column(String, nullable=True)
+    embedding_dim: Mapped[int | None] = mapped_column(Integer, nullable=True)
     created_event_id: Mapped[str] = mapped_column(ForeignKey("events.id"), nullable=False)
 
 
@@ -122,7 +128,8 @@ class Candidate(Base):
     run_id: Mapped[str] = mapped_column(ForeignKey("runs.id"), nullable=False)
     text_norm: Mapped[str] = mapped_column(Text, nullable=False)
     evidence_json: Mapped[str] = mapped_column(Text, nullable=False)
-    extract_call_id: Mapped[str] = mapped_column(ForeignKey("model_calls.id"), nullable=False)
+    # Null for gold candidates. An oracle run must not invent an extract call.
+    extract_call_id: Mapped[str | None] = mapped_column(ForeignKey("model_calls.id"), nullable=True)
 
 
 class Proposal(Base):
@@ -138,6 +145,10 @@ class Proposal(Base):
     predicted_relation: Mapped[str] = mapped_column(String, nullable=False)
     proposed_event: Mapped[str] = mapped_column(String, nullable=False)
     engine_verdict: Mapped[str] = mapped_column(String, nullable=False)
+    # Full channel rankings so score.py can separate a retrieval miss from a wrong pick.
+    rankings_json: Mapped[str | None] = mapped_column(Text, nullable=True)
+    decision: Mapped[str | None] = mapped_column(String, nullable=True)
+    downgraded: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
 
 
 class Event(Base):
