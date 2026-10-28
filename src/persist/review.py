@@ -404,14 +404,10 @@ def commit_decision(
                     "The register changed since this proposal was loaded; reload and review the current entries"
                 ) from None
             previous_snapshot = json.loads(context.expected_project_heads_json or "null")
-            verdict = assess_stored_proposal(
-                session, proposal, allow_project_changes=True
-            )
+            verdict = assess_stored_proposal(session, proposal, allow_project_changes=True)
             if verdict.verdict not in (Verdict.ALLOWED, Verdict.NO_OP):
                 raise ReviewConflict(verdict.reason) from None
-            context.expected_project_heads_json = json.dumps(
-                current_snapshot, sort_keys=True
-            )
+            context.expected_project_heads_json = json.dumps(current_snapshot, sort_keys=True)
             session.add(
                 Event(
                     id=str(uuid4()),

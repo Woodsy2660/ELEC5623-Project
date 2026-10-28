@@ -181,9 +181,7 @@ def proposal_out(session: Session, proposal: Proposal) -> ProposalOut:
         reason = "" if can_confirm else verdict.reason
     except ProjectSnapshotConflict:
         try:
-            verdict = assess_stored_proposal(
-                session, proposal, allow_project_changes=True
-            )
+            verdict = assess_stored_proposal(session, proposal, allow_project_changes=True)
             can_confirm = verdict.verdict in (Verdict.ALLOWED, Verdict.NO_OP)
             reason = "" if can_confirm else verdict.reason
         except ReviewConflict as exc:
