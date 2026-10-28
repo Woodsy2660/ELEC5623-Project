@@ -1,9 +1,22 @@
 """Tests for the state machine. The module under test remains stdlib-only."""
 
+import pytest
 from hypothesis import given
 from hypothesis import strategies as st
 
-from src.engine.state_machine import TRANSITIONS, EventType, State, validate_transition
+from src.engine.state_machine import EventType, State, validate_transition
+
+# Independent oracle transcribed from docs/02, never imported from production.
+EXPECTED = {
+    (None, "create"): "proposed",
+    ("proposed", "confirm"): "confirmed",
+    ("proposed", "reject"): "withdrawn",
+    ("confirmed", "refine"): "confirmed",
+    ("confirmed", "contradict"): "contradicted",
+    ("confirmed", "supersede"): "superseded",
+    ("contradicted", "supersede"): "superseded",
+    ("contradicted", "resolve"): "confirmed",
+}
 
 
 def test_create_from_none_produces_proposed() -> None:
@@ -67,14 +80,25 @@ def test_cannot_create_from_existing_state() -> None:
     assert result is None
 
 
-@given(st.sampled_from([None, *State]), st.sampled_from(list(EventType)))
+@pytest.mark.parametrize("from_state", [None, *State])
+@pytest.mark.parametrize("event_type", list(EventType))
 def test_only_documented_transitions_succeed(
     from_state: State | None, event_type: EventType
 ) -> None:
     """No state/event pair outside the documented transition table can succeed."""
     result = validate_transition(from_state, event_type)
 
-    if (from_state, event_type) in TRANSITIONS:
-        assert result == TRANSITIONS[(from_state, event_type)]
-    else:
-        assert result is None
+    assert result == EXPECTED.get((from_state, event_type))
+
+
+@given(st.lists(st.sampled_from(list(EventType)), max_size=100))
+def test_sequences_keep_state_when_transition_is_illegal(events: list[EventType]) -> None:
+    state = None
+    expected = None
+    for event in events:
+        result = validate_transition(state, event)
+        expected_result = EXPECTED.get((expected, event))
+        assert result == expected_result
+        if result is not None:
+            state = result
+            expected = expected_result

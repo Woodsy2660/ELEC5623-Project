@@ -1,6 +1,7 @@
-import type { ReactNode } from 'react'
+import { useState, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { CountBadge } from './CountBadge.tsx'
+import { setReviewerToken } from '../api/client.ts'
 
 export type NavKey = 'home' | 'meetings' | 'register' | 'review' | 'capture' | 'settings'
 
@@ -95,17 +96,56 @@ export function AppShell({
             <NavLink to={`${base}/settings`} current={active === 'settings'}>
               Settings
             </NavLink>
-            <div style={{ padding: '12px 14px', borderTop: '1px solid var(--border-subtle)', marginTop: 8 }}>
-              <div style={{ fontSize: 13 }}>Ben Wood</div>
-              <div className="cia-authority" style={{ fontSize: 12 }}>
-                Cannot confirm scope
-              </div>
-            </div>
           </div>
         </nav>
         {children}
       </div>
     </div>
+  )
+}
+
+export function ReviewerAccess() {
+  const [token, setToken] = useState('')
+  const [notice, setNotice] = useState('')
+  return (
+    <details style={{ width: '100%', maxWidth: 320 }}>
+      <summary style={{ cursor: 'pointer', fontSize: 13, textAlign: 'right' }}>Reviewer access</summary>
+      <div
+        style={{
+          marginTop: 8,
+          padding: 14,
+          border: '1px solid var(--border-subtle)',
+          borderRadius: 'var(--radius-md)',
+          background: 'var(--surface-raised)',
+        }}
+      >
+        <label htmlFor="reviewer-token" style={{ display: 'block', marginBottom: 6, fontSize: 12 }}>
+          Access token
+        </label>
+        <input
+          id="reviewer-token"
+          className="fld"
+          type="password"
+          autoComplete="off"
+          value={token}
+          onChange={(event) => setToken(event.target.value)}
+          style={{ width: '100%' }}
+        />
+        <button
+          type="button"
+          className="cia-btn"
+          style={{ marginTop: 8 }}
+          onClick={() => {
+            setReviewerToken(token)
+            setNotice(token ? 'Token set for this tab. The server checks each save.' : 'Reviewer token cleared.')
+            setToken('')
+          }}
+        >
+          Apply
+        </button>
+        {notice && <p role="status" style={{ margin: '8px 0 0', fontSize: 12 }}>{notice}</p>}
+      </div>
+    </details>
   )
 }
 

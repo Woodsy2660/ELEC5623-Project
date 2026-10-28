@@ -1,5 +1,6 @@
 """Storage foundation tests; no model calls, gold labels, or fixture API (FR09/E4)."""
 
+import json
 import sys
 from collections.abc import Iterator
 from datetime import datetime
@@ -13,6 +14,7 @@ from sqlalchemy.exc import IntegrityError
 from src.persist.__main__ import main
 from src.persist.database import create_database_engine, initialize_database, transaction
 from src.persist.models import Meeting, Project
+from src.retrieve.schemas import VectorRecord
 
 EXPECTED_TABLES = {
     "projects",
@@ -24,6 +26,7 @@ EXPECTED_TABLES = {
     "requirements_current",
     "candidates",
     "proposals",
+    "proposal_reviews",
     "events",
     "runs",
     "model_calls",
@@ -48,6 +51,13 @@ def database(tmp_path: Path) -> Iterator[Engine]:
 
 def test_initialization_creates_the_existing_schema(database: Engine) -> None:
     assert set(inspect(database).get_table_names()) == EXPECTED_TABLES
+    columns = {column["name"] for column in inspect(database).get_columns("requirement_versions")}
+    assert {
+        "embedding_blob",
+        "embedding_model",
+        "embedding_version",
+        "embedding_dim",
+    } <= columns
     with transaction(database) as session:
         assert session.scalars(select(Project)).all() == []
 
@@ -58,6 +68,62 @@ def test_initializing_again_preserves_rows(database: Engine) -> None:
     initialize_database(database)
     with transaction(database) as session:
         assert session.get(Project, "P1") is not None
+
+
+def test_initialization_migrates_additive_columns_and_only_backfills_verified_vectors(
+    tmp_path: Path,
+) -> None:
+    engine = create_database_engine(URL.create("sqlite", database=str(tmp_path / "legacy.db")))
+    legacy = VectorRecord(
+        embedding_model="legacy-model",
+        embedding_version="rev1",
+        embedding_dim=2,
+        embedding=(0.6, 0.8),
+    )
+    try:
+        with engine.begin() as connection:
+            connection.exec_driver_sql(
+                "CREATE TABLE requirement_versions (id TEXT PRIMARY KEY, embedding_blob BLOB)"
+            )
+            connection.exec_driver_sql("CREATE TABLE proposals (id TEXT PRIMARY KEY)")
+            connection.exec_driver_sql(
+                "CREATE TABLE proposal_reviews (proposal_id TEXT PRIMARY KEY)"
+            )
+            connection.exec_driver_sql(
+                "INSERT INTO requirement_versions (id, embedding_blob) VALUES (?, ?)",
+                ("verified", legacy.model_dump_json().encode("utf-8")),
+            )
+            connection.exec_driver_sql(
+                "INSERT INTO requirement_versions (id, embedding_blob) VALUES (?, ?)",
+                ("unverified", json.dumps([0.6, 0.8]).encode("utf-8")),
+            )
+
+        initialize_database(engine)
+        with engine.connect() as connection:
+            rows = {
+                row[0]: row[1:]
+                for row in connection.exec_driver_sql(
+                    "SELECT id, embedding_blob, embedding_model, embedding_version, embedding_dim "
+                    "FROM requirement_versions"
+                )
+            }
+        migrated = rows["verified"]
+        assert json.loads(migrated[0].decode("utf-8")) == [0.6, 0.8]
+        assert migrated[1:] == ("legacy-model", "rev1", 2)
+        assert rows["unverified"][1:] == (None, None, None)
+        assert {column["name"] for column in inspect(engine).get_columns("proposals")} >= {
+            "rankings_json",
+            "decision",
+            "downgraded",
+        }
+        assert "classifier_replacement_stated" in {
+            column["name"] for column in inspect(engine).get_columns("proposal_reviews")
+        }
+        assert "expected_project_heads_json" in {
+            column["name"] for column in inspect(engine).get_columns("proposal_reviews")
+        }
+    finally:
+        engine.dispose()
 
 
 def test_committed_data_survives_close_and_reopen(tmp_path: Path) -> None:

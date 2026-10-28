@@ -1,4 +1,4 @@
-"""Run the fixture API: ``python -m src.api``."""
+"""Run the local SQLite review API: ``python -m src.api``."""
 
 import uvicorn
 

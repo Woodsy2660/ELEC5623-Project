@@ -4,5 +4,6 @@
   "dimensions": 384,
   "max_tokens": 256,
   "device": "cpu",
-  "normalize_embeddings": true
+  "normalize_embeddings": true,
+  "encoder_role": "active"
 }

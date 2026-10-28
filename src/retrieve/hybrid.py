@@ -80,10 +80,21 @@ def retrieve(request: RetrievalRequest, corpus: Sequence[RequirementVersion]) ->
         if key in seen:
             raise ValueError(f"Duplicate requirement version: {key}")
         seen.add(key)
-        if version.embedding_model != request.embedding_model:
-            raise ValueError("Query and corpus embedding model/revision must match")
-        if len(version.embedding) != len(request.embedding):
-            raise ValueError("Query and corpus embedding dimensions must match")
+        if (
+            version.embedding_model != request.embedding_model
+            or version.embedding_version != request.embedding_version
+            or version.embedding_dim != request.embedding_dim
+            or len(version.embedding) != len(request.embedding)
+        ):
+            raise ValueError(
+                "Refusing to compare embeddings from different encoders: "
+                f"query {request.embedding_model} version {request.embedding_version} "
+                f"dim {request.embedding_dim} ({len(request.embedding)} values), "
+                f"corpus {version.requirement_id} v{version.version} "
+                f"{version.embedding_model} version {version.embedding_version} "
+                f"dim {version.embedding_dim} ({len(version.embedding)} values). "
+                "A 1536-dim Foundry vector and a 384-dim local vector are not the same space."
+            )
 
     bm25_ids: tuple[str, ...] = ()
     dense_ids: tuple[str, ...] = ()
@@ -123,6 +134,8 @@ def retrieve(request: RetrievalRequest, corpus: Sequence[RequirementVersion]) ->
         candidate_id=request.candidate.candidate_id,
         project_id=request.candidate.project_id,
         embedding_model=request.embedding_model,
+        embedding_version=request.embedding_version,
+        embedding_dim=request.embedding_dim,
         families=families,
         bm25_family_ids=bm25_ids,
         dense_family_ids=dense_ids,

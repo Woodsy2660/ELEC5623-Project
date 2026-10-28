@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { useMeetings, useProject, useProposals, useRequirements } from '../api/queries.ts'
-import type { Schemas } from '../api/client.ts'
+import { api, type Schemas } from '../api/client.ts'
 import { AppShell } from '../components/AppShell.tsx'
 import { RegisterTable } from '../components/RegisterTable.tsx'
 import { ScopeBar } from '../components/ScopeBar.tsx'
@@ -83,7 +83,7 @@ export function RegisterRoute() {
             </p>
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
-            <button type="button" className="cia-btn">
+            <button type="button" className="cia-btn" onClick={() => { window.location.href = api.exportUrl(projectId) }}>
               Export
             </button>
             <Link to={`/projects/${projectId}/review`} style={{ textDecoration: 'none' }}>

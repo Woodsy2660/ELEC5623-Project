@@ -4,7 +4,7 @@ from pathlib import Path
 
 from fastapi.testclient import TestClient
 
-from src.api.app import app, create_app
+from src.api.app import create_app
 from src.api.store import reset_store
 
 
@@ -15,7 +15,7 @@ def test_hosted_serves_the_ui_and_prefixes_the_api(tmp_path: Path) -> None:
     assets.mkdir()
     (assets / "mark.txt").write_text("logo", encoding="utf-8")
 
-    hosted = create_app(api_prefix="/api")
+    hosted = create_app(api_prefix="/api", use_fixtures=True)
     hosted.frontend("/", directory=tmp_path, fallback="index.html", check_dir=False)
     client = TestClient(hosted)
 
@@ -38,7 +38,7 @@ def test_hosted_serves_the_ui_and_prefixes_the_api(tmp_path: Path) -> None:
     assert asset.status_code == 200
     assert asset.text == "logo"
 
-    local = TestClient(app)
+    local = TestClient(create_app(use_fixtures=True))
     assert local.get("/projects").status_code == 200
     assert local.get("/api/projects").status_code == 404
 

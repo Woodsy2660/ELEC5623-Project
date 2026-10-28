@@ -63,6 +63,14 @@ export function useDecide(projectId: string) {
     mutationFn: (input: { proposalId: string; body: Schemas['DecisionRequest'] }) =>
       api.decide(input.proposalId, input.body),
     onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['proposals', projectId] }),
+        queryClient.invalidateQueries({ queryKey: ['requirements', projectId] }),
+        queryClient.invalidateQueries({ queryKey: ['requirement', projectId] }),
+        queryClient.invalidateQueries({ queryKey: ['projects'] }),
+      ])
+    },
+    onError: async () => {
       await queryClient.invalidateQueries({ queryKey: ['proposals', projectId] })
     },
   })

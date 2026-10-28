@@ -24,6 +24,9 @@ Coding agents: read `AGENTS.md` first.
 | [`docs/05-annotation-and-corpus.md`](docs/05-annotation-and-corpus.md) | Label definitions, authoring protocol |
 | [`docs/06-build-plan.md`](docs/06-build-plan.md) | Build order, schedule, three-way split, cut list |
 | [`docs/07-conventions.md`](docs/07-conventions.md) | Repo layout, code conventions, logging |
+| [`docs/11-remaining-implementation.md`](docs/11-remaining-implementation.md) | Current implementation status against Ben's draft |
+| [`docs/12-track-c-review.md`](docs/12-track-c-review.md) | SQLite review setup, behavior, validation and remaining work |
+| [`handover.md`](handover.md) | 27 Oct 2026 status for the report: what is wired, what is unmeasured, what D1 contains |
 
 ## Team
 
@@ -35,18 +38,23 @@ Coding agents: read `AGENTS.md` first.
 
 ## Quickstart
 
+For the local human-review demo on Windows, follow the step-by-step instructions in
+[`docs/12-track-c-review.md`](docs/12-track-c-review.md#local-demo-on-windows-powershell).
+A fresh clone does not include a SQLite database: `*.db` files are local and ignored by
+Git. To create a new D1 review queue, install the pinned local embedding model and run
+the demo pipeline with an Azure OpenAI chat key. Reviewing proposals already present in
+a database does not call Azure and does not need that key.
+
+The browser's **Reviewer access** field takes the same `REVIEWER_TOKEN` value configured
+for the local API. This is a shared local-demo write token, not a user account. Keep the
+API bound to localhost and never put the Azure key in the browser or a `VITE_*` variable.
+The detailed guide covers setup, pipeline generation, API and UI startup, and review.
+Do not use eval mode as the interactive demo: its missing-decision behavior is being
+reconciled with the project's gold-decision gate requirement.
+
 ```bash
-python -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt
-cp .env.example .env        # add your Azure Foundry deployment details
-
-# The state engine runs with no credentials and no database:
+# The deterministic state engine runs without credentials or a database:
 pytest src/engine
-
-# Load a development scenario and score one metric:
-python -m src.eval.ingest_scenario --scenario scenarios/dev/D1
-python -m src.eval.run_pipeline --mode eval --candidate-source gold --repeat 1
-python -m src.eval.score --run <run_id>
 ```
 
 ## Pipeline

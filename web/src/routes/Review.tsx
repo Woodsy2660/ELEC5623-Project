@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import type { CSSProperties } from 'react'
 import { useDecide, useProject, useProposals, useRequirements } from '../api/queries.ts'
 import type { Schemas } from '../api/client.ts'
-import { AppShell } from '../components/AppShell.tsx'
+import { AppShell, ReviewerAccess } from '../components/AppShell.tsx'
 import { ProposalCard } from '../components/ProposalCard.tsx'
 import { RelationChip } from '../components/RelationChip.tsx'
 import { ScopeBar } from '../components/ScopeBar.tsx'
@@ -64,7 +64,12 @@ export function ReviewRoute() {
     decide.mutate(
       {
         proposalId: selected.id,
-        body: action === 'edit' ? { action, edited_text: draft } : { action },
+        body: {
+          ...(action === 'edit' ? { action, edited_text: draft } : { action }),
+          ...(action !== 'reject' && selected.project_snapshot_token
+            ? { project_snapshot_token: selected.project_snapshot_token }
+            : {}),
+        },
       },
       {
         onSuccess: () => setEditing(false),
@@ -120,8 +125,11 @@ export function ReviewRoute() {
       </div>
       <main style={{ flex: '999 1 520px', minWidth: 0, boxSizing: 'border-box', padding: '32px 40px' }}>
         <ScopeBar client={project.data.client} projectName={project.data.name} count={list.scope_count_label} />
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 10 }}>
+          <ReviewerAccess />
+        </div>
         {selected ? (
-          <div style={{ marginTop: 28 }}>
+          <div style={{ marginTop: 18 }}>
             <ProposalCard
               scopeLabel={`${project.data.name} / ${scopeIdentity(selected, requirements.data)}`}
               statement={selected.statement}
@@ -146,6 +154,15 @@ export function ReviewRoute() {
                 text: item.text,
                 state: item.state,
                 chosen: item.chosen,
+              }))}
+              projectChanges={(selected.project_changes ?? []).map((change) => ({
+                requirementId: change.requirement_id,
+                change: change.change,
+                previousVersion: change.previous_version ?? null,
+                previousState: change.previous_state ?? null,
+                currentVersion: change.current_version ?? null,
+                currentState: change.current_state ?? null,
+                currentText: change.current_text ?? null,
               }))}
               canConfirm={selected.can_confirm}
               canConfirmReason={selected.can_confirm_reason}
@@ -176,9 +193,8 @@ export function ReviewRoute() {
           <p style={{ margin: '28px 0 0', color: 'var(--ink-meta)' }}>No proposals in this queue.</p>
         )}
         <p style={{ margin: '20px 0 0', maxWidth: 760, fontSize: 13, lineHeight: '20px', color: 'var(--ink-meta)' }}>
-          Rank 2 is the near-duplicate. Both are emails the system sends and both were discussed in adjacent turns;
-          showing what the classifier considered and did not pick is how a reviewer catches a wrong match rather than
-          trusting one.
+          Check the transcript evidence, retrieved alternatives, and any register changes above before confirming.
+          A model proposal is not client approval; proposals tied to a changed requirement remain blocked.
         </p>
       </main>
     </AppShell>
