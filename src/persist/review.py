@@ -5,6 +5,7 @@ decision and own the transaction. SQLite writers acquire BEGIN IMMEDIATE before
 reading so a second reviewer cannot commit against the same historical head.
 """
 
+import hashlib
 import json
 import re
 from collections.abc import Callable
@@ -45,6 +46,10 @@ _IDS = TypeAdapter(list[str])
 
 class ReviewConflict(ValueError):
     """A rejected/unresolved input. Never repair or substitute a prediction."""
+
+
+class ProjectSnapshotConflict(ReviewConflict):
+    """The project changed, while the proposal's own retrieved heads may still match."""
 
 
 class ReviewDecision(BaseModel):
@@ -165,6 +170,12 @@ def project_head_snapshot(session: Session, project_id: str) -> ProjectHeadSnaps
     return snapshot
 
 
+def project_snapshot_fingerprint(snapshot: ProjectHeadSnapshot) -> str:
+    """Stable token proving which current register snapshot the reviewer saw."""
+    canonical = json.dumps(snapshot, sort_keys=True, separators=(",", ":"))
+    return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+
+
 def require_project_embedding_contract(
     session: Session, project_id: str, vector: VectorRecord
 ) -> None:
@@ -205,7 +216,9 @@ def _next_event_seq(session: Session, run_id: str) -> int:
     return largest + 1
 
 
-def assess_stored_proposal(session: Session, proposal: Proposal) -> RuleVerdict:
+def assess_stored_proposal(
+    session: Session, proposal: Proposal, *, allow_project_changes: bool = False
+) -> RuleVerdict:
     candidate = session.get(Candidate, proposal.candidate_id)
     if candidate is None or candidate.run_id != proposal.run_id:
         raise ReviewConflict("Proposal and candidate run disagree")
@@ -243,9 +256,10 @@ def assess_stored_proposal(session: Session, proposal: Proposal) -> RuleVerdict:
     except (TypeError, ValueError) as exc:
         raise ReviewConflict("Proposal has an invalid project snapshot") from exc
     if expected_project_heads != project_head_snapshot(session, meeting.project_id):
-        raise ReviewConflict(
-            "Project requirements or states changed since this proposal; regenerate it"
-        )
+        if not allow_project_changes:
+            raise ProjectSnapshotConflict(
+                "Project requirements or states changed since this proposal"
+            )
     head = None
     if proposal.predicted_id is not None:
         head = current_head(session, meeting.project_id, proposal.predicted_id)
@@ -346,6 +360,7 @@ def commit_decision(
     proposal_id: str,
     decision: ReviewDecision,
     embed_text: EmbedText,
+    project_snapshot_token: str | None = None,
 ) -> ReviewResult:
     """Apply one human decision inside the caller's locked transaction.
 
@@ -380,7 +395,41 @@ def commit_decision(
             raise ReviewConflict("Edit requires replacement text")
         text = decision.edited_text
     if decision.action != "reject":
-        verdict = assess_stored_proposal(session, proposal)
+        try:
+            verdict = assess_stored_proposal(session, proposal)
+        except ProjectSnapshotConflict:
+            current_snapshot = project_head_snapshot(session, meeting.project_id)
+            if project_snapshot_token != project_snapshot_fingerprint(current_snapshot):
+                raise ReviewConflict(
+                    "The register changed since this proposal was loaded; reload and review the current entries"
+                ) from None
+            previous_snapshot = json.loads(context.expected_project_heads_json or "null")
+            verdict = assess_stored_proposal(
+                session, proposal, allow_project_changes=True
+            )
+            if verdict.verdict not in (Verdict.ALLOWED, Verdict.NO_OP):
+                raise ReviewConflict(verdict.reason) from None
+            context.expected_project_heads_json = json.dumps(
+                current_snapshot, sort_keys=True
+            )
+            session.add(
+                Event(
+                    id=str(uuid4()),
+                    project_id=meeting.project_id,
+                    ts=datetime.now(UTC),
+                    actor=decision.actor,
+                    event_type="proposal_revalidated",
+                    run_id=None,
+                    payload_json=json.dumps(
+                        {
+                            "proposal_id": proposal.id,
+                            "previous_project_heads": previous_snapshot,
+                            "current_project_heads": current_snapshot,
+                        },
+                        sort_keys=True,
+                    ),
+                )
+            )
         if verdict.verdict not in (Verdict.ALLOWED, Verdict.NO_OP):
             raise ReviewConflict(verdict.reason)
         if decision.action == "edit" and verdict.verdict == Verdict.NO_OP:

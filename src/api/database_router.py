@@ -105,6 +105,7 @@ def build_database_router(
                                 action=body.action, edited_text=body.edited_text, actor=actor
                             ),
                             embed_text=embed_text,
+                            project_snapshot_token=body.project_snapshot_token,
                         )
                     return CommittedEvent(**result.model_dump())
                 except ReviewConflict as exc:

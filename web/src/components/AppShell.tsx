@@ -96,9 +96,6 @@ export function AppShell({
             <NavLink to={`${base}/settings`} current={active === 'settings'}>
               Settings
             </NavLink>
-            <div style={{ padding: '12px 14px', borderTop: '1px solid var(--border-subtle)', marginTop: 8 }}>
-              <ReviewerAccess />
-            </div>
           </div>
         </nav>
         {children}
@@ -107,21 +104,47 @@ export function AppShell({
   )
 }
 
-function ReviewerAccess() {
+export function ReviewerAccess() {
   const [token, setToken] = useState('')
   const [notice, setNotice] = useState('')
   return (
-    <details>
-      <summary style={{ fontSize: 13 }}>Reviewer access</summary>
-      <label htmlFor="reviewer-token" style={{ display: 'block', marginTop: 12, fontSize: 12 }}>Access token</label>
-      <input id="reviewer-token" className="fld" type="password" autoComplete="off"
-        value={token} onChange={(event) => setToken(event.target.value)} style={{ width: '100%' }} />
-      <button type="button" className="cia-btn" style={{ marginTop: 8 }} onClick={() => {
-        setReviewerToken(token)
-        setNotice(token ? 'Token set for this tab. The server checks each save.' : 'Reviewer token cleared.')
-        setToken('')
-      }}>Apply</button>
-      {notice && <p role="status" style={{ fontSize: 12 }}>{notice}</p>}
+    <details style={{ width: '100%', maxWidth: 320 }}>
+      <summary style={{ cursor: 'pointer', fontSize: 13, textAlign: 'right' }}>Reviewer access</summary>
+      <div
+        style={{
+          marginTop: 8,
+          padding: 14,
+          border: '1px solid var(--border-subtle)',
+          borderRadius: 'var(--radius-md)',
+          background: 'var(--surface-raised)',
+        }}
+      >
+        <label htmlFor="reviewer-token" style={{ display: 'block', marginBottom: 6, fontSize: 12 }}>
+          Access token
+        </label>
+        <input
+          id="reviewer-token"
+          className="fld"
+          type="password"
+          autoComplete="off"
+          value={token}
+          onChange={(event) => setToken(event.target.value)}
+          style={{ width: '100%' }}
+        />
+        <button
+          type="button"
+          className="cia-btn"
+          style={{ marginTop: 8 }}
+          onClick={() => {
+            setReviewerToken(token)
+            setNotice(token ? 'Token set for this tab. The server checks each save.' : 'Reviewer token cleared.')
+            setToken('')
+          }}
+        >
+          Apply
+        </button>
+        {notice && <p role="status" style={{ margin: '8px 0 0', fontSize: 12 }}>{notice}</p>}
+      </div>
     </details>
   )
 }

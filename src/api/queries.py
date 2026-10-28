@@ -11,6 +11,7 @@ from src.api.schemas import (
     CommittedEvent,
     MeetingOut,
     ProjectOut,
+    ProjectRegisterChange,
     ProposalList,
     ProposalOut,
     RegisterRow,
@@ -37,7 +38,14 @@ from src.persist.models import (
     Speaker,
     Turn,
 )
-from src.persist.review import ReviewConflict, assess_stored_proposal, candidate_evidence
+from src.persist.review import (
+    ProjectSnapshotConflict,
+    ReviewConflict,
+    assess_stored_proposal,
+    candidate_evidence,
+    project_head_snapshot,
+    project_snapshot_fingerprint,
+)
 from src.validate.schemas import EvidenceSpan
 
 
@@ -103,15 +111,83 @@ def meetings(session: Session, project_id: str) -> list[MeetingOut]:
     return result
 
 
+def _project_register_changes(
+    session: Session,
+    project_id: str,
+    expected: dict[str, dict[str, str | int]],
+    current: dict[str, dict[str, str | int]],
+) -> list[ProjectRegisterChange]:
+    rows = session.execute(
+        select(
+            Requirement.id,
+            RequirementCurrent.state,
+            RequirementCurrent.text,
+            RequirementVersion.version,
+        )
+        .outerjoin(RequirementCurrent, RequirementCurrent.requirement_id == Requirement.id)
+        .outerjoin(
+            RequirementVersion,
+            RequirementVersion.id == RequirementCurrent.current_version_id,
+        )
+        .where(Requirement.project_id == project_id)
+        .order_by(Requirement.id)
+    )
+    current_rows = {
+        requirement_id: (state, text, version)
+        for requirement_id, state, text, version in rows
+        if state is not None and version is not None
+    }
+    changes = []
+    for requirement_id in sorted(expected.keys() | current.keys()):
+        before, after = expected.get(requirement_id), current.get(requirement_id)
+        if before == after:
+            continue
+        state, text, version = current_rows.get(requirement_id, (None, None, None))
+        changes.append(
+            ProjectRegisterChange(
+                requirement_id=requirement_id,
+                change=("added" if before is None else "removed" if after is None else "changed"),
+                previous_version=int(before["version"]) if before else None,
+                previous_state=State(before["state"]) if before else None,
+                current_version=version,
+                current_state=State(state) if state else None,
+                current_text=text,
+            )
+        )
+    return changes
+
+
 def proposal_out(session: Session, proposal: Proposal) -> ProposalOut:
     candidate = session.get(Candidate, proposal.candidate_id)
     meeting = session.get(Meeting, candidate.meeting_id)
     context = session.get(ProposalReview, proposal.id)
     can_confirm, reason, verdict = False, "", None
+    project_changes: list[ProjectRegisterChange] = []
+    project_snapshot_token = None
+    if context and context.expected_project_heads_json:
+        try:
+            expected_heads = json.loads(context.expected_project_heads_json)
+            current_heads = project_head_snapshot(session, meeting.project_id)
+            if expected_heads != current_heads:
+                project_changes = _project_register_changes(
+                    session, meeting.project_id, expected_heads, current_heads
+                )
+                project_snapshot_token = project_snapshot_fingerprint(current_heads)
+        except (ReviewConflict, TypeError, ValueError):
+            pass
     try:
         verdict = assess_stored_proposal(session, proposal)
         can_confirm = verdict.verdict in (Verdict.ALLOWED, Verdict.NO_OP)
         reason = "" if can_confirm else verdict.reason
+    except ProjectSnapshotConflict:
+        try:
+            verdict = assess_stored_proposal(
+                session, proposal, allow_project_changes=True
+            )
+            can_confirm = verdict.verdict in (Verdict.ALLOWED, Verdict.NO_OP)
+            reason = "" if can_confirm else verdict.reason
+        except ReviewConflict as exc:
+            reason = str(exc)
     except ReviewConflict as exc:
         reason = str(exc)
     evidence = []
@@ -166,6 +242,8 @@ def proposal_out(session: Session, proposal: Proposal) -> ProposalOut:
         to_state=verdict.resulting_state if verdict else None,
         can_confirm=can_confirm,
         can_confirm_reason=reason,
+        project_changes=project_changes,
+        project_snapshot_token=project_snapshot_token,
         unresolved=not can_confirm and decision is None,
         evidence=evidence,
         retrieved=retrieved,

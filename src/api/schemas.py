@@ -100,6 +100,18 @@ class CommittedEvent(BaseModel):
     reason: str
 
 
+class ProjectRegisterChange(BaseModel):
+    """A current register entry that differs from a proposal's original snapshot."""
+
+    requirement_id: str
+    change: Literal["added", "changed", "removed"]
+    previous_version: int | None = None
+    previous_state: State | None = None
+    current_version: int | None = None
+    current_state: State | None = None
+    current_text: str | None = None
+
+
 class ProposalOut(BaseModel):
     """A proposal awaiting a human decision.
 
@@ -121,6 +133,8 @@ class ProposalOut(BaseModel):
     proposal_status: Literal["proposed"] = "proposed"
     can_confirm: bool
     can_confirm_reason: str
+    project_changes: list[ProjectRegisterChange] = Field(default_factory=list)
+    project_snapshot_token: str | None = None
     unresolved: bool
     evidence: list[EvidenceQuote]
     retrieved: list[RetrievedAlternative]
@@ -144,6 +158,7 @@ class ProposalList(BaseModel):
 class DecisionRequest(BaseModel):
     action: Literal["confirm", "reject", "edit"]
     edited_text: str | None = None
+    project_snapshot_token: str | None = Field(default=None, pattern=r"^[a-f0-9]{64}$")
 
     @model_validator(mode="after")
     def edit_has_text(self) -> "DecisionRequest":

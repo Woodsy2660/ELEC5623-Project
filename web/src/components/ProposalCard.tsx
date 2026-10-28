@@ -20,6 +20,16 @@ export type RetrievedRow = {
   chosen: boolean
 }
 
+export type ProjectChangeRow = {
+  requirementId: string
+  change: 'added' | 'changed' | 'removed'
+  previousVersion: number | null
+  previousState: LifecycleState | null
+  currentVersion: number | null
+  currentState: LifecycleState | null
+  currentText: string | null
+}
+
 export function ProposalCard({
   scopeLabel,
   statement,
@@ -34,6 +44,7 @@ export function ProposalCard({
   authorityNote,
   rationale,
   retrieved,
+  projectChanges,
   canConfirm,
   canConfirmReason,
   decided,
@@ -60,6 +71,7 @@ export function ProposalCard({
   authorityNote?: string | null
   rationale: string
   retrieved: RetrievedRow[]
+  projectChanges?: ProjectChangeRow[]
   canConfirm: boolean
   canConfirmReason: string
   decided: boolean
@@ -96,6 +108,42 @@ export function ProposalCard({
         <RelationChip relation={relation} />
       </div>
       <div className="cia-proposal__body">
+        {projectChanges?.length ? (
+          <section
+            aria-label="Register changes since proposal"
+            style={{
+              padding: '14px 16px',
+              border: '1px solid var(--border-strong)',
+              background: 'var(--surface-sunken)',
+              borderRadius: 8,
+            }}
+          >
+            <div className="cia-proposal__section-label">Register changed since this proposal was created</div>
+            <p style={{ margin: '8px 0 12px', fontSize: 13, lineHeight: '20px' }}>
+              This proposal has not been classified again. Compare these current entries with its evidence before
+              confirming; the server will check the current register again when you decide.
+            </p>
+            <div style={{ display: 'grid', gap: 10 }}>
+              {projectChanges.map((change) => (
+                <div key={change.requirementId} style={{ borderTop: '1px solid var(--border-subtle)', paddingTop: 8 }}>
+                  <div style={{ fontSize: 12, fontWeight: 600 }}>
+                    {change.change.toUpperCase()} · {change.requirementId}
+                  </div>
+                  <div style={{ fontSize: 12, color: 'var(--ink-meta)', marginTop: 3 }}>
+                    {change.previousVersion == null
+                      ? 'Not in the original register snapshot'
+                      : `Previously v${change.previousVersion} · ${change.previousState ?? 'unknown'}`}
+                    {' → '}
+                    {change.currentVersion == null
+                      ? 'No longer in the current register'
+                      : `Now v${change.currentVersion} · ${change.currentState ?? 'unknown'}`}
+                  </div>
+                  {change.currentText ? <div style={{ fontSize: 13, marginTop: 5 }}>{change.currentText}</div> : null}
+                </div>
+              ))}
+            </div>
+          </section>
+        ) : null}
         <div>
           <div className="cia-proposal__section-label">Evidence</div>
           {evidence.map((quote) => (

@@ -28,8 +28,8 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** List Requirements */
-        get: operations["list_requirements_projects__project_id__requirements_get"];
+        /** Register */
+        get: operations["register_projects__project_id__requirements_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -45,8 +45,8 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Get Requirement */
-        get: operations["get_requirement_projects__project_id__requirements__requirement_id__get"];
+        /** Detail */
+        get: operations["detail_projects__project_id__requirements__requirement_id__get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -96,8 +96,8 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** List Meetings */
-        get: operations["list_meetings_projects__project_id__meetings_get"];
+        /** Meetings */
+        get: operations["meetings_projects__project_id__meetings_get"];
         put?: never;
         /** Create Meeting */
         post: operations["create_meeting_projects__project_id__meetings_post"];
@@ -114,8 +114,8 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** List Turns */
-        get: operations["list_turns_meetings__meeting_id__turns_get"];
+        /** Turns */
+        get: operations["turns_meetings__meeting_id__turns_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -131,11 +131,25 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /**
-         * Stream Meeting
-         * @description Replay stored turns. The last turn of the live meeting is still partial.
-         */
-        get: operations["stream_meeting_meetings__meeting_id__stream_get"];
+        /** Stream */
+        get: operations["stream_meetings__meeting_id__stream_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/projects/{project_id}/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Export */
+        get: operations["export_projects__project_id__export_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -191,6 +205,11 @@ export interface components {
             rationale: string;
             /** Retrieved Ids */
             retrieved_ids: string[];
+            /**
+             * Replacement Stated
+             * @default false
+             */
+            replacement_stated: boolean;
         };
         /** CommittedEvent */
         CommittedEvent: {
@@ -243,6 +262,8 @@ export interface components {
             action: "confirm" | "reject" | "edit";
             /** Edited Text */
             edited_text?: string | null;
+            /** Project Snapshot Token */
+            project_snapshot_token?: string | null;
         };
         /**
          * EventType
@@ -357,6 +378,27 @@ export interface components {
             /** Live Detail */
             live_detail?: string | null;
         };
+        /**
+         * ProjectRegisterChange
+         * @description A current register entry that differs from a proposal's original snapshot.
+         */
+        ProjectRegisterChange: {
+            /** Requirement Id */
+            requirement_id: string;
+            /**
+             * Change
+             * @enum {string}
+             */
+            change: "added" | "changed" | "removed";
+            /** Previous Version */
+            previous_version?: number | null;
+            previous_state?: components["schemas"]["State"] | null;
+            /** Current Version */
+            current_version?: number | null;
+            current_state?: components["schemas"]["State"] | null;
+            /** Current Text */
+            current_text?: string | null;
+        };
         /** ProjectSettings */
         ProjectSettings: {
             /** Project Id */
@@ -438,6 +480,10 @@ export interface components {
             can_confirm: boolean;
             /** Can Confirm Reason */
             can_confirm_reason: string;
+            /** Project Changes */
+            project_changes?: components["schemas"]["ProjectRegisterChange"][];
+            /** Project Snapshot Token */
+            project_snapshot_token?: string | null;
             /** Unresolved */
             unresolved: boolean;
             /** Evidence */
@@ -627,7 +673,7 @@ export interface operations {
             };
         };
     };
-    list_requirements_projects__project_id__requirements_get: {
+    register_projects__project_id__requirements_get: {
         parameters: {
             query?: never;
             header?: never;
@@ -647,15 +693,6 @@ export interface operations {
                     "application/json": components["schemas"]["RegisterRow"][];
                 };
             };
-            /** @description Not Found */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ReasonBody"];
-                };
-            };
             /** @description Validation Error */
             422: {
                 headers: {
@@ -667,7 +704,7 @@ export interface operations {
             };
         };
     };
-    get_requirement_projects__project_id__requirements__requirement_id__get: {
+    detail_projects__project_id__requirements__requirement_id__get: {
         parameters: {
             query?: never;
             header?: never;
@@ -686,15 +723,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["RequirementDetail"];
-                };
-            };
-            /** @description Not Found */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ReasonBody"];
                 };
             };
             /** @description Validation Error */
@@ -728,15 +756,6 @@ export interface operations {
                     "application/json": components["schemas"]["ProposalList"];
                 };
             };
-            /** @description Not Found */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ReasonBody"];
-                };
-            };
             /** @description Validation Error */
             422: {
                 headers: {
@@ -751,7 +770,9 @@ export interface operations {
     decide_proposals__proposal_id__decision_post: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                authorization?: string | null;
+            };
             path: {
                 proposal_id: string;
             };
@@ -801,7 +822,7 @@ export interface operations {
             };
         };
     };
-    list_meetings_projects__project_id__meetings_get: {
+    meetings_projects__project_id__meetings_get: {
         parameters: {
             query?: never;
             header?: never;
@@ -821,15 +842,6 @@ export interface operations {
                     "application/json": components["schemas"]["MeetingOut"][];
                 };
             };
-            /** @description Not Found */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ReasonBody"];
-                };
-            };
             /** @description Validation Error */
             422: {
                 headers: {
@@ -844,7 +856,9 @@ export interface operations {
     create_meeting_projects__project_id__meetings_post: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                authorization?: string | null;
+            };
             path: {
                 project_id: string;
             };
@@ -865,24 +879,6 @@ export interface operations {
                     "application/json": components["schemas"]["MeetingOut"];
                 };
             };
-            /** @description Not Found */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ReasonBody"];
-                };
-            };
-            /** @description Conflict */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["DecisionConflict"];
-                };
-            };
             /** @description Validation Error */
             422: {
                 headers: {
@@ -894,7 +890,7 @@ export interface operations {
             };
         };
     };
-    list_turns_meetings__meeting_id__turns_get: {
+    turns_meetings__meeting_id__turns_get: {
         parameters: {
             query?: never;
             header?: never;
@@ -914,13 +910,35 @@ export interface operations {
                     "application/json": components["schemas"]["StreamTurn"][];
                 };
             };
-            /** @description Not Found */
-            404: {
+            /** @description Validation Error */
+            422: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ReasonBody"];
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    stream_meetings__meeting_id__stream_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                meeting_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
                 };
             };
             /** @description Validation Error */
@@ -934,34 +952,24 @@ export interface operations {
             };
         };
     };
-    stream_meeting_meetings__meeting_id__stream_get: {
+    export_projects__project_id__export_get: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                meeting_id: string;
+                project_id: string;
             };
             cookie?: never;
         };
         requestBody?: never;
         responses: {
-            /** @description Server-sent events. Each event is one StreamTurn. */
+            /** @description Successful Response */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
                     "application/json": unknown;
-                    "text/event-stream": components["schemas"]["StreamTurn"];
-                };
-            };
-            /** @description Not Found */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ReasonBody"];
                 };
             };
             /** @description Validation Error */
@@ -995,15 +1003,6 @@ export interface operations {
                     "application/json": components["schemas"]["ProjectSettings"];
                 };
             };
-            /** @description Not Found */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ReasonBody"];
-                };
-            };
             /** @description Validation Error */
             422: {
                 headers: {
@@ -1018,7 +1017,9 @@ export interface operations {
     put_settings_projects__project_id__settings_put: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                authorization?: string | null;
+            };
             path: {
                 project_id: string;
             };
@@ -1037,24 +1038,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ProjectSettings"];
-                };
-            };
-            /** @description Not Found */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ReasonBody"];
-                };
-            };
-            /** @description Conflict */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["DecisionConflict"];
                 };
             };
             /** @description Validation Error */
