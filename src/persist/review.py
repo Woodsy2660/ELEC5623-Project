@@ -401,7 +401,8 @@ def commit_decision(
             current_snapshot = project_head_snapshot(session, meeting.project_id)
             if project_snapshot_token != project_snapshot_fingerprint(current_snapshot):
                 raise ReviewConflict(
-                    "The register changed since this proposal was loaded; reload and review the current entries"
+                    "Project requirements or states changed since this proposal was loaded; "
+                    "reload and review the current entries"
                 ) from None
             previous_snapshot = json.loads(context.expected_project_heads_json or "null")
             verdict = assess_stored_proposal(session, proposal, allow_project_changes=True)
