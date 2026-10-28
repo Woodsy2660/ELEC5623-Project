@@ -250,3 +250,7 @@
 }
 .cia-scope__project:hover { border-color: var(--ink); }
 .cia-scope__note { margin-left: auto; font-family: var(--font-sans); font-size: 12px; color: var(--ink-meta); }
+
+/* ---------- Meetings page redesign --------------------------------------- */
+.proposal-row:hover { background: var(--surface-sunken); }
+.mcard:hover { border-color: var(--border-strong); box-shadow: var(--shadow-card); }

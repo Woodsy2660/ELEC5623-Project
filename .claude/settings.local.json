@@ -32,7 +32,9 @@
       "Bash(python -m src.eval.run_pipeline:*)",
       "Bash(uv run python:*)",
       "Bash(diff:*)",
-      "Bash(pkill:*)"
+      "Bash(pkill:*)",
+      "Bash(npx tsc:*)",
+      "Bash(fuser:*)"
     ]
   }
 }
