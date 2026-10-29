@@ -125,6 +125,42 @@ JSON in SQLite.
 Cost is computed at log time from the recorded rates for the pinned deployment. Record the rates in
 `docs/` when the model is selected; do not hardcode them in code.
 
+### Failed attempts and E8 accounting (29 October 2026)
+
+The shared SQL row shape and successful `CallLogger.call` / `embed` returns are
+unchanged. Each provider attempt now gets its own ID, raw JSON and committed
+`model_calls` row, including the failed attempt before a retry. Chat retries once;
+embedding retains its existing no-retry policy. SDK-internal retries are disabled
+so they cannot issue invisible requests. Schema-validation retries at the stage
+level remain separate calls. `retries` is the transport attempt index (0 or 1).
+
+The raw payload adds `_call_trace`: `outcome` (provider success/failure),
+`usage_known`, `attempt_index`, `logical_call_id` and a safe error summary. Provider
+success does not imply schema-valid, evidence-supported or correct output. Error
+summaries retain exception type, HTTP status and machine error code, without
+exception text, request headers, credentials, URLs or request bodies. A failed
+extraction returns diagnostic call IDs; the pipeline exposes it in `errors` and
+run notes instead of reporting an apparently successful empty meeting.
+
+The existing SQL numeric columns remain non-null for compatibility. On attempts
+without provider usage, their zeros are **unknown placeholders, not free usage**.
+E8 reads the raw flags: if any usage is unknown, total `cost`, `input_tokens` and
+`output_tokens` are null. `recorded_cost` and recorded token subtotals cover only
+known usage; `unknown_usage_calls`, `failed_calls` and `usage_complete` expose the
+limit, also by stage. Do not sum SQL `cost` directly and describe it as total cost.
+Missing raw records also make usage unknown. Legacy successful raw responses and
+local encoder traces remain readable; earlier missing requests cannot be recovered.
+
+Audit rows commit in a separate transaction, like local embedding traces, so a
+later candidate/register rollback does not erase a paid attempt. The run must be
+committed first and the caller must not hold a SQLite write lock during inference.
+The logger does not commit pending business writes. An audit storage error stops
+processing without making another provider request.
+
+This fixes the logging and error-reporting defect found in the full AMI smoke run;
+it does not repair its historical records, rerun that corpus, fix API/canonical
+import deduplication, change prompts, or establish evaluation accuracy.
+
 ## Secrets
 
 Credentials in `.env`, never committed. `.env.example` lists the variable names only. Nothing in

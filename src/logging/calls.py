@@ -8,14 +8,15 @@ See docs/09-model-deployment.md for deployment configuration.
 
 import hashlib
 import json
+import re
 import time
 import uuid
+from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
 from openai import AzureOpenAI
-from openai.types.chat import ChatCompletion
 
 from src.llm.config import compute_cost
 
@@ -23,7 +24,9 @@ from src.llm.config import compute_cost
 class ModelCallError(Exception):
     """Error during model call (schema failure, parse error, etc.)."""
 
-    pass
+    def __init__(self, message: str, *, call_ids: tuple[str, ...] = ()) -> None:
+        super().__init__(message)
+        self.call_ids = call_ids
 
 
 @dataclass(frozen=True)
@@ -46,23 +49,87 @@ def _compute_prompt_hash(prompt_path: Path) -> str:
     return hashlib.sha1(header + content).hexdigest()
 
 
-def _write_raw_response(
-    run_id: str,
-    call_id: str,
-    response: ChatCompletion,
-    runs_dir: Path,
-) -> str:
-    """Write raw response JSON to disk and return the path."""
+def _write_payload(run_id: str, call_id: str, payload: dict[str, Any], runs_dir: Path) -> str:
     run_dir = runs_dir / run_id
     run_dir.mkdir(parents=True, exist_ok=True)
+    path = run_dir / f"{call_id}.json"
+    path.write_text(json.dumps(payload, indent=2, ensure_ascii=False), encoding="utf-8")
+    return str(path)
 
-    raw_path = run_dir / f"{call_id}.json"
-    raw_path.write_text(
-        json.dumps(response.model_dump(), indent=2, ensure_ascii=False),
-        encoding="utf-8",
+
+def _safe_error(exc: Exception) -> dict[str, Any]:
+    """Retain diagnostic codes, never exception text, headers, URLs or request bodies."""
+    error: dict[str, Any] = {"type": type(exc).__name__}
+    status = getattr(exc, "status_code", None)
+    if isinstance(status, int):
+        error["http_status"] = status
+    code = getattr(exc, "code", None)
+    if isinstance(code, str) and re.fullmatch(r"[A-Za-z0-9_.-]{1,100}", code):
+        error["code"] = code
+    return error
+
+
+def _request_client(client: AzureOpenAI) -> AzureOpenAI:
+    # SDK retries would hide HTTP attempts from this logger's explicit retry loop.
+    return client.with_options(max_retries=0) if isinstance(client, AzureOpenAI) else client
+
+
+def _attempt_row(
+    *,
+    run_id: str,
+    call_id: str,
+    stage: str,
+    deployment_name: str,
+    prompt_hash: str,
+    temperature: float,
+    seed: int | None,
+    attempt: int,
+    logical_call_id: str,
+    latency_ms: int,
+    runs_dir: Path,
+    response: Any = None,
+    error: Exception | None = None,
+) -> dict[str, Any]:
+    payload = response.model_dump() if response is not None else {}
+    usage = payload.get("usage")
+    known = (
+        isinstance(usage, dict)
+        and isinstance(usage.get("prompt_tokens"), int)
+        and isinstance(
+            usage.get("completion_tokens", 0)
+            if stage == "embed"
+            else usage.get("completion_tokens"),
+            int,
+        )
     )
-
-    return str(raw_path)
+    payload["_call_trace"] = {
+        "outcome": "failed" if error is not None else "success",
+        "usage_known": known,
+        "attempt_index": attempt,
+        "logical_call_id": logical_call_id,
+        "error": _safe_error(error) if error is not None else None,
+    }
+    # Keep the existing non-null SQL row contract. These numeric zero placeholders
+    # are unknown, not free calls; E8 reads _call_trace and emits null totals.
+    input_tokens = usage["prompt_tokens"] if known else 0
+    output_tokens = usage.get("completion_tokens", 0) if known else 0
+    served_model = payload.get("model") or "unknown"
+    return {
+        "id": call_id,
+        "run_id": run_id,
+        "stage": stage,
+        "deployment_name": deployment_name,
+        "served_model": served_model,
+        "prompt_hash": prompt_hash,
+        "temperature": temperature,
+        "seed": seed,
+        "input_tokens": input_tokens,
+        "output_tokens": output_tokens,
+        "latency_ms": latency_ms,
+        "retries": attempt,
+        "cost": compute_cost(served_model, input_tokens, output_tokens) if known else 0.0,
+        "raw_json_path": _write_payload(run_id, call_id, payload, runs_dir),
+    }
 
 
 def call_model(
@@ -77,31 +144,14 @@ def call_model(
     temperature: float = 0.0,
     seed: int | None = 42,
     runs_dir: Path = Path("runs"),
+    record_attempt: Callable[[dict[str, Any]], None] | None = None,
 ) -> tuple[ParsedResponse, dict[str, Any]]:
-    """Make a model call with logging.
+    """Log every transport attempt; preserve the final response/row return contract.
 
-    Args:
-        client: Azure OpenAI client.
-        run_id: Run ID for this pipeline execution.
-        stage: Pipeline stage (e.g., "extract", "classify").
-        prompt_path: Path to the versioned prompt file.
-        messages: Chat messages to send.
-        response_format: Optional JSON schema for structured output.
-        deployment_name: Deployment name we're requesting.
-        temperature: Temperature setting.
-        seed: Random seed for reproducibility.
-        runs_dir: Directory for storing raw responses.
-
-    Returns:
-        Tuple of (ParsedResponse, row_data for model_calls table).
-
-    Raises:
-        ModelCallError: On schema failure after retry.
+    Persistence errors propagate without issuing another paid request. The shared
+    caller retries provider errors once; SDK retries are disabled for this call.
     """
-    call_id = str(uuid.uuid4())
     prompt_hash = _compute_prompt_hash(prompt_path)
-
-    # Build request kwargs
     kwargs: dict[str, Any] = {
         "model": deployment_name,
         "messages": messages,
@@ -111,89 +161,79 @@ def call_model(
         kwargs["seed"] = seed
     if response_format is not None:
         kwargs["response_format"] = response_format
-
-    retries = 0
-    last_error: Exception | None = None
-
-    for attempt in range(2):  # Max one retry
+    request_client = _request_client(client)
+    call_ids = []
+    for attempt in range(2):
+        call_id = str(uuid.uuid4())
+        call_ids.append(call_id)
         start_time = time.perf_counter()
-
+        response, error = None, None
         try:
-            response = client.chat.completions.create(**kwargs)
-            latency_ms = int((time.perf_counter() - start_time) * 1000)
-
-            # Extract response data
-            content = response.choices[0].message.content or ""
-            usage = response.usage
-            input_tokens = usage.prompt_tokens if usage else 0
-            output_tokens = usage.completion_tokens if usage else 0
-
-            # Get served model from response (what actually answered)
-            served_model = response.model or deployment_name
-
-            # Write raw response to disk
-            raw_json_path = _write_raw_response(run_id, call_id, response, runs_dir)
-
-            # Compute cost
-            cost = compute_cost(served_model, input_tokens, output_tokens)
-
-            # Build row data for model_calls table
-            row_data = {
-                "id": call_id,
-                "run_id": run_id,
-                "stage": stage,
-                "deployment_name": deployment_name,
-                "served_model": served_model,
-                "prompt_hash": prompt_hash,
-                "temperature": temperature,
-                "seed": seed,
-                "input_tokens": input_tokens,
-                "output_tokens": output_tokens,
-                "latency_ms": latency_ms,
-                "retries": retries,
-                "cost": cost,
-                "raw_json_path": raw_json_path,
-            }
-
-            parsed = ParsedResponse(
-                call_id=call_id,
-                content=content,
-                input_tokens=input_tokens,
-                output_tokens=output_tokens,
-                served_model=served_model,
-                latency_ms=latency_ms,
-                retries=retries,
-            )
-
-            return parsed, row_data
-
-        except Exception as e:
-            latency_ms = int((time.perf_counter() - start_time) * 1000)
-            last_error = e
-
+            response = request_client.chat.completions.create(**kwargs)
+        except Exception as exc:
+            error = exc
+        latency_ms = int((time.perf_counter() - start_time) * 1000)
+        row = _attempt_row(
+            run_id=run_id,
+            call_id=call_id,
+            stage=stage,
+            deployment_name=deployment_name,
+            prompt_hash=prompt_hash,
+            temperature=temperature,
+            seed=seed,
+            attempt=attempt,
+            logical_call_id=call_ids[0],
+            latency_ms=latency_ms,
+            runs_dir=runs_dir,
+            response=response,
+            error=error,
+        )
+        if record_attempt is not None:
+            record_attempt(row)
+        if error is not None:
             if attempt == 0:
-                # First failure - retry once
-                retries = 1
                 continue
-            else:
-                # Second failure - raise
-                raise ModelCallError(f"Model call failed after retry: {e}") from e
+            raise ModelCallError(
+                f"Model call failed after retry: {_safe_error(error)}; calls={','.join(call_ids)}",
+                call_ids=tuple(call_ids),
+            ) from None
+        if not response.choices:
+            raise ModelCallError("Model response contained no choices", call_ids=tuple(call_ids))
+        parsed = ParsedResponse(
+            call_id=call_id,
+            content=response.choices[0].message.content or "",
+            input_tokens=row["input_tokens"],
+            output_tokens=row["output_tokens"],
+            served_model=row["served_model"],
+            latency_ms=latency_ms,
+            retries=attempt,
+        )
+        return parsed, row
+    raise AssertionError("Unreachable retry state")
 
-    # Should never reach here, but for type safety
-    raise ModelCallError(f"Model call failed: {last_error}")
 
-
-def _write_embed_response(
-    run_id: str,
-    call_id: str,
-    payload: dict[str, Any],
-    runs_dir: Path,
-) -> str:
-    run_dir = runs_dir / run_id
-    run_dir.mkdir(parents=True, exist_ok=True)
-    raw_path = run_dir / f"{call_id}.json"
-    raw_path.write_text(json.dumps(payload, indent=2, ensure_ascii=False), encoding="utf-8")
-    return str(raw_path)
+def accounting_from_raw(path: str) -> dict[str, Any]:
+    """Read trace flags for E8 without changing the shared ModelCall SQL contract."""
+    try:
+        payload = json.loads(Path(path).read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return {"outcome": "unknown", "usage_known": False}
+    if not isinstance(payload, dict):
+        return {"outcome": "unknown", "usage_known": False}
+    trace = payload.get("_call_trace")
+    if isinstance(trace, dict):
+        return {
+            "outcome": trace.get("outcome", "unknown"),
+            "usage_known": trace.get("usage_known") is True,
+        }
+    # Older raw provider responses and local encoder traces remain readable.
+    if "model_id" in payload and "input_tokens" in payload:
+        return {"outcome": "failed" if payload.get("error") else "success", "usage_known": True}
+    usage = payload.get("usage")
+    return {
+        "outcome": "success" if "choices" in payload or "data" in payload else "unknown",
+        "usage_known": isinstance(usage, dict) and isinstance(usage.get("prompt_tokens"), int),
+    }
 
 
 def call_embedding(
@@ -203,6 +243,7 @@ def call_embedding(
     deployment_name: str,
     texts: list[str],
     runs_dir: Path = Path("runs"),
+    record_attempt: Callable[[dict[str, Any]], None] | None = None,
 ) -> tuple[list[tuple[float, ...]], dict[str, Any]]:
     """Embed a batch. This is the only ``embeddings.create`` call site.
 
@@ -216,35 +257,37 @@ def call_embedding(
     identity = f"{deployment_name}|{FOUNDRY_EMBED_MODEL}|{FOUNDRY_EMBED_VERSION}".encode()
     prompt_hash = hashlib.sha1(f"blob {len(identity)}\0".encode() + identity).hexdigest()
     start_time = time.perf_counter()
+    response, error = None, None
     try:
-        response = client.embeddings.create(model=deployment_name, input=list(texts))
+        response = _request_client(client).embeddings.create(
+            model=deployment_name, input=list(texts)
+        )
     except Exception as exc:
-        raise ModelCallError(f"Embedding call failed: {exc}") from exc
-    latency_ms = int((time.perf_counter() - start_time) * 1000)
+        error = exc
+    row = _attempt_row(
+        run_id=run_id,
+        call_id=call_id,
+        stage="embed",
+        deployment_name=deployment_name,
+        prompt_hash=prompt_hash,
+        temperature=0.0,
+        seed=None,
+        attempt=0,
+        logical_call_id=call_id,
+        latency_ms=int((time.perf_counter() - start_time) * 1000),
+        runs_dir=runs_dir,
+        response=response,
+        error=error,
+    )
+    if record_attempt is not None:
+        record_attempt(row)
+    if error is not None:
+        raise ModelCallError(
+            f"Embedding call failed: {_safe_error(error)}; call={call_id}",
+            call_ids=(call_id,),
+        ) from None
     ordered = sorted(response.data, key=lambda item: item.index)
-    vectors = [tuple(float(value) for value in item.embedding) for item in ordered]
-    usage = response.usage
-    input_tokens = usage.prompt_tokens if usage else 0
-    served_model = response.model or deployment_name
-    raw_json_path = _write_embed_response(run_id, call_id, response.model_dump(), runs_dir)
-    cost = compute_cost(served_model, input_tokens, 0)
-    row_data = {
-        "id": call_id,
-        "run_id": run_id,
-        "stage": "embed",
-        "deployment_name": deployment_name,
-        "served_model": served_model,
-        "prompt_hash": prompt_hash,
-        "temperature": 0.0,
-        "seed": None,
-        "input_tokens": input_tokens,
-        "output_tokens": 0,
-        "latency_ms": latency_ms,
-        "retries": 0,
-        "cost": cost,
-        "raw_json_path": raw_json_path,
-    }
-    return vectors, row_data
+    return [tuple(float(value) for value in item.embedding) for item in ordered], row
 
 
 class CallLogger:
@@ -300,9 +343,7 @@ class CallLogger:
         Raises:
             ModelCallError: On failure after retry.
         """
-        from src.persist.models import ModelCall
-
-        parsed, row_data = call_model(
+        parsed, _ = call_model(
             self.client,
             run_id=run_id,
             stage=stage,
@@ -313,27 +354,33 @@ class CallLogger:
             temperature=self.temperature,
             seed=self.seed,
             runs_dir=self.runs_dir,
+            record_attempt=self._record_attempt,
         )
-
-        # Insert row into model_calls table
-        model_call = ModelCall(**row_data)
-        self.session.add(model_call)
-        self.session.flush()
-
         return parsed
 
     def embed(self, *, run_id: str, texts: list[str]) -> list[tuple[float, ...]]:
         """Log one embedding batch against cia-embed, not the chat deployment."""
         from src.llm.config import FOUNDRY_EMBED_DEPLOYMENT
-        from src.persist.models import ModelCall
 
-        vectors, row_data = call_embedding(
+        vectors, _ = call_embedding(
             self.client,
             run_id=run_id,
             deployment_name=FOUNDRY_EMBED_DEPLOYMENT,
             texts=texts,
             runs_dir=self.runs_dir,
+            record_attempt=self._record_attempt,
         )
-        self.session.add(ModelCall(**row_data))
-        self.session.flush()
         return vectors
+
+    def _record_attempt(self, row: dict[str, Any]) -> None:
+        """Audit independently of later candidate/register rollback, like local encodes.
+
+        The run must already be committed and the caller must not hold a write lock.
+        This logger never commits the caller's pending business changes.
+        """
+        from sqlalchemy.orm import Session
+
+        from src.persist.models import ModelCall
+
+        with Session(bind=self.session.get_bind()) as trace, trace.begin():
+            trace.add(ModelCall(**row))

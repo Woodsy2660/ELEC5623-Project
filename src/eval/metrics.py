@@ -501,30 +501,37 @@ def illegal_transition_rate(events: list[dict]) -> dict:
 
 
 def e8_from_calls(calls: list[dict]) -> dict:
-    """Latency, tokens, retries, and cost. An empty stage means the logger did not record it."""
-    by_stage: dict[str, dict[str, float | int]] = {}
-    latencies = []
-    for call in calls:
-        stage = str(call.get("stage") or "unknown")
-        bucket = by_stage.setdefault(
-            stage,
-            {
-                "calls": 0,
-                "input_tokens": 0,
-                "output_tokens": 0,
-                "retries": 0,
-                "cost": 0.0,
-                "latency_ms": 0,
-            },
-        )
-        bucket["calls"] += 1
-        bucket["input_tokens"] += int(call.get("input_tokens") or 0)
-        bucket["output_tokens"] += int(call.get("output_tokens") or 0)
-        bucket["retries"] += int(call.get("retries") or 0)
-        bucket["cost"] += float(call.get("cost") or 0.0)
-        bucket["latency_ms"] += int(call.get("latency_ms") or 0)
-        latencies.append(int(call.get("latency_ms") or 0))
-    ordered = sorted(latencies)
+    """Count attempts, including failures; unknown provider usage never means free."""
+
+    def summarize(items: list[dict]) -> dict:
+        unknown = sum(call.get("usage_known") is False for call in items)
+        known = [call for call in items if call.get("usage_known") is not False]
+        recorded_cost = sum(float(call.get("cost") or 0.0) for call in known)
+        recorded_input = sum(int(call.get("input_tokens") or 0) for call in known)
+        recorded_output = sum(int(call.get("output_tokens") or 0) for call in known)
+        return {
+            "calls": len(items),
+            "failed_calls": sum(call.get("outcome") == "failed" for call in items),
+            "unknown_usage_calls": unknown,
+            "usage_complete": unknown == 0,
+            "input_tokens": None if unknown else recorded_input,
+            "output_tokens": None if unknown else recorded_output,
+            "cost": None if unknown else recorded_cost,
+            "recorded_input_tokens": recorded_input,
+            "recorded_output_tokens": recorded_output,
+            "recorded_cost": recorded_cost,
+            "retries": sum(int(call.get("retries") or 0) for call in items),
+        }
+
+    stages = sorted({str(call.get("stage") or "unknown") for call in calls})
+    by_stage = {}
+    for stage in stages:
+        items = [call for call in calls if str(call.get("stage") or "unknown") == stage]
+        by_stage[stage] = {
+            **summarize(items),
+            "latency_ms": sum(int(call.get("latency_ms") or 0) for call in items),
+        }
+    ordered = sorted(int(call.get("latency_ms") or 0) for call in calls)
 
     def percentile(fraction: float) -> int | None:
         if not ordered:
@@ -533,12 +540,9 @@ def e8_from_calls(calls: list[dict]) -> dict:
         return ordered[index]
 
     return {
-        "calls": len(calls),
+        **summarize(calls),
         "by_stage": by_stage,
-        "input_tokens": sum(int(call.get("input_tokens") or 0) for call in calls),
-        "output_tokens": sum(int(call.get("output_tokens") or 0) for call in calls),
-        "retries": sum(int(call.get("retries") or 0) for call in calls),
-        "cost": sum(float(call.get("cost") or 0.0) for call in calls),
         "latency_ms_p50": percentile(0.50),
         "latency_ms_p95": percentile(0.95),
+        "latency_scope": "per recorded attempt, including failures; not end-to-end latency",
     }

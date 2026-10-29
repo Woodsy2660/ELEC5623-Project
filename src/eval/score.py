@@ -39,6 +39,7 @@ from src.eval.metrics import (
     retrieval_recall,
 )
 from src.eval.retrieval_schemas import RetrievalObservation
+from src.logging.calls import accounting_from_raw
 from src.persist.database import create_database_engine
 from src.persist.models import (
     Candidate,
@@ -577,6 +578,7 @@ def score_run(
                 "retries": row.retries,
                 "cost": row.cost,
                 "latency_ms": row.latency_ms,
+                **accounting_from_raw(row.raw_json_path),
             }
             for row in session.query(ModelCall).filter(ModelCall.run_id == run_id).all()
         ]
