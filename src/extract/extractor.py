@@ -68,6 +68,8 @@ class ExtractionResult:
     rejected_unresolvable: int = 0
     parse_failures: int = 0
     call_id: str | None = None
+    error: str | None = None
+    call_ids: tuple[str, ...] = ()
 
 
 def _render_prompt(turns: list[dict[str, str]]) -> str:
@@ -232,7 +234,11 @@ def extract_candidates(
                 response_format=_build_schema(),
             )
             result.call_id = response.call_id
-        except ModelCallError:
+            result.call_ids = (response.call_id,)
+        except ModelCallError as exc:
+            result.call_ids = exc.call_ids
+            result.call_id = exc.call_ids[-1] if exc.call_ids else None
+            result.error = str(exc)
             result.parse_failures = 1
             return result
 
@@ -240,7 +246,8 @@ def extract_candidates(
     try:
         data = json.loads(response.content)
         extraction = _ExtractionResponse.model_validate(data)
-    except (json.JSONDecodeError, ValidationError):
+    except (json.JSONDecodeError, ValidationError) as exc:
+        result.error = f"Invalid extraction output ({type(exc).__name__}); call={result.call_id}"
         result.parse_failures = 1
         return result
 

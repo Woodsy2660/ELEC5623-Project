@@ -214,8 +214,12 @@ integration remain deferred by the build-plan cut list.
 The current eval runner auto-confirms an engine-allowed proposal when its gold input
 has no explicit `event_action`; D1 currently has no such action fields. This conflicts
 with `AGENTS.md`'s gold-decision gate. The team needs an explicit decision file and
-aligned runner behavior before eval writes can be considered compliant. The shared
-model logger also misses a database row when both attempts of an Azure call fail.
+aligned runner behavior before eval writes can be considered compliant.
+
+The earlier shared-logger failure gap is addressed by the E8 attempt-auditing
+fix described in [`docs/07-conventions.md`](07-conventions.md#failed-attempts-and-e8-accounting-29-october-2026).
+Failed attempts and retries now have independent audit rows; unknown usage remains
+explicitly unknown. This does not repair old run logs or resolve the eval gate issue.
 
 Database initialization preserves rows and applies the additive SQLite migration
 needed for Track B's vector metadata and proposal fields. It does not infer metadata

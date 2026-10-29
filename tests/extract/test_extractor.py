@@ -450,3 +450,39 @@ class TestExtractCandidates:
 
         assert result.call_id is not None
         assert len(result.call_id) == 36  # UUID format
+
+
+def test_provider_failure_has_diagnostic_and_both_attempt_ids(db_session, temp_runs_dir):
+    client = MagicMock()
+    client.chat.completions.create.side_effect = TimeoutError("private upstream text")
+    result = extract_candidates(
+        db_session,
+        client,
+        run_id="run-001",
+        meeting_id="meet-001",
+        deployment_name="cia-chat",
+        runs_dir=temp_runs_dir,
+    )
+    assert result.parse_failures == 1 and result.candidates == []
+    assert result.error and "TimeoutError" in result.error
+    assert "private upstream text" not in result.error
+    assert len(result.call_ids) == 2 and result.call_id == result.call_ids[-1]
+    db_session.rollback()
+    from src.persist.models import ModelCall
+
+    assert db_session.query(ModelCall).count() == 2
+
+
+def test_invalid_json_keeps_response_reference_and_failure_type(db_session, temp_runs_dir):
+    client = MagicMock()
+    client.chat.completions.create.return_value = FakeCompletion("not JSON")
+    result = extract_candidates(
+        db_session,
+        client,
+        run_id="run-001",
+        meeting_id="meet-001",
+        deployment_name="cia-chat",
+        runs_dir=temp_runs_dir,
+    )
+    assert result.parse_failures == 1 and "JSONDecodeError" in result.error
+    assert result.call_id and result.call_ids == (result.call_id,)

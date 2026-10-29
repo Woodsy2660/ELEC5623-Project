@@ -110,7 +110,9 @@ def classify_candidate(
             )
         except ModelCallError as exc:
             # call_model has already retried the transport failure once.
-            return _failure(retrieved_ids, tuple(call_ids), f"model call failed: {exc}")
+            return _failure(
+                retrieved_ids, tuple(call_ids) + exc.call_ids, f"model call failed: {exc}"
+            )
         call_ids.append(parsed.call_id)
         try:
             decoded = decode_output(parsed.content, prepared)

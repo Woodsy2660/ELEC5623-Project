@@ -742,6 +742,17 @@ def run_pipeline(
             notes["extraction"]["parse_failures"] += result.parse_failures
             run = session.get(Run, run_id)
             run.notes = json.dumps(notes)
+            if result.parse_failures:
+                error = result.error or "Extraction failed without a diagnostic"
+                stats["errors"].append(f"Extraction failed for {meeting_id}: {error}")
+                notes.setdefault("extraction_errors", []).append(
+                    {
+                        "meeting_id": meeting_id,
+                        "error": error,
+                        "call_ids": list(result.call_ids),
+                    }
+                )
+                run.notes = json.dumps(notes)
             session.commit()
             stats["candidates_accepted"] += result.accepted
             prepared = [(candidate, None) for candidate in result.candidates]

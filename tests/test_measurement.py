@@ -672,3 +672,68 @@ def test_pipeline_modules_do_not_read_gold_labels() -> None:
         assert '.get("requirement_id")' not in text
         assert "canonical_requirement_id" not in text
         assert "expected_state_after" not in text
+
+
+def test_extraction_failure_is_visible_in_top_level_run_and_score(tmp_path):
+    from unittest.mock import MagicMock
+
+    client = MagicMock()
+    client.chat.completions.create.side_effect = TimeoutError("provider unavailable")
+    db_url = f"sqlite:///{tmp_path / 'failed-extraction.db'}"
+    stats = run_pipeline(
+        scenario_dir=Path("scenarios/dev/D1"),
+        mode="demo",
+        candidate_source="extracted",
+        repeat_index=1,
+        db_url=db_url,
+        runs_dir=tmp_path / "runs",
+        client=client,
+        config=type("Cfg", (), {"deployment_name": "cia-chat", "temperature": 0, "seed": 42})(),
+        embedder=_Embedder(),
+    )
+    assert stats["meetings_processed"] == 2 and stats["proposals_created"] == 0
+    assert len(stats["errors"]) == 2
+    assert all(
+        "Extraction failed for D1-M" in error and "TimeoutError" in error
+        for error in stats["errors"]
+    )
+    engine = create_database_engine(db_url)
+    with Session(engine) as session:
+        notes = json.loads(session.get(Run, stats["run_id"]).notes)
+        assert notes["extraction"]["parse_failures"] == 2
+        assert len(notes["extraction_errors"]) == 2
+        assert all(len(error["call_ids"]) == 2 for error in notes["extraction_errors"])
+        assert session.query(ModelCall).count() == client.chat.completions.create.call_count == 4
+        assert session.query(Requirement).count() == 0
+    engine.dispose()
+    report = score_run(stats["run_id"], db_url=db_url, scenario_dir=Path("scenarios/dev/D1"))
+    assert report["e8"]["calls"] == report["e8"]["failed_calls"] == 4
+    assert report["e8"]["cost"] is None and report["e8"]["unknown_usage_calls"] == 4
+
+
+def test_baseline_uses_same_failure_audit_and_does_not_write_register(tmp_path):
+    from unittest.mock import MagicMock
+
+    client = MagicMock()
+    client.chat.completions.create.side_effect = TimeoutError("upstream private text")
+    db_url = f"sqlite:///{tmp_path / 'failed-baseline.db'}"
+    stats = run_baseline(
+        scenario_dir=Path("scenarios/dev/D1"),
+        mode="eval",
+        repeat_index=1,
+        db_url=db_url,
+        runs_dir=tmp_path / "runs",
+        client=client,
+        config=type("Cfg", (), {"deployment_name": "cia-chat", "temperature": 0, "seed": 42})(),
+    )
+    assert len(stats["errors"]) == 2 and stats["events_applied"] == 0
+    engine = create_database_engine(db_url)
+    with Session(engine) as session:
+        calls = session.query(ModelCall).all()
+        assert len(calls) == client.chat.completions.create.call_count == 4
+        assert all(call.stage == "baseline" for call in calls)
+        assert session.query(Requirement).count() == 0
+    engine.dispose()
+    report = score_run(stats["run_id"], db_url=db_url, scenario_dir=Path("scenarios/dev/D1"))
+    assert report["e8"]["failed_calls"] == report["e8"]["unknown_usage_calls"] == 4
+    assert report["e8"]["cost"] is None
