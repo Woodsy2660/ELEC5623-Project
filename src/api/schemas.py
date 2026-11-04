@@ -209,6 +209,17 @@ class MeetingOut(BaseModel):
     not_requirement_count: int | None = None
     footer: str | None = None
     capture_label: str | None = None
+    generated: bool | None = None
+    can_generate: bool | None = None
+    generate_reason: str | None = None
+
+
+class GenerateResult(BaseModel):
+    meeting_id: str
+    candidates: int
+    proposals_created: int
+    classify_errors: int
+    errors: list[str] = Field(default_factory=list)
 
 
 class ImportedTurn(BaseModel):

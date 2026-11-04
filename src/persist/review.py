@@ -96,20 +96,95 @@ def candidate_evidence(
     return meeting, spans, turns
 
 
+class MeetingGate(BaseModel):
+    meeting_id: str
+    ordinal: int
+    generated: bool
+    can_generate: bool
+    reason: str = ""
+
+
+def meeting_has_candidates(session: Session, meeting_id: str) -> bool:
+    return (
+        session.scalar(select(Candidate.id).where(Candidate.meeting_id == meeting_id).limit(1))
+        is not None
+    )
+
+
+def pending_review_count(session: Session, project_id: str) -> int:
+    """Proposals in this project that no reviewer has confirmed, edited or rejected."""
+    return len(
+        session.scalars(
+            select(Proposal.id)
+            .join(Candidate, Candidate.id == Proposal.candidate_id)
+            .join(Meeting, Meeting.id == Candidate.meeting_id)
+            .where(Meeting.project_id == project_id, Proposal.decision.is_(None))
+        ).all()
+    )
+
+
+def meeting_gates(session: Session, project_id: str) -> list[MeetingGate]:
+    """Demo order from docs/02: the reviewed register feeds the next meeting.
+
+    Only the earliest unprocessed meeting can be generated, and only once every
+    earlier proposal in the project has a human decision.
+    """
+    pending = pending_review_count(session, project_id)
+    gates: list[MeetingGate] = []
+    first_open: int | None = None
+    for meeting in session.scalars(
+        select(Meeting).where(Meeting.project_id == project_id).order_by(Meeting.ordinal)
+    ):
+        if meeting_has_candidates(session, meeting.id):
+            gates.append(
+                MeetingGate(
+                    meeting_id=meeting.id,
+                    ordinal=meeting.ordinal,
+                    generated=True,
+                    can_generate=False,
+                )
+            )
+            continue
+        if first_open is not None:
+            reason = f"Generate meeting {first_open} first"
+        elif pending:
+            reason = f"Decide the {pending} pending proposals from earlier meetings first"
+        else:
+            reason = ""
+        gates.append(
+            MeetingGate(
+                meeting_id=meeting.id,
+                ordinal=meeting.ordinal,
+                generated=False,
+                can_generate=not reason,
+                reason=reason,
+            )
+        )
+        if first_open is None:
+            first_open = meeting.ordinal
+    return gates
+
+
 def explicit_replacement(quotes: list[str]) -> bool:
     """Conservative English rule on quoted evidence, never the classifier label.
 
     Unrecognised wording remains unresolved for review. This is a declared MVP
     rule, not a general natural-language entailment test.
     """
-    text = " ".join(quotes).lower()
-    if re.search(r"\b(if|maybe|perhaps|could|might|would|should|not|never|no)\b|n't|[?]", text):
+    text = " ".join(quotes).lower().replace("’", "'")
+    if re.search(
+        r"\b(if|unless|maybe|perhaps|possibly|probably|may|could|might|would|should|not|never|no)\b"
+        r"|n't|[?]",
+        text,
+    ):
         return False
+    decision = r"(?:we will|we'll|we are going to|we're going to|we (?:have |'ve )?decided to|let's|let us)"
     return any(
         re.search(pattern, text)
         for pattern in (
-            r"\bwe (?:will|have decided to) (?:use|adopt)\b[^.!?]+\binstead\b",
-            r"\bwe (?:will|have decided to) replace\b[^.!?]+\bwith\b[^.!?]+",
+            rf"\b{decision} (?:use|adopt|go with)\b[^.!?]+\binstead\b",
+            rf"\b{decision} replace\b[^.!?]+\bwith\b[^.!?]+",
+            rf"\b{decision} (?:change|switch|move)\b[^.!?]*\bto\b[^.!?]+",
         )
     )
 

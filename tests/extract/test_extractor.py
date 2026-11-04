@@ -13,7 +13,7 @@ import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from src.extract.extractor import ExtractionError, extract_candidates
+from src.extract.extractor import ExtractionError, _render_prompt, extract_candidates
 from src.persist.models import Base, Candidate, Meeting, Project, Run, Turn
 
 
@@ -450,3 +450,13 @@ class TestExtractCandidates:
 
         assert result.call_id is not None
         assert len(result.call_id) == 36  # UUID format
+
+
+def test_prompt_keeps_turn_text_byte_exact() -> None:
+    """Quotes must match stored text, so the prompt cannot escape its characters."""
+    text = """Let's add "SSO" & <MFA> — it's required"""
+
+    prompt = _render_prompt([{"turn_id": "t-1", "speaker": "Sam", "text": text}])
+
+    assert json.dumps(text, ensure_ascii=False) in prompt
+    assert "\\u0027" not in prompt

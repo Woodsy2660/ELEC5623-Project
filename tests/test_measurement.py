@@ -17,6 +17,7 @@ from src.classify.classify import ClassificationOutcome, apply_soft_downgrade, c
 from src.classify.schemas import Classification, Relation
 from src.engine.state_machine import EventType, State
 from src.eval.gold_candidates import gold_candidate_from_event
+from src.eval.ingest_scenario import ingest_scenario
 from src.eval.metrics import (
     DRIVING_LABELS,
     align_by_span,
@@ -25,7 +26,7 @@ from src.eval.metrics import (
     relation_report,
 )
 from src.eval.run_baseline import run_baseline
-from src.eval.run_pipeline import _log_local_embedding, run_pipeline
+from src.eval.run_pipeline import _log_local_embedding, generate_demo_meeting, run_pipeline
 from src.eval.score import score_run
 from src.extract import ExtractionResult
 from src.extract.schemas import Candidate
@@ -49,6 +50,7 @@ from src.persist.models import (
     Candidate as CandidateRow,
 )
 from src.persist.register import confirm_current, write_version
+from src.persist.review import ReviewConflict, ReviewDecision, commit_decision, meeting_gates
 from src.retrieve.embedder import encoder_kind, get_embedder
 from src.retrieve.embeddings import EmbeddingCall
 from src.validate.schemas import EvidenceSpan
@@ -429,54 +431,50 @@ def test_local_embedding_call_log_survives_later_pipeline_rollback(tmp_path: Pat
     engine.dispose()
 
 
-def test_demo_extracted_pipeline_stages_track_b_output_without_register_writes(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    def fake_extract(session, client, *, run_id, meeting_id, **kwargs):
-        turn = session.query(Turn).filter(Turn.meeting_id == meeting_id).first()
-        assert turn is not None
-        candidate_id = f"{meeting_id}-C0000"
-        candidate = Candidate(
-            candidate_id=candidate_id,
-            project_id=session.get(Meeting, meeting_id).project_id,
+def _fake_demo_extract(session, client, *, run_id, meeting_id, **kwargs):
+    turn = session.query(Turn).filter(Turn.meeting_id == meeting_id).first()
+    assert turn is not None
+    candidate_id = f"{meeting_id}-C0000"
+    candidate = Candidate(
+        candidate_id=candidate_id,
+        project_id=session.get(Meeting, meeting_id).project_id,
+        meeting_id=meeting_id,
+        text_norm=turn.text,
+        evidence=[EvidenceSpan(turn_id=turn.id, start=0, end=len(turn.text))],
+        atomic=True,
+    )
+    session.add(
+        CandidateRow(
+            id=candidate_id,
             meeting_id=meeting_id,
-            text_norm=turn.text,
-            evidence=[EvidenceSpan(turn_id=turn.id, start=0, end=len(turn.text))],
-            atomic=True,
+            run_id=run_id,
+            text_norm=candidate.text_norm,
+            evidence_json=json.dumps([{"turn_id": turn.id, "start": 0, "end": len(turn.text)}]),
+            extract_call_id=None,
         )
-        session.add(
-            CandidateRow(
-                id=candidate_id,
-                meeting_id=meeting_id,
-                run_id=run_id,
-                text_norm=candidate.text_norm,
-                evidence_json=json.dumps([{"turn_id": turn.id, "start": 0, "end": len(turn.text)}]),
-                extract_call_id=None,
-            )
-        )
-        return ExtractionResult(
-            candidates=[candidate], returned=3, accepted=1, rejected_unresolvable=2
-        )
+    )
+    return ExtractionResult(candidates=[candidate], returned=3, accepted=1, rejected_unresolvable=2)
 
-    def fake_classify(client, *, inputs, **kwargs):
-        classification = Classification(
-            matched_requirement_id=None,
-            relation=Relation.NEW,
-            rationale="Synthetic pipeline integration check.",
-            retrieved_ids=list(inputs.retrieval.retrieved_ids),
-        )
-        return ClassificationOutcome(
-            retrieved_ids=tuple(classification.retrieved_ids),
-            classification=classification,
-            downgraded=False,
-            model_relation="new",
-            error=None,
-            call_ids=(),
-        )
 
-    monkeypatch.setattr(src.extract, "extract_candidates", fake_extract)
-    db_url = f"sqlite:///{tmp_path / 'demo.db'}"
-    stats = run_pipeline(
+def _fake_new_classifier(client, *, inputs, **kwargs):
+    classification = Classification(
+        matched_requirement_id=None,
+        relation=Relation.NEW,
+        rationale="Synthetic pipeline integration check.",
+        retrieved_ids=list(inputs.retrieval.retrieved_ids),
+    )
+    return ClassificationOutcome(
+        retrieved_ids=tuple(classification.retrieved_ids),
+        classification=classification,
+        downgraded=False,
+        model_relation="new",
+        error=None,
+        call_ids=(),
+    )
+
+
+def _run_demo(db_url: str, tmp_path: Path, classifier=_fake_new_classifier) -> dict:
+    return run_pipeline(
         scenario_dir=Path("scenarios/dev/D1"),
         mode="demo",
         candidate_source="extracted",
@@ -486,14 +484,24 @@ def test_demo_extracted_pipeline_stages_track_b_output_without_register_writes(
         client=object(),
         config=type("Cfg", (), {"deployment_name": "stub", "temperature": 0, "seed": 1})(),
         embedder=_Embedder(),
-        classifier=fake_classify,
+        classifier=classifier,
     )
+
+
+def test_demo_extracted_pipeline_stages_track_b_output_without_register_writes(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(src.extract, "extract_candidates", _fake_demo_extract)
+    db_url = f"sqlite:///{tmp_path / 'demo.db'}"
+    stats = _run_demo(db_url, tmp_path)
     engine = create_database_engine(db_url)
     session = sessionmaker(bind=engine)()
     try:
         proposals = session.query(Proposal).filter(Proposal.run_id == stats["run_id"]).all()
         assert stats["errors"] == []
         assert stats["events_applied"] == 0
+        assert stats["meetings_processed"] == 1
+        assert stats["waiting_for_review"] == {"meeting_ordinal": 2, "pending": 1}
         assert len(proposals) == stats["proposals_created"] > 0
         assert all(proposal.decision is None for proposal in proposals)
         assert all(
@@ -501,7 +509,7 @@ def test_demo_extracted_pipeline_stages_track_b_output_without_register_writes(
         )
         queue = query_proposals(session, stats["project_id"])
         assert len(queue.proposals) == len(proposals)
-        assert queue.discarded_candidates == 4
+        assert queue.discarded_candidates == 2
         assert all(
             item.can_confirm and item.classification.relation == Relation.NEW
             for item in queue.proposals
@@ -512,6 +520,105 @@ def test_demo_extracted_pipeline_stages_track_b_output_without_register_writes(
     finally:
         session.close()
         engine.dispose()
+
+
+def test_demo_waits_for_review_and_next_meeting_sees_confirmed_register(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(src.extract, "extract_candidates", _fake_demo_extract)
+    retrieved_per_call: list[list[str]] = []
+
+    def classifier(client, *, inputs, **kwargs):
+        retrieved_per_call.append(list(inputs.retrieval.retrieved_ids))
+        return _fake_new_classifier(client, inputs=inputs, **kwargs)
+
+    def no_embedding(text: str):
+        raise AssertionError("confirm must not re-embed")
+
+    db_url = f"sqlite:///{tmp_path / 'demo.db'}"
+    first = _run_demo(db_url, tmp_path, classifier)
+    blocked = _run_demo(db_url, tmp_path, classifier)
+    assert first["meetings_processed"] == 1
+    assert blocked["meetings_processed"] == blocked["proposals_created"] == 0
+    assert blocked["waiting_for_review"] == {"meeting_ordinal": 2, "pending": 1}
+
+    engine = create_database_engine(db_url)
+    with Session(engine) as session:
+        project_id = first["project_id"]
+        assert not session.query(Meeting).filter(Meeting.ordinal == 2).count()
+        proposal = session.query(Proposal).one()
+        commit_decision(
+            session,
+            proposal_id=proposal.id,
+            decision=ReviewDecision(action="confirm", actor="tester"),
+            embed_text=no_embedding,
+        )
+        session.commit()
+        confirmed_id = session.query(RequirementCurrent).one().requirement_id
+
+    second_meeting = _run_demo(db_url, tmp_path, classifier)
+    finished = _run_demo(db_url, tmp_path, classifier)
+    assert second_meeting["meetings_processed"] == 1
+    assert second_meeting["waiting_for_review"] is None
+    assert retrieved_per_call == [[], [confirmed_id]]
+    assert finished["meetings_processed"] == finished["proposals_created"] == 0
+    with Session(engine) as session:
+        assert session.query(Meeting).filter(Meeting.project_id == project_id).count() == 2
+    engine.dispose()
+
+
+def test_review_ui_generates_imported_meetings_in_review_order(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(src.extract, "extract_candidates", _fake_demo_extract)
+    retrieved_per_call: list[list[str]] = []
+
+    def classifier(client, *, inputs, **kwargs):
+        retrieved_per_call.append(list(inputs.retrieval.retrieved_ids))
+        return _fake_new_classifier(client, inputs=inputs, **kwargs)
+
+    def generate(meeting_id: str) -> dict:
+        return generate_demo_meeting(
+            db_url,
+            "D1",
+            meeting_id,
+            tmp_path / "runs",
+            client=object(),
+            config=type("Cfg", (), {"deployment_name": "stub", "temperature": 0, "seed": 1})(),
+            embedder=_Embedder(),
+            classifier=classifier,
+        )
+
+    db_url = f"sqlite:///{tmp_path / 'ui.db'}"
+    ingest_scenario(Path("scenarios/dev/D1"), db_url)
+    engine = create_database_engine(db_url)
+    with Session(engine) as session:
+        assert [(g.ordinal, g.can_generate) for g in meeting_gates(session, "D1")] == [
+            (1, True),
+            (2, False),
+        ]
+
+    assert generate("D1-M01")["proposals_created"] == 1
+    with pytest.raises(ReviewConflict, match="already been generated"):
+        generate("D1-M01")
+    with pytest.raises(ReviewConflict, match="Decide the 1 pending proposals"):
+        generate("D1-M02")
+
+    with Session(engine) as session:
+        proposal = session.query(Proposal).one()
+        commit_decision(
+            session,
+            proposal_id=proposal.id,
+            decision=ReviewDecision(action="confirm", actor="tester"),
+            embed_text=lambda text: pytest.fail("confirm must not re-embed"),
+        )
+        session.commit()
+        confirmed_id = session.query(RequirementCurrent).one().requirement_id
+        assert meeting_gates(session, "D1")[1].can_generate
+
+    assert generate("D1-M02")["proposals_created"] == 1
+    assert retrieved_per_call == [[], [confirmed_id]]
+    engine.dispose()
 
 
 def test_demo_pipeline_rejects_gold_candidates() -> None:

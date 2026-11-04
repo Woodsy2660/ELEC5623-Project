@@ -20,6 +20,7 @@ from src.api.schemas import (
     CommittedEvent,
     DecisionConflict,
     DecisionRequest,
+    GenerateResult,
     MeetingCreate,
     MeetingOut,
     ProjectOut,
@@ -31,6 +32,7 @@ from src.api.schemas import (
     SpeakerSetting,
     StreamTurn,
 )
+from src.eval.run_pipeline import generate_demo_meeting, load_dotenv
 from src.export.register import export_register
 from src.ingest.loader import MeetingError, import_meeting
 from src.persist.database import initialize_database, review_transaction
@@ -197,6 +199,26 @@ def build_database_router(
             return next(
                 item for item in queries.meetings(locked, project_id) if item.id == meeting.id
             )
+
+    @router.post(
+        "/projects/{project_id}/meetings/{meeting_id}/generate",
+        response_model=GenerateResult,
+        responses={409: {"model": ReasonBody}, 404: {"model": ReasonBody}},
+    )
+    def generate(project_id: str, meeting_id: str, actor: Reviewer) -> GenerateResult:
+        # Demo mode only: the model stages proposals; a person still decides each one.
+        # No request session is held open, so the pipeline's SQLite writes are not blocked.
+        load_dotenv()
+        stats = generate_demo_meeting(
+            engine.url.render_as_string(hide_password=False), project_id, meeting_id
+        )
+        return GenerateResult(
+            meeting_id=meeting_id,
+            candidates=stats["candidates_total"],
+            proposals_created=stats["proposals_created"],
+            classify_errors=stats["classify_errors"],
+            errors=stats["errors"],
+        )
 
     @router.get("/meetings/{meeting_id}/turns", response_model=list[StreamTurn])
     def turns(meeting_id: str, db: Database) -> list[StreamTurn]:

@@ -512,6 +512,45 @@ def test_edited_text_cannot_switch_the_proposal_embedding_contract(database):
 def test_replacement_rule_does_not_accept_negation():
     assert explicit_replacement(["We have decided to replace email login with SSO."])
     assert not explicit_replacement(["We won't replace email login with SSO."])
+    assert not explicit_replacement(["We won’t replace email login with SSO."])
+
+
+@pytest.mark.parametrize(
+    "quote",
+    [
+        "We will use SSO instead.",
+        "We'll use SSO instead.",
+        "We’ll use SSO instead.",
+        "We have decided to replace email login with SSO.",
+        "Let's change it to sixty minutes instead.",
+        "We're going to switch to SSO.",
+        "We decided to move to quarterly billing.",
+        "Let's go with SSO instead.",
+    ],
+)
+def test_replacement_rule_accepts_decided_replacements(quote):
+    assert explicit_replacement([quote])
+
+
+@pytest.mark.parametrize(
+    "quote",
+    [
+        "Could we use SSO?",
+        "could SSO be an option?",
+        "Should we switch to SSO?",
+        "Maybe we will use SSO instead.",
+        "We might change it to sixty minutes.",
+        "We should change it to SSO.",
+        "If legal agrees, we will use SSO instead.",
+        "We will use SSO instead unless legal objects.",
+        "Let's not change it to SSO.",
+        "Let's discuss whether to switch to SSO.",
+        "Login must also support password reset.",
+        "Let's review the requirements from last week.",
+    ],
+)
+def test_replacement_rule_keeps_hedges_and_other_wording_unresolved(quote):
+    assert not explicit_replacement([quote])
 
 
 def test_existing_meeting_contract_imports_real_turns_and_is_idempotent(database):

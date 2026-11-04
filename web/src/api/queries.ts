@@ -76,6 +76,20 @@ export function useDecide(projectId: string) {
   })
 }
 
+export function useGenerateMeeting(projectId: string) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (meetingId: string) => api.generateMeeting(projectId, meetingId),
+    onSettled: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['meetings', projectId] }),
+        queryClient.invalidateQueries({ queryKey: ['proposals', projectId] }),
+        queryClient.invalidateQueries({ queryKey: ['projects'] }),
+      ])
+    },
+  })
+}
+
 export function useUpdateSettings(projectId: string) {
   const queryClient = useQueryClient()
   return useMutation({

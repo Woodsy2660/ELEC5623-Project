@@ -47,7 +47,11 @@ from src.persist.models import (
 from src.persist.register import confirm_current, next_requirement_id, write_version
 from src.persist.review import (
     ProjectHeadSnapshot,
+    ReviewConflict,
     explicit_replacement,
+    meeting_gates,
+    meeting_has_candidates,
+    pending_review_count,
     project_head_snapshot,
     stage_proposal,
 )
@@ -564,27 +568,7 @@ def _process_candidate(
             stats["errors"].append(f"{candidate.candidate_id}: proposal row failed: {inner}")
 
 
-def run_pipeline(
-    scenario_dir: Path,
-    mode: str,
-    candidate_source: str,
-    repeat_index: int,
-    db_url: str = "sqlite:///pipeline.db",
-    runs_dir: Path = Path("runs"),
-    *,
-    client=None,
-    config=None,
-    embedder: Embedder | None = None,
-    classifier=None,
-) -> dict[str, Any]:
-    """Run retrieval, classification, and the engine. Gold does not supply labels."""
-    if mode not in {"demo", "eval"}:
-        raise ValueError("mode must be demo or eval")
-    if mode == "demo" and candidate_source != "extracted":
-        raise ValueError("Demo inference requires extracted candidates; gold is eval-only")
-    engine = create_database_engine(db_url)
-    initialize_database(engine)
-    session = sessionmaker(bind=engine)()
+def _setup_clients(candidate_source: str, client, config, classifier):
     if classifier is None:
         classifier = classify_candidate
     if config is None:
@@ -599,7 +583,22 @@ def run_pipeline(
             api_key=config.api_key,
             api_version=config.api_version,
         )
+    return client, config, classifier, needs_client
 
+
+def _open_run(
+    session: Session,
+    *,
+    mode: str,
+    candidate_source: str,
+    repeat_index: int,
+    project_id: str,
+    scenario_note: str,
+    client,
+    config,
+    embedder: Embedder | None,
+    runs_dir: Path,
+) -> tuple[str, dict[str, Any], Embedder, dict[str, Any]]:
     run_id = str(uuid4())
     run = Run(
         id=run_id,
@@ -614,10 +613,6 @@ def run_pipeline(
     )
     session.add(run)
     session.commit()
-
-    project = load_scenario(session, scenario_dir)
-    session.commit()
-    project_id = project.id
 
     if embedder is None:
         logger = None
@@ -636,10 +631,6 @@ def run_pipeline(
 
         embedder = get_embedder(record_local=_record, azure_logger=logger, run_id=run_id)
 
-    try:
-        scenario_note = scenario_dir.resolve().relative_to(Path.cwd().resolve()).as_posix()
-    except ValueError:
-        scenario_note = scenario_dir.as_posix()
     split = "dev" if "dev" in Path(scenario_note).parts else "unspecified"
     notes = {
         "scenario": scenario_note,
@@ -673,8 +664,210 @@ def run_pipeline(
         "events_applied": 0,
         "downgrades": 0,
         "classify_errors": 0,
+        "waiting_for_review": None,
         "errors": [],
     }
+    return run_id, notes, embedder, stats
+
+
+def _extract_meeting(
+    session: Session,
+    *,
+    run_id: str,
+    meeting_id: str,
+    client,
+    config,
+    runs_dir: Path,
+    notes: dict[str, Any],
+    stats: dict[str, Any],
+) -> list[tuple[Candidate, str | None]] | None:
+    from src.extract import ExtractionError, extract_candidates
+
+    try:
+        result = extract_candidates(
+            session,
+            client,
+            run_id=run_id,
+            meeting_id=meeting_id,
+            deployment_name=config.deployment_name,
+            temperature=config.temperature,
+            seed=config.seed,
+            runs_dir=runs_dir,
+        )
+    except ExtractionError as exc:
+        stats["errors"].append(f"Extraction error: {exc}")
+        return None
+    session.commit()
+    notes["extraction"]["returned"] += result.returned
+    notes["extraction"]["accepted"] += result.accepted
+    notes["extraction"]["rejected_unresolvable"] += result.rejected_unresolvable
+    notes["extraction"]["parse_failures"] += result.parse_failures
+    run = session.get(Run, run_id)
+    run.notes = json.dumps(notes)
+    session.commit()
+    stats["candidates_accepted"] += result.accepted
+    return [(candidate, None) for candidate in result.candidates]
+
+
+def _process_prepared(
+    session: Session,
+    prepared: list[tuple[Candidate, str | None]],
+    *,
+    run_id: str,
+    project_id: str,
+    meeting_ordinal: int,
+    mode: str,
+    embedder: Embedder,
+    classifier,
+    client,
+    config,
+    runs_dir: Path,
+    seq: dict[str, int],
+    stats: dict[str, Any],
+) -> None:
+    stats["candidates_total"] += len(prepared)
+    for candidate, event_action in prepared:
+        _process_candidate(
+            session,
+            run_id=run_id,
+            project_id=project_id,
+            meeting_ordinal=meeting_ordinal,
+            candidate=candidate,
+            event_action=event_action,
+            mode=mode,
+            embedder=embedder,
+            classifier=classifier,
+            client=client,
+            config=config,
+            runs_dir=runs_dir,
+            seq=seq,
+            stats=stats,
+        )
+
+
+def generate_demo_meeting(
+    db_url: str,
+    project_id: str,
+    meeting_id: str,
+    runs_dir: Path = Path("runs"),
+    *,
+    client=None,
+    config=None,
+    embedder: Embedder | None = None,
+    classifier=None,
+) -> dict[str, Any]:
+    """Demo step for the review UI: extract one imported meeting and stage its proposals.
+
+    The meeting must be the next one in order, with every earlier proposal decided,
+    so classification sees the reviewed register (docs/02).
+    """
+    engine = create_database_engine(db_url)
+    initialize_database(engine)
+    session = sessionmaker(bind=engine)()
+    try:
+        gate = next(
+            (item for item in meeting_gates(session, project_id) if item.meeting_id == meeting_id),
+            None,
+        )
+        if gate is None:
+            raise LookupError(f"Unknown meeting {meeting_id}")
+        if gate.generated:
+            raise ReviewConflict("Proposals for this meeting have already been generated")
+        if not gate.can_generate:
+            raise ReviewConflict(gate.reason)
+        client, config, classifier, _ = _setup_clients("extracted", client, config, classifier)
+        if client is None:
+            raise ReviewConflict("The Azure chat model is not configured on this server")
+        run_id, notes, embedder, stats = _open_run(
+            session,
+            mode="demo",
+            candidate_source="extracted",
+            repeat_index=1,
+            project_id=project_id,
+            scenario_note=f"review-ui/{project_id}",
+            client=client,
+            config=config,
+            embedder=embedder,
+            runs_dir=runs_dir,
+        )
+        prepared = _extract_meeting(
+            session,
+            run_id=run_id,
+            meeting_id=meeting_id,
+            client=client,
+            config=config,
+            runs_dir=runs_dir,
+            notes=notes,
+            stats=stats,
+        )
+        if prepared is not None:
+            stats["meetings_processed"] = 1
+            _process_prepared(
+                session,
+                prepared,
+                run_id=run_id,
+                project_id=project_id,
+                meeting_ordinal=gate.ordinal,
+                mode="demo",
+                embedder=embedder,
+                classifier=classifier,
+                client=client,
+                config=config,
+                runs_dir=runs_dir,
+                seq={"n": 0},
+                stats=stats,
+            )
+        return stats
+    finally:
+        session.close()
+        engine.dispose()
+
+
+def run_pipeline(
+    scenario_dir: Path,
+    mode: str,
+    candidate_source: str,
+    repeat_index: int,
+    db_url: str = "sqlite:///pipeline.db",
+    runs_dir: Path = Path("runs"),
+    *,
+    client=None,
+    config=None,
+    embedder: Embedder | None = None,
+    classifier=None,
+) -> dict[str, Any]:
+    """Run retrieval, classification, and the engine. Gold does not supply labels."""
+    if mode not in {"demo", "eval"}:
+        raise ValueError("mode must be demo or eval")
+    if mode == "demo" and candidate_source != "extracted":
+        raise ValueError("Demo inference requires extracted candidates; gold is eval-only")
+    engine = create_database_engine(db_url)
+    initialize_database(engine)
+    session = sessionmaker(bind=engine)()
+    client, config, classifier, needs_client = _setup_clients(
+        candidate_source, client, config, classifier
+    )
+
+    project = load_scenario(session, scenario_dir)
+    session.commit()
+    project_id = project.id
+
+    try:
+        scenario_note = scenario_dir.resolve().relative_to(Path.cwd().resolve()).as_posix()
+    except ValueError:
+        scenario_note = scenario_dir.as_posix()
+    run_id, notes, embedder, stats = _open_run(
+        session,
+        mode=mode,
+        candidate_source=candidate_source,
+        repeat_index=repeat_index,
+        project_id=project_id,
+        scenario_note=scenario_note,
+        client=client,
+        config=config,
+        embedder=embedder,
+        runs_dir=runs_dir,
+    )
     if needs_client and client is None:
         stats["errors"].append("No Azure config for classification")
         session.close()
@@ -688,6 +881,20 @@ def run_pipeline(
 
     for meeting_info in sorted(manifest.get("meetings", []), key=lambda item: item["ordinal"]):
         ordinal = meeting_info["ordinal"]
+        if mode == "demo":
+            # The reviewed register feeds the next meeting (docs/02), so demo extracts
+            # one meeting at a time and waits until every earlier proposal is decided.
+            existing = (
+                session.query(Meeting)
+                .filter(Meeting.project_id == project_id, Meeting.ordinal == ordinal)
+                .first()
+            )
+            if existing is not None and meeting_has_candidates(session, existing.id):
+                continue
+            pending = pending_review_count(session, project_id)
+            if pending:
+                stats["waiting_for_review"] = {"meeting_ordinal": ordinal, "pending": pending}
+                break
         meeting = import_meeting(
             session, project_id, scenario_dir / meeting_info["canonical"], ordinal
         )
@@ -719,54 +926,38 @@ def run_pipeline(
             session.commit()
             stats["candidates_accepted"] += len(prepared)
         elif candidate_source == "extracted":
-            from src.extract import ExtractionError, extract_candidates
-
-            try:
-                result = extract_candidates(
-                    session,
-                    client,
-                    run_id=run_id,
-                    meeting_id=meeting_id,
-                    deployment_name=config.deployment_name,
-                    temperature=config.temperature,
-                    seed=config.seed,
-                    runs_dir=runs_dir,
-                )
-            except ExtractionError as exc:
-                stats["errors"].append(f"Extraction error: {exc}")
+            extracted = _extract_meeting(
+                session,
+                run_id=run_id,
+                meeting_id=meeting_id,
+                client=client,
+                config=config,
+                runs_dir=runs_dir,
+                notes=notes,
+                stats=stats,
+            )
+            if extracted is None:
                 continue
-            session.commit()
-            notes["extraction"]["returned"] += result.returned
-            notes["extraction"]["accepted"] += result.accepted
-            notes["extraction"]["rejected_unresolvable"] += result.rejected_unresolvable
-            notes["extraction"]["parse_failures"] += result.parse_failures
-            run = session.get(Run, run_id)
-            run.notes = json.dumps(notes)
-            session.commit()
-            stats["candidates_accepted"] += result.accepted
-            prepared = [(candidate, None) for candidate in result.candidates]
+            prepared = extracted
         else:
             stats["errors"].append(f"Unknown candidate source: {candidate_source}")
             continue
 
-        stats["candidates_total"] += len(prepared)
-        for candidate, event_action in prepared:
-            _process_candidate(
-                session,
-                run_id=run_id,
-                project_id=project_id,
-                meeting_ordinal=ordinal,
-                candidate=candidate,
-                event_action=event_action,
-                mode=mode,
-                embedder=embedder,
-                classifier=classifier,
-                client=client,
-                config=config,
-                runs_dir=runs_dir,
-                seq=seq,
-                stats=stats,
-            )
+        _process_prepared(
+            session,
+            prepared,
+            run_id=run_id,
+            project_id=project_id,
+            meeting_ordinal=ordinal,
+            mode=mode,
+            embedder=embedder,
+            classifier=classifier,
+            client=client,
+            config=config,
+            runs_dir=runs_dir,
+            seq=seq,
+            stats=stats,
+        )
 
     session.close()
     engine.dispose()
@@ -815,6 +1006,13 @@ def main() -> None:
     print(f"  Events applied: {stats['events_applied']}")
     print(f"  Downgrades: {stats['downgrades']}")
     print(f"  Classify errors: {stats['classify_errors']}")
+    waiting = stats["waiting_for_review"]
+    if waiting:
+        print(
+            f"\nMeeting {waiting['meeting_ordinal']} waits for review: "
+            f"{waiting['pending']} earlier proposals are still pending. Confirm, edit or "
+            "reject them in the review queue, then run this command again."
+        )
     if stats["errors"]:
         print(f"\nErrors ({len(stats['errors'])}):")
         for error in stats["errors"][:10]:

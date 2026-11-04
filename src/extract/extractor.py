@@ -71,10 +71,17 @@ class ExtractionResult:
 
 
 def _render_prompt(turns: list[dict[str, str]]) -> str:
-    """Render the extraction prompt with the meeting turns."""
+    """Render the extraction prompt with the meeting turns.
+
+    Jinja's tojson escapes apostrophes as \\u0027. The model must see the raw turn
+    text, because its quotes have to match that text byte for byte.
+    """
     template_content = PROMPT_PATH.read_text(encoding="utf-8")
     template = Template(template_content)
-    return template.render(turns=turns)
+    rendered_turns = [
+        {**turn, "text_json": json.dumps(turn["text"], ensure_ascii=False)} for turn in turns
+    ]
+    return template.render(turns=rendered_turns)
 
 
 def _build_schema() -> dict[str, Any]:

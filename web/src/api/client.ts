@@ -69,6 +69,12 @@ export const api = {
       method: 'POST',
       body: JSON.stringify(body),
     }),
+  // The server decides whether this meeting may be generated; the button only asks.
+  generateMeeting: (projectId: string, meetingId: string) =>
+    request<Schemas['GenerateResult']>(
+      `/projects/${encodeURIComponent(projectId)}/meetings/${encodeURIComponent(meetingId)}/generate`,
+      { method: 'POST' },
+    ),
   turns: (meetingId: string) => request<Schemas['StreamTurn'][]>(`/meetings/${meetingId}/turns`),
   settings: (projectId: string) =>
     request<Schemas['ProjectSettings']>(`/projects/${projectId}/settings`),

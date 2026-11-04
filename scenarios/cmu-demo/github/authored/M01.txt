@@ -1,0 +1,332 @@
+[Interviewer]
+Hi, thank you for joining at this time. for the interview. I'd love to know more about your I would love to know inputs about your use case of programming web apps and how you use them. And what do you like about them?
+
+[Stakeholder]
+Yeah, I'd love to talk about that with you today.
+
+[Interviewer]
+Okay, thank you. Can I ask, what is the one programming app that you would like to talk about?
+
+[Stakeholder]
+The web, allocation.
+
+[Interviewer]
+Yeah.
+
+[Stakeholder]
+Yeah. So the the most prominent one that I use on a daily basis. It would be Github.
+
+[Interviewer]
+Okay, that's great to hear. Man. So what would you like? What would you describe yourself as a user of github like, what kind of a user, are you? What capacity. in what capacity do you use Github as.
+
+[Stakeholder]
+Yes, I use it as a student, as an independent developer, and I also use it as a teaching assistant for my undergraduate courses.
+
+[Interviewer]
+Okay, that's great to hear, miss. And how did you like start? Got to know about Github? And how did you start using it? Can I know.
+
+[Stakeholder]
+Yeah. So I actually learned about Github, my freshman year. It was just mainly just a lot of the my classes were, had all their code published on Github and required us to work with the Github repositories online to pull code for our assignments. And that's how I got familiar with it. Overall.
+
+[Interviewer]
+Oh, that seems to know in the in the answer that you said earlier, you said that you had something called the Repository. Could you please explain? What does that mean?
+
+[Stakeholder]
+Yeah, for sure. So Repository just refers to like a folder that contains files or other like more folders of code. And that's what is stored on Github, and it's actually the key term used on github folders Aka repositories.
+
+[Interviewer]
+Oh, okay, got you got you also? Do you? Did use the term? You pull something from the repositories. What does pulling from a repository mean.
+
+[Stakeholder]
+Yeah, for sure, I can elaborate. So if when I say Pull, I mean, I am essentially copying whatever code is online on the online folder or slash repository onto my local machine. Like my, for example, my Mac.
+
+[Interviewer]
+Right. and you're able to access that like directly on a Mac. And is it synced to the Github cloud? Or it just stays in a Mac.
+
+[Stakeholder]
+Yes, it's it's it's it's synced in the sense that you would have like. It's not automatically synced. But you would have to manually synchronize it by running commands, such as get pull, which will pull in the latest code from the repository, or you can run, get, push, to push your latest code into the online repository.
+
+[Interviewer]
+Oh, got you? Okay? So you have to do manual actions to like, actually push and put the code. Got you got you? so. What would you say your usage of Github would look like in terms of weekly hours. How often do you use it, and how much they use it?
+
+[Stakeholder]
+Yeah, so this very much depends on what I'm using it for. If as a student, I'm only really using it to pull code and push code so I could estimate approximately 2Â h per week on that as an independent developer. This is really just me working on my own personal projects on ad hoc basis, and with the same case use case of pushing and pulling. I'd be working maybe 1Â h per week. But as a teaching assistant for my undergrad courses. I'm spending around 5Â h per week. so I can monitor my students code and actually look through and see how they're doing on their in their projects.
+
+[Interviewer]
+Oh, okay, so would you describe yourself as a heavy user of Github features like, do you use in a large capacity? Do you use them in a large capacity.
+
+[Stakeholder]
+If we're gonna look at a scale, I would argue that I use it in like a medium large cap, large capacity in the sense that it's.
+
+[Interviewer]
+Okay.
+
+[Stakeholder]
+A platform that I'm using throughout the entire day. But is it is a platform that I am using on a daily basis?
+
+[Interviewer]
+Okay, okay, got you got you? What? What are the main tasks that you accomplish with Github? What are the main goals that you are using github for.
+
+[Stakeholder]
+Yeah, so the main one would just be. For like, I, I guess from my student perspective is like team collaboration. So essentially, if I go to like my repository. It's not just me who has access to update this online folder, the repository of code. It's also other like my teammates as well. And essentially, we're like, we are asynchronous collab, asynchronously collaborating on this code. We're making changes and such to get a get through of our course work.
+
+[Interviewer]
+Okay, can you? Like, take me through the process of you collaborating in like, what senses do you collaborate? How do you collaborate what all actions do you use to collaborate.
+
+[Stakeholder]
+Yeah, for sure. So it's actually a I can't talk about this without mentioning one of the features on Github called pull requests. So if I were to have a repository, let's call it example. If I went to the Example Repository, I get brought to a new page with a bunch of toggle switch tabs if I can list them, their code issues pull request. Is that what I will talk about? Actions, projects, wiki security insights and settings. So pull request. If I click on. That is like the main one that I use. No, no, it's only my teammates. Essentially, if I have a github or a git branch that I want to with with changes that I want to see in the main branch so like what would be actually submitted, I would go and click on, pull request, go to the right side of my screen and press a green button, called New pull request. Then you would be brought to a screen that says, compare changes on the top for the title, and below that there's a banner that takes up the full width of the screen with a base branch and a compare Branch, and the Compare Branch is the branch with the changes you want to push to the brace branch. So if I were to have an example branch and my main branch, the base would be main, and compare would be example. and after doing that, I can click, create, pull request, which is on a green button. and it will lead me to a page with text input to input a title for the pull request, and a description box which is just below the title for the port request. And this allows me to provide context for my code changes for my collaborators, like my teammates, to review.
+
+[Interviewer]
+Oh, okay, what's a what's a code review?
+
+[Stakeholder]
+A code review is essentially.
+
+[Interviewer]
+From there.
+
+[Stakeholder]
+Yeah, yeah, for sure. For sure. it's essentially another collaborator on this repository like this folder is making sure that the code is.
+
+[Interviewer]
+It's compatible.
+
+[Stakeholder]
+Or, like the code, is up to standard of the team or their personal standard, to have those changes made in the main branch of the Repository. and.
+
+[Interviewer]
+Oh, okay.
+
+[Stakeholder]
+Either approved, or they can also be denied if they don't meet the standards.
+
+[Interviewer]
+Okay. So now, just to get this, get, get this clear you basically, if you don't like the code you just approve, you just deny it, or, if you like, so do you approve it, and margins main main branch right.
+
+[Stakeholder]
+Yeah, so you can approve it, and then there will. If I go to an example. What would happen is if I can just open this. Yes, there we go. If I go to an example.
+
+[Interviewer]
+Right.
+
+[Stakeholder]
+If I go to the bottom and scroll to the bottom. once it has been reviewed by a collaborator. There will be a box that says review required, that will be green. and then there will be another box below. That call is that that says merging is active, or and you would like if if you're not allowed to merge it in, you'll get a red like a box with a red circle or red with a cross in it that says merging is blocked. and below that that says, add comment with a text input, add your comment. Here you can add more comments as a reviewer or as a developer. and below that there would be a button that says Merge, pull, request, and once you click, that your code changes will be reflected in the main branch. So you're essentially you're changing.
+
+[Interviewer]
+Just gotten.
+
+[Stakeholder]
+In embedded into that main branch. And that's what allows that collaboration.
+
+[Interviewer]
+Oh, okay, got you got you? I understand more now. Thank you so much for that. Yeah. I don't. I had a doubt. you said that you pushed the code right. Can can I ask? Do you like, I understand that projects are like done in increment done done incrementally. So do you just push the code all at once? Or is there any feature to break the code and like, how do you do it actually. How do you manage that code? Oh. on the main bench.
+
+[Stakeholder]
+So do you mean like pushing new changes.
+
+[Interviewer]
+Yeah. Yeah. How do you? How do you manage the changes? Do do it. Do you do it incrementally, or do you do it all at once?
+
+[Stakeholder]
+I would say, that's very much like an individual choice based on how you want to work with the like. The application I personally prefer to do it incrementally, because it.
+
+[Interviewer]
+No.
+
+[Stakeholder]
+It provides less content for my collaborators to have to review. and it keeps a more flowing process. But if I was to like that's that's me as a student, as a collaborator. But me individually well, I wouldn't even use pull requests, in the 1st place, because I don't have any collaborators except for myself. But if I were to use pull requests I would have rather larger pull request, because it's just me reviewing myself. So it's very much a personal choice.
+
+[Interviewer]
+Okay, got you? Are there any actions to on Github to facilitate this kind of behavior like the incremental? Like, you said, you prefer to use incrementally push changes. Basically. So are there any actions in Github that you use to do this can walk me through those actions if there are any.
+
+[Stakeholder]
+So in terms of incrementally pushing changes. That's something that's more done like independently based on like.
+
+[Interviewer]
+Okay.
+
+[Stakeholder]
+Local development, the commits what files like, how many files you're changing at a time. But in terms of managing all of these there is a feature on Github, called projects, which you can see on the main toggle switch tab. I mentioned earlier.
+
+[Interviewer]
+Okay.
+
+[Stakeholder]
+Page. you can create a new project, or you can link an existing project. And I, if I do define a project. a project is essentially just a tracking board. You can have.
+
+[Interviewer]
+Okay.
+
+[Stakeholder]
+Layout or a Kanban board where you're actually assigning tasks, and you can facilitate team management that way. You can decide requirements. How big of changes to be made. how frequent, what like, what exactly, should be exactly, should be mentioned in changes. You can see who's reviewing what pull request which I mentioned earlier. And it's just it's a very much about like a productivity tool that's embedded into the application.
+
+[Interviewer]
+Okay, thank you so much for the description, and that was very helpful. I didn't know like. I didn't know this kind of thing existed in Github. but that was very insightful for sure. And if you if you if you like like, you say you collaborate with different people. But different people. How do you guys actually split the work? How do you like if you, if you found a feature that you want to implement in the code. and if someone else found a bug, how do you guys manage to work it out? How do you multitask? Or how do you collaborate on Github for that.
+
+[Stakeholder]
+Yeah. So actually, for that use case as well, we would most certainly be using the combine board which I just mentioned. and it. In terms of that, we would just. We have our backlog, and we would just simply make an issue in that backlog. And
+
+[Interviewer]
+Just a 3rd one. Okay.
+
+[Stakeholder]
+Queue is like a requirement. It's a task.
+
+[Interviewer]
+Okay.
+
+[Stakeholder]
+Attachment of a title and a description, and who it's assigned to in the backlog. It's assigned to nobody, but we would add that to the backlog, we would meet together as a team. discuss who should be assigned, what? And move those those issues that I mentioned, those entities from the backlog to another part of the combine board.
+
+[Interviewer]
+Excuse me.
+
+[Stakeholder]
+To do, or ready to pick up or ready to, you know, develop. and that would indicate that it is up. Fortakes.
+
+[Interviewer]
+Oh, okay, got you got you? And you can. Can you like push specific code for those black backlogs or issues that you just made in the Kanban Board.
+
+[Stakeholder]
+Did you say push specific code.
+
+[Interviewer]
+Yeah, yeah, yeah, push, I mean, make specific code changes or push specific code for that backlog or feature that you just added in the Kanban on Github like, can you manage that?
+
+[Stakeholder]
+Yeah, for sure, you can actually link. So remember, I mentioned pull request earlier.
+
+[Interviewer]
+Right.
+
+[Stakeholder]
+If I was to make a pull request, you can actually attach it to an issue in the Kanban board. You just have to make sure that the canva board the project is actually linked to the repository which has which I mentioned earlier, with, like the.
+
+[Interviewer]
+New product.
+
+[Stakeholder]
+Click Project Button. and if I was to make a port request I can use a feature in Github called There's keywords. and one of them, for example, is resolves. So I would just simply in the description I would type resolves and then the pound symbol. And then a list of actually all the issues within that common, where would pop back and select the issue? So then, when that port request is merged, the Kanban board would automatically reflect that. So it's very much a convenient feature that gets developed.
+
+[Interviewer]
+Okay, that's great to hear, man, I I think that increasing your productivity a lot right.
+
+[Stakeholder]
+Yeah, for sure, for sure.
+
+[Interviewer]
+Okay, that's good to hear. Can I ask if if Github was not there, how would you have solved these issues like. How would I? How would you have come up with solutions of these issues that you have. that you are using Github for every day.
+
+[Stakeholder]
+Well, I would probably revert to a different platform that actually has the same very vote, not exact same, but very, very similar features to Github to manage git repositories. Example would be gitlab. or I am pretty sure aws Amazon web services offers a similar service as well, which I could use too.
+
+[Interviewer]
+Okay, got you got you got you? I are there any other goals? Apart from collaborating with your team teammates that you use Github for.
+
+[Stakeholder]
+Yeah, actually, I guess another use case is just having a convenient place to store my code in a in a in a safe manner. Were my machine to go corrupt, were it to be lost, I would still have my work in a cloud environment that I could simply I'm gonna use the keyword pull onto a different machine and continue working on my code base.
+
+[Interviewer]
+Okay. Nice. as you said, you can store your code on the cloud. Can others also do that?
+
+[Stakeholder]
+Yeah, yeah, very much. So it's a, it's just like it's a collaborative cloud environment. So they can. If I mentioned where, if I mentioned the term get branch like the you can make a different branch. They can store their work on that branch, for example. and if I was to allow changes. It's just simply a copy of the existing repository, but it has its own. It's like it's a copy with its own different changes which don't affect the main repository.
+
+[Interviewer]
+Okay, that's that's great to hear, man. Yeah, that must be very helpful. Can you see other people's code? Also, like some kind of a different project that you that is altogether different than yours.
+
+[Stakeholder]
+Yeah, for sure. Oh, yeah, what were you gonna say?
+
+[Interviewer]
+No, no, nothing. I was just hearing you. I was just waiting for a reply.
+
+[Stakeholder]
+Oh, yes, so Github is very much a an open source platform. You could say, in the sense that public repositories are visible to anybody. meaning I can. If I open up the web application on the top right section of the screen. there's a search bar where I can like. I can look up keywords right where those keywords can include file names. It can include variable names in terms of code languages. and it can then search the entire Github database for public repositories that I can look at. So if I was to look up example, this ring example. I can look at code that matches, that string repositories, pull requests that are public issues that are public. I can look at discussion forms that are public users that have example in their username. I can also filter based on language. So it's very much an open source app, like application, or a portal where I can look at other people's code.
+
+[Interviewer]
+Okay, that's quite nice to hear. Man. yeah. If if what? What are the what are the most like features about Github that you like like. What are what are your most like features about Github?
+
+[Stakeholder]
+That's a that's a good question. I think my most like feature would probably have it would probably have to be the port request feature simply because it's a great way to make sure that the main repository stays safe from unknown code changes before they are reviewed by others. It's also a very convenient way to track history. because once a pull request is made, it is it's not deleted. It is simply saved in a backlog. and in that backlog I mean to see, like what changes were made with this pull request. What changes were made with this pull request I can somewhat see, like a history of the Repository. plus other like changes that were made by my collaborators.
+
+[Interviewer]
+Right right now. Thank you for the answer. If there, if there are any other features that you might find buggy or need improvement. And, Github, what what might they be if you can identify.
+
+[Stakeholder]
+In terms of need improvement. There's a feature on Github or Github actions. If I elaborate on that, it's essentially running, it compiles your code that you, your repository code and you can configure a Yaml file to run that code, run test cases on the Github environment on their server space. The issue I have with this feature is their documentation overall is a little broad. or it's it's very. It's very difficult to find. And most of the documentation, I find is from other external sources. Stack, overflow, for example. So if they. Could have a forum or such, or like a a blog, tab forward discussions or information on building these action workflows. It'd be great.
+
+[Interviewer]
+Okay, that's thank you for elaborating on that. Yeah. what kind of features would you want to see in Github in the future?
+
+[Stakeholder]
+I think I'm very much. It's it's not an essential feature, it's more so. Just like convenience. Nice to have feature. It would be to see a visual mapping of the repository history. So I mentioned, there's like branches for like copies of my repository, but they can get merged into the main repository. If there was a way now, I could look at the commit history, which all have timestamps. So it's all like very much a linear stack of changes you could look at, but it's it very much. Doesn't give like a an exact history of the repository because of visual mapping. For this to visually see there was new branches made where they were merged in and within those branches like see issues with like their corresponding timeline. That'd be it would be really great for context on the repository.
+
+[Interviewer]
+Hmm! That actually makes sense. I I think that's a very good idea. Nice anything, anything, any of the features that you use that you think should be automated.
+
+[Stakeholder]
+Oh!
+
+[Interviewer]
+They can be automated.
+
+[Stakeholder]
+Like a new feature. For example.
+
+[Interviewer]
+Yeah, any any kind of features that you currently use, that you find Hassle to use. And you think that this can be automated. Instead of doing yourself.
+
+[Stakeholder]
+Yeah, in terms of automation. I don't have much else to say. But I do think we are live like in the current space and into the tech world, where AI assistants are being integrated everywhere. I think if a Github was to integrate such an assistant to allow users to consult with it to have better to use all the resources available on Github. It'd be really nice.
+
+[Interviewer]
+Nice, nice idea. So do you think? Ai in this space could help you AI can AI help you with the code as well like the code is.
+
+[Stakeholder]
+Yeah. AI, for sure.
+
+[Interviewer]
+Annual time.
+
+[Stakeholder]
+I was to like, for example, as an independent collaborator like me, reviewing my own code. I will only get so far with that. But if I was to have maybe an AI assistant or something that would review help me with code reviews, provide suggestions. I have another source of feedback that I can incorporate, or I could have a almost like an assistant to guide me through. maybe making a pull request, or, as I mentioned earlier, making like, you know, sending an action file.
+
+[Interviewer]
+Right? Right? Right? Right? That's a good idea, man. can you? Do you? Do you think? Github is at the top of its game? Or do you think it should incorporate any features from its competitors like you? Said Github, is one of the competitors right? Or if if if Github was not there you would have used Gitlab. So do you think Github does everything that Gritlab has to offer.
+
+[Stakeholder]
+Yeah, I'm yeah for sure. I I can confidently say, like, Github has everything that has to offer. It's very much like the the top platform that is used for the collaborative git environment.
+
+[Interviewer]
+Okay, nice nice. Okay. Let's I wanna ask how like a kind of a scenario, if you can talk me through a scenario when Beta was very useful to you or a real life experience. And Github was like, like great help to you, basically.
+
+[Stakeholder]
+Yeah, for sure. I think the the best example would be my junior year when I was in a project group developing an Ios app my project group. We were asynchronous in the sense that we could not ever we could. We had a very difficult time finding work session like creating work sessions to collaborate with each other in person. So we decided that we were going to develop asynchronously, and we did so through githubs. We set up our project boards to make issues to plan out the development process. We said in terms of the code, we always use our pull request to merge and changes. We would look at each other's code, for, like a collaborator, reviews and help ensure, we had top quality code going into the main repository, like the official repository and.
+
+[Interviewer]
+Right.
+
+[Stakeholder]
+Overall it was. It was great to it. It really did help facilitate our asynchronous workflows.
+
+[Interviewer]
+Right? Right? I bet that must have helped you a lot. Yeah. Nice. What? What is one feature that you use most often in Github.
+
+[Stakeholder]
+The yeah, I think I the most often would, for sure probably be. Excuse me it would probably be the the port request feature just, but just.
+
+[Interviewer]
+Because.
+
+[Stakeholder]
+In terms of like having people collaborate on my code. I want to ensure that I review their code. If I am collaborating someone else's code. They review my code. So it's for sure, the the most used feature I have.
+
+[Interviewer]
+Okay, got you got you? I think I ha! That's it. On my end, based on the question that I had in mind to ask you and thank you for expanding. My view on Github. Got to learn a lot of things that I didn't actually know knew about that. Yeah, thank you for taking the time for this interview. Man.
+
+[Stakeholder]
+Of course, and thank you for choosing me.
+
+[Interviewer]
+Thank you.

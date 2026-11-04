@@ -76,5 +76,5 @@ Multiple evidence items are allowed if the requirement spans multiple turns.
 
 MEETING TRANSCRIPT
 {% for turn in turns %}
-{"turn_id": "{{ turn.turn_id }}", "speaker": "{{ turn.speaker }}", "text": {{ turn.text | tojson }}}
+{"turn_id": "{{ turn.turn_id }}", "speaker": "{{ turn.speaker }}", "text": {{ turn.text_json }}}
 {% endfor %}

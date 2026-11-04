@@ -1,7 +1,14 @@
 import { Link, useParams } from 'react-router-dom'
-import { useMeetings, useProject, useProposals, useRequirements, useSettings } from '../api/queries.ts'
+import {
+  useGenerateMeeting,
+  useMeetings,
+  useProject,
+  useProposals,
+  useRequirements,
+  useSettings,
+} from '../api/queries.ts'
 import type { Schemas } from '../api/client.ts'
-import { AppShell } from '../components/AppShell.tsx'
+import { AppShell, ReviewerAccess } from '../components/AppShell.tsx'
 import type { RelationLabel } from '../components/RelationChip.tsx'
 import { RelationChip } from '../components/RelationChip.tsx'
 import { StateChip } from '../components/StateChip.tsx'
@@ -74,14 +81,18 @@ export function MeetingsRoute() {
             <div>
               <h1 style={titleStyle}>Meetings</h1>
               <p style={subtitleStyle}>
-                {sortedPast.length} processed · {currentReqs.length} requirements tracked
+                {sortedPast.filter((meeting) => meeting.generated !== false).length} processed ·{' '}
+                {currentReqs.length} requirements tracked
               </p>
             </div>
-            <Link to={`/projects/${projectId}/import`} style={{ textDecoration: 'none' }}>
-              <span className="cia-btn" style={{ display: 'inline-block' }}>
-                Import transcript
-              </span>
-            </Link>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 8 }}>
+              <Link to={`/projects/${projectId}/import`} style={{ textDecoration: 'none' }}>
+                <span className="cia-btn" style={{ display: 'inline-block' }}>
+                  Import transcript
+                </span>
+              </Link>
+              <ReviewerAccess />
+            </div>
           </div>
         </header>
 
@@ -201,9 +212,13 @@ export function MeetingsRoute() {
                     </p>
                   </div>
                 ) : (
-                  sortedPast.map((meeting) => (
-                    <PastCard key={meeting.id} meeting={meeting} projectId={projectId} />
-                  ))
+                  sortedPast.map((meeting) =>
+                    meeting.generated === false ? (
+                      <GenerateCard key={meeting.id} meeting={meeting} projectId={projectId} />
+                    ) : (
+                      <PastCard key={meeting.id} meeting={meeting} projectId={projectId} />
+                    ),
+                  )
                 )}
               </div>
             </section>
@@ -398,6 +413,59 @@ function PastCard({ meeting, projectId }: { meeting: Schemas['MeetingOut']; proj
         </div>
       )}
     </Link>
+  )
+}
+
+function GenerateCard({ meeting, projectId }: { meeting: Schemas['MeetingOut']; projectId: string }) {
+  const generate = useGenerateMeeting(projectId)
+  const result = generate.data
+  const problems = result?.errors ?? []
+  return (
+    <div
+      className="mcard"
+      style={{
+        background: 'var(--surface-raised)',
+        border: '1px dashed var(--border-strong)',
+        borderRadius: 'var(--radius-md)',
+        padding: '16px 18px',
+      }}
+    >
+      <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginBottom: 10 }}>
+        <span className="cia-id">{meeting.id}</span>
+        <span style={{ fontSize: 15, fontWeight: 500, color: 'var(--ink)' }}>{meeting.title}</span>
+        <span style={{ marginLeft: 'auto', fontSize: 12, color: 'var(--ink-meta)' }}>
+          {meeting.turn_count} turns · not processed
+        </span>
+      </div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+        <button
+          type="button"
+          className="cia-btn cia-btn--primary"
+          disabled={!meeting.can_generate || generate.isPending}
+          onClick={() => generate.mutate(meeting.id)}
+        >
+          {generate.isPending ? 'Generating… (about 30 s)' : 'Generate proposals'}
+        </button>
+        {!meeting.can_generate && meeting.generate_reason && (
+          <span style={{ fontSize: 13, color: 'var(--ink-meta)' }}>{meeting.generate_reason}</span>
+        )}
+      </div>
+      {generate.error && (
+        <p role="alert" style={{ margin: '10px 0 0', fontSize: 13, color: 'var(--state-live)' }}>
+          {generate.error.message}
+          {'status' in generate.error && generate.error.status === 401
+            ? ' Enter the reviewer token under Reviewer access first.'
+            : ''}
+        </p>
+      )}
+      {result && (
+        <p role="status" style={{ margin: '10px 0 0', fontSize: 13 }}>
+          {result.proposals_created} proposals staged.{' '}
+          <Link to={`/projects/${projectId}/review`}>Open the review queue →</Link>
+          {problems.length > 0 && ` ${problems.length} errors: ${problems[0]}`}
+        </p>
+      )}
+    </div>
   )
 }
 
