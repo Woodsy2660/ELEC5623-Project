@@ -521,10 +521,12 @@ def _prediction_records(
         .join(Requirement, Requirement.id == RequirementVersion.requirement_id)
         .all()
     )
+    # A meeting with no writes (only restatements, no-ops or rejections) still has a
+    # register state: the one carried over. Take cutoffs from proposals as well as events.
     ordinals = sorted(
         {
             row["meeting_ordinal"]
-            for row in event_rows
+            for row in [*event_rows, *predictions]
             if isinstance(row.get("meeting_ordinal"), int)
         }
     )

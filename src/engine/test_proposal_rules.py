@@ -16,6 +16,7 @@ def assess(**overrides: object):  # type: ignore[no-untyped-def]
         "speaker_can_confirm_scope": True,
         "replacement_stated": True,
         "hedged": False,
+        "cancellation_stated": True,
     }
     values.update(overrides)
     return assess_proposal(**values)  # type: ignore[arg-type]
@@ -96,6 +97,7 @@ def test_supersession_without_required_guard_is_unresolved(overrides: dict[str, 
         {"hedged": True},
         {"speaker_can_confirm_scope": False},
         {"hedged": True, "speaker_can_confirm_scope": False},
+        {"cancellation_stated": False},
     ],
 )
 def test_contradiction_without_required_guard_is_unresolved(overrides: dict[str, object]) -> None:

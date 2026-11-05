@@ -823,3 +823,48 @@ def test_pipeline_modules_do_not_read_gold_labels() -> None:
         assert '.get("requirement_id")' not in text
         assert "canonical_requirement_id" not in text
         assert "expected_state_after" not in text
+
+
+def test_meeting_without_writes_keeps_the_carried_over_register_state(tmp_path: Path) -> None:
+    calls = {"n": 0}
+
+    def fake_classify(client, *, session, run_id, inputs, **kwargs):
+        calls["n"] += 1
+        # The first three candidates create requirements; everything after is a no-op,
+        # so later meetings have proposals but no register events.
+        relation = Relation.NEW if calls["n"] <= 3 else Relation.NOT_REQUIREMENT
+        classification = Classification(
+            matched_requirement_id=None,
+            relation=relation,
+            rationale="stub",
+            retrieved_ids=list(inputs.retrieval.retrieved_ids),
+            replacement_stated=False,
+        )
+        return ClassificationOutcome(
+            retrieved_ids=tuple(classification.retrieved_ids),
+            classification=classification,
+            downgraded=False,
+            model_relation=relation.value,
+            error=None,
+            call_ids=(),
+        )
+
+    db_url = f"sqlite:///{tmp_path / 'carry.db'}"
+    stats = run_pipeline(
+        scenario_dir=Path("scenarios/dev/D1"),
+        mode="eval",
+        candidate_source="gold",
+        repeat_index=1,
+        db_url=db_url,
+        runs_dir=tmp_path / "runs",
+        client=object(),
+        config=type("Cfg", (), {"deployment_name": "cia-chat", "temperature": 0.0, "seed": 42})(),
+        embedder=_Embedder(),
+        classifier=fake_classify,
+    )
+    assert stats["errors"] == []
+    report = score_run(stats["run_id"], db_url=db_url, scenario_dir=Path("scenarios/dev/D1"))
+    last = report["e5"]["per_meeting"][max(report["e5"]["per_meeting"], key=int)]
+    mapped = [m for m in last["mismatches"] if m["system_id"] is not None]
+    assert mapped, "the three created requirements must map to gold"
+    assert all(m["actual"] is not None for m in mapped)

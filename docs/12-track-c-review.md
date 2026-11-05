@@ -75,17 +75,28 @@ drop a leading “From now on” or “If legal agrees,”. It accepts either a 
 replacement frame (“use, adopt or go with B instead”, “replace A with B”, “change, switch
 or move ... to B”), or a dated commitment (“from now on”, “going forward”, “from today”,
 “as of today”, “starting today/now”) with a named alternative (“instead of”, “rather
-than”). Normative “should” is accepted only in the second form. Hedges, questions,
-conditionals, negation and unrecognized wording stay unresolved.
+than”). Normative “should” is accepted only in the second form. An unhedged instruction
+that names the replacement is also accepted: a sentence opening with “Replace A with B” or
+“Change, switch or move ... to B”, or any unhedged sentence with “instead of” or “rather
+than”. “No longer” retires the outgoing option and is not read as negation. Hedges,
+questions, conditionals, other negation and unrecognized wording stay unresolved.
 
 A `contradiction` is held as unresolved when its evidence sentence is hedged
 (`hedged_statement`: “if”, “unless”, “maybe”, “perhaps”, “possibly”, “probably”, “may”,
 “might”, “could”, “would”, or a question mark). Negation is not a hedge there, because
 “the receipt emails can't happen as agreed” is how a contradiction is stated. The engine
 takes this as an explicit `hedged` input, like `replacement_stated`. A contradiction from a
-speaker who cannot confirm scope is also held, matching the supersession guard. This small rule is a safety filter; it does not claim general
+speaker who cannot confirm scope is also held, matching the supersession guard. A
+contradiction must also state a withdrawal (`cancellation_stated`: “cannot”, “can't”,
+“won't”, “will not”, “must not”, “no longer”, “not needed/required”, “don't need”, “drop”,
+“remove”, “withdraw”, “scrap”, “abandon”). A plain requirement sentence or a reaffirmation
+(“still required”) labelled contradiction is held, because docs/05 defines a contradiction as
+making an earlier statement false. “Cancel” is excluded because it is often the subject
+matter. This small rule is a safety filter; it does not claim general
 natural language understanding. Its wording list was set on spec examples and the dev
-split, and it must be frozen with the prompts before holdout scoring.
+split, and it must be frozen with the prompts before holdout scoring. The imperative
+replacement forms and the withdrawal check were added after the provisional AI-draft run
+(docs/16), so results on those drafts after the change are post hoc.
 
 The `proposal_reviews` table is additive and never backfills earlier proposal rows.
 Old pending proposals without the new full-project snapshot stay visible but cannot be

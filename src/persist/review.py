@@ -195,6 +195,26 @@ def hedged_statement(quotes: list[str]) -> bool:
     )
 
 
+def cancellation_stated(quotes: list[str]) -> bool:
+    """True when the evidence withdraws something: the content test for a contradiction.
+
+    A contradiction makes an earlier statement false with no replacement (docs/05), so
+    its evidence must carry a refusal or withdrawal. A plain requirement sentence ("Record
+    the parcels delivered to each household") or a reaffirmation ("still required") does
+    not. "cancel" is left out because it is often the subject matter, not the decision.
+    """
+    text = " ".join(quotes).lower().replace("’", "'")
+    return bool(
+        re.search(
+            r"\b(?:cannot|can't|won't|will not|must not|shall not|no longer|not part of"
+            r"|not (?:needed|required|necessary|going ahead|go ahead|happen(?:ing)?)"
+            r"|(?:don't|doesn't|do not|does not) need"
+            r"|drop(?:s|ped)?|remove[sd]?|withdraw(?:n|s)?|scrap(?:s|ped)?|abandon(?:s|ed)?)\b",
+            text,
+        )
+    )
+
+
 def explicit_replacement(quotes: list[str]) -> bool:
     """Conservative English rule on quoted evidence, never the classifier label.
 
@@ -202,10 +222,12 @@ def explicit_replacement(quotes: list[str]) -> bool:
     rule, not a general natural-language entailment test.
     """
     text = " ".join(quotes).lower().replace("’", "'")
+    # "no longer" retires the outgoing option ("telephone booking is no longer part of
+    # this service"); it does not refuse the replacement, so it is not a negation here.
     if re.search(
         r"\b(if|unless|maybe|perhaps|possibly|probably|may|could|might|would|not|never|no)\b"
         r"|n't|[?]",
-        text,
+        re.sub(r"\bno longer\b", "", text),
     ):
         return False
     # A dated commitment plus a named alternative is a replacement even without "we'll":
@@ -220,6 +242,14 @@ def explicit_replacement(quotes: list[str]) -> bool:
         return True
     if re.search(r"\bshould\b", text):
         return False
+    # An unhedged instruction names the replacement directly: "Replace X with Y",
+    # "Switch X to Y", "Send it by SMS instead of email".
+    if re.search(
+        r"(?:^|[.;:!]\s*)(?:replace\b[^.!?]+\bwith\b|(?:switch|change|move)\b[^.!?]*\bto\b)", text
+    ):
+        return True
+    if re.search(r"\b(?:instead of|rather than)\b", text):
+        return True
     decision = r"(?:we will|we'll|we are going to|we're going to|we (?:have |'ve )?decided to|let's|let us)"
     return any(
         re.search(pattern, text)
@@ -391,6 +421,7 @@ def assess_stored_proposal(
         speaker_can_confirm_scope=speaker.can_confirm_scope,
         replacement_stated=explicit_replacement(sentences),
         hedged=hedged_statement(sentences),
+        cancellation_stated=cancellation_stated(sentences),
     )
 
 

@@ -39,6 +39,7 @@ from src.persist.retrieval import retrieval_snapshot
 from src.persist.review import (
     ReviewConflict,
     ReviewDecision,
+    cancellation_stated,
     commit_decision,
     evidence_sentence,
     explicit_replacement,
@@ -512,11 +513,11 @@ def test_edited_text_cannot_switch_the_proposal_embedding_contract(database):
 
 
 def test_evidence_sentence_restores_the_words_around_a_cropped_quote():
-    turn = "The emails land in spam. From now on reset links go by SMS instead of email. Thanks."
+    turn = "The emails land in spam. From now on reset links should go by SMS instead of email. Thanks."
     start = turn.index("reset links")
     end = turn.index("instead of email") + len("instead of email")
     assert evidence_sentence(turn, start, end) == (
-        "From now on reset links go by SMS instead of email."
+        "From now on reset links should go by SMS instead of email."
     )
     assert explicit_replacement([evidence_sentence(turn, start, end)])
     assert not explicit_replacement([turn[start:end]])
@@ -572,6 +573,11 @@ def test_replacement_rule_does_not_accept_negation():
         "from now on password reset links should be sent by text message instead of email",
         "Going forward, invoices are emailed rather than posted.",
         "Reset links go by SMS instead of email starting today.",
+        "Replace the two-hour maximum with a three-hour maximum.",
+        "Replace phone booking with a web form; phone booking is no longer offered.",
+        "Switch the export format to CSV.",
+        "Send the confirmation by SMS instead of email.",
+        "Use invoices rather than receipts.",
     ],
 )
 def test_replacement_rule_accepts_decided_replacements(quote):
@@ -673,3 +679,48 @@ def test_precomputed_candidate_embedding_is_saved_without_a_model_call(database)
     with Session(engine) as db:
         versions, _ = retrieval_snapshot(db, "P1")
         assert len(versions) == 1
+
+
+@pytest.mark.parametrize(
+    "quote",
+    [
+        "Replace email login with SSO if legal agrees.",
+        "We won't replace phone booking with a web form.",
+        "Could we send it by SMS instead of email?",
+        "Phone booking is not replaced with anything yet.",
+        "In meeting one the limit was two hours, but that was replaced with three hours.",
+    ],
+)
+def test_replacement_rule_rejects_hedged_negated_or_reported_replacements(quote):
+    assert not explicit_replacement([quote])
+
+
+@pytest.mark.parametrize(
+    "quote",
+    [
+        "IT won't renew it, so the automatic receipt emails can't happen as agreed.",
+        "The agreed reminder emails cannot be sent; we have not decided on a replacement.",
+        "The cancellation email to staff cannot go ahead and we have no alternative yet.",
+        "Receipts can no longer be emailed.",
+        "The weekly report is not needed any more.",
+        "We don't need the audit export.",
+        "Drop the dark mode requirement.",
+        "The calendar sync has been withdrawn.",
+    ],
+)
+def test_withdrawal_check_accepts_stated_withdrawals(quote):
+    assert cancellation_stated([quote])
+
+
+@pytest.mark.parametrize(
+    "quote",
+    [
+        "Record the number of food parcels delivered to each household.",
+        "The pickup parcel count and pickup date are still required.",
+        "Email a receipt when a member pays for an event ticket.",
+        "When a coordinator cancels a pickup, record the reason.",
+        "Email staff when an appointment is cancelled.",
+    ],
+)
+def test_withdrawal_check_rejects_plain_or_reaffirming_requirements(quote):
+    assert not cancellation_stated([quote])

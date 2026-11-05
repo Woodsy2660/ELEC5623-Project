@@ -48,6 +48,7 @@ from src.persist.register import confirm_current, next_requirement_id, write_ver
 from src.persist.review import (
     ProjectHeadSnapshot,
     ReviewConflict,
+    cancellation_stated,
     evidence_sentence,
     explicit_replacement,
     hedged_statement,
@@ -468,6 +469,7 @@ def _process_candidate(
         speaker_can_confirm_scope=can_confirm,
         replacement_stated=explicit_replacement(sentences),
         hedged=hedged_statement(sentences),
+        cancellation_stated=cancellation_stated(sentences),
     )
     decision = _human_decision(mode, event_action, verdict.verdict, verdict.proposed_event)
     try:
