@@ -1,0 +1,5 @@
+{"turn_index": 0, "turn_id": "H1-M03:0000", "speaker": "consultant", "text": "In meeting one the limit was two hours, but that was replaced with three hours last meeting."}
+{"turn_index": 1, "turn_id": "H1-M03:0001", "speaker": "client", "text": "The three-hour room reservation limit applies separately to each day."}
+{"turn_index": 2, "turn_id": "H1-M03:0002", "speaker": "client", "text": "The reminder email is still blocked and there is no replacement decision."}
+{"turn_index": 3, "turn_id": "H1-M03:0003", "speaker": "observer", "text": "Would a text reminder be cheaper?"}
+{"turn_index": 4, "turn_id": "H1-M03:0004", "speaker": "client", "text": "The reservation confirmation email still needs the room number."}

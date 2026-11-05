@@ -1,0 +1,14 @@
+[client]
+Patients must book appointments by calling the clinic.
+
+[client]
+Email patients a confirmation for each appointment.
+
+[client]
+Email staff when an appointment is cancelled.
+
+[consultant]
+Could patients book online in future?
+
+[client]
+For now patients book by calling us.

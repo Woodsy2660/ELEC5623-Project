@@ -1,0 +1,5 @@
+{"turn_index": 0, "turn_id": "H3-M03:0000", "speaker": "client", "text": "Show the pickup address together with the pickup time."}
+{"turn_index": 1, "turn_id": "H3-M03:0001", "speaker": "consultant", "text": "The delivered parcel count is recorded for each household with the delivery date."}
+{"turn_index": 2, "turn_id": "H3-M03:0002", "speaker": "client", "text": "When a coordinator cancels a pickup, record the reason."}
+{"turn_index": 3, "turn_id": "H3-M03:0003", "speaker": "client", "text": "I wonder if drivers need an offline mode."}
+{"turn_index": 4, "turn_id": "H3-M03:0004", "speaker": "client", "text": "The pickup parcel count and pickup date are still required."}

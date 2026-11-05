@@ -1,0 +1,14 @@
+[client]
+For the departure record, staff must also record the receiving institution.
+
+[client]
+The emailed loan agreement must include the loan reference number.
+
+[client]
+A collections manager must approve each outgoing loan.
+
+[consultant]
+Would automatic approval be acceptable for small loans?
+
+[client]
+Record the departure date and receiving institution.

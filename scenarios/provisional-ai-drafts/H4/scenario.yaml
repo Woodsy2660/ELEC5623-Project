@@ -1,0 +1,39 @@
+{
+  "id": "H4",
+  "name": "Museum collection loans",
+  "client": "Fictional client",
+  "speakers": [
+    {
+      "label": "client",
+      "role": "Client representative",
+      "can_confirm_scope": true
+    },
+    {
+      "label": "consultant",
+      "role": "Consultant",
+      "can_confirm_scope": false
+    },
+    {
+      "label": "observer",
+      "role": "Observer",
+      "can_confirm_scope": false
+    }
+  ],
+  "meetings": [
+    {
+      "ordinal": 1,
+      "title": "Meeting 1",
+      "canonical": "canonical/M01.jsonl"
+    },
+    {
+      "ordinal": 2,
+      "title": "Meeting 2",
+      "canonical": "canonical/M02.jsonl"
+    },
+    {
+      "ordinal": 3,
+      "title": "Meeting 3",
+      "canonical": "canonical/M03.jsonl"
+    }
+  ]
+}

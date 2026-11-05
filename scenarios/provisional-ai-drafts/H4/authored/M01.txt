@@ -1,0 +1,14 @@
+[client]
+Staff must record the date an object leaves the museum on loan.
+
+[client]
+Staff must record the date a loaned object returns to the museum.
+
+[client]
+Email the borrower a loan agreement.
+
+[observer]
+Can we attach a photograph as well?
+
+[client]
+We need the return date for every object on loan.

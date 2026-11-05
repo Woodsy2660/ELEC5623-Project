@@ -1,0 +1,14 @@
+[client]
+After a phone number is updated, show the member the new number.
+
+[client]
+When deactivating an account, the administrator must enter a reason.
+
+[consultant]
+The annual fee receipt goes by email and shows the membership year.
+
+[client]
+Perhaps we could add postal receipts one day.
+
+[client]
+An administrator can deactivate an account by entering a reason.

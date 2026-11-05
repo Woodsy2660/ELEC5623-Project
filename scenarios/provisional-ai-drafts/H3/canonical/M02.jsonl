@@ -1,0 +1,5 @@
+{"turn_index": 0, "turn_id": "H3-M02:0000", "speaker": "client", "text": "For each pickup, record the parcel count alongside the pickup date."}
+{"turn_index": 1, "turn_id": "H3-M02:0001", "speaker": "client", "text": "For each household delivery, record the parcel count alongside the delivery date."}
+{"turn_index": 2, "turn_id": "H3-M02:0002", "speaker": "observer", "text": "Could we record the weight as well?"}
+{"turn_index": 3, "turn_id": "H3-M02:0003", "speaker": "client", "text": "Volunteers need to see the pickup address."}
+{"turn_index": 4, "turn_id": "H3-M02:0004", "speaker": "client", "text": "A coordinator must be able to cancel a scheduled pickup."}

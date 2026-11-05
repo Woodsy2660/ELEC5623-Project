@@ -1,0 +1,14 @@
+[client]
+For each pickup, record the parcel count alongside the pickup date.
+
+[client]
+For each household delivery, record the parcel count alongside the delivery date.
+
+[observer]
+Could we record the weight as well?
+
+[client]
+Volunteers need to see the pickup address.
+
+[client]
+A coordinator must be able to cancel a scheduled pickup.

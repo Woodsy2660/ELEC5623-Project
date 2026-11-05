@@ -1,0 +1,5 @@
+{"turn_index": 0, "turn_id": "H2-M03:0000", "speaker": "consultant", "text": "In meeting one we chose telephone booking, which the web form replaced in meeting two."}
+{"turn_index": 1, "turn_id": "H2-M03:0001", "speaker": "client", "text": "The web booking form must show available appointment times."}
+{"turn_index": 2, "turn_id": "H2-M03:0002", "speaker": "client", "text": "Send the patient appointment confirmation by SMS instead of email, keeping the appointment time in the message."}
+{"turn_index": 3, "turn_id": "H2-M03:0003", "speaker": "client", "text": "The staff cancellation email remains unresolved; we have not agreed an alternative."}
+{"turn_index": 4, "turn_id": "H2-M03:0004", "speaker": "client", "text": "Should the SMS also include a map?"}

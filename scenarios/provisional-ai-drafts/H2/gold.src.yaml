@@ -1,0 +1,184 @@
+{
+  "events": [
+    {
+      "event_index": 0,
+      "meeting_ordinal": 1,
+      "requirement_id": "R01",
+      "relation": "new",
+      "evidence": [
+        {
+          "turn_id": "H2-M01:0000",
+          "quote": "Patients must book appointments by calling the clinic."
+        }
+      ]
+    },
+    {
+      "event_index": 1,
+      "meeting_ordinal": 1,
+      "requirement_id": "R02",
+      "relation": "new",
+      "evidence": [
+        {
+          "turn_id": "H2-M01:0001",
+          "quote": "Email patients a confirmation for each appointment."
+        }
+      ]
+    },
+    {
+      "event_index": 2,
+      "meeting_ordinal": 1,
+      "requirement_id": "R03",
+      "relation": "new",
+      "evidence": [
+        {
+          "turn_id": "H2-M01:0002",
+          "quote": "Email staff when an appointment is cancelled."
+        }
+      ]
+    },
+    {
+      "event_index": 3,
+      "meeting_ordinal": 1,
+      "requirement_id": null,
+      "relation": "not_requirement",
+      "evidence": [
+        {
+          "turn_id": "H2-M01:0003",
+          "quote": "Could patients book online in future?"
+        }
+      ]
+    },
+    {
+      "event_index": 4,
+      "meeting_ordinal": 1,
+      "requirement_id": "R01",
+      "relation": "restatement",
+      "evidence": [
+        {
+          "turn_id": "H2-M01:0004",
+          "quote": "For now patients book by calling us."
+        }
+      ]
+    },
+    {
+      "event_index": 5,
+      "meeting_ordinal": 2,
+      "requirement_id": "R01",
+      "relation": "supersession",
+      "evidence": [
+        {
+          "turn_id": "H2-M02:0000",
+          "quote": "Replace telephone booking with a web booking form; telephone booking is no longer part of this service."
+        }
+      ]
+    },
+    {
+      "event_index": 6,
+      "meeting_ordinal": 2,
+      "requirement_id": "R02",
+      "relation": "refinement",
+      "evidence": [
+        {
+          "turn_id": "H2-M02:0001",
+          "quote": "The patient appointment confirmation email must include the appointment time."
+        }
+      ]
+    },
+    {
+      "event_index": 7,
+      "meeting_ordinal": 2,
+      "requirement_id": "R03",
+      "relation": "contradiction",
+      "evidence": [
+        {
+          "turn_id": "H2-M02:0002",
+          "quote": "The cancellation email to staff cannot go ahead and we have no alternative yet."
+        }
+      ]
+    },
+    {
+      "event_index": 8,
+      "meeting_ordinal": 2,
+      "requirement_id": null,
+      "relation": "not_requirement",
+      "evidence": [
+        {
+          "turn_id": "H2-M02:0003",
+          "quote": "Maybe cancellation notices could appear on a dashboard?"
+        }
+      ]
+    },
+    {
+      "event_index": 9,
+      "meeting_ordinal": 2,
+      "requirement_id": "R02",
+      "relation": "restatement",
+      "evidence": [
+        {
+          "turn_id": "H2-M02:0004",
+          "quote": "The patient confirmation email includes the appointment time."
+        }
+      ]
+    },
+    {
+      "event_index": 10,
+      "meeting_ordinal": 3,
+      "requirement_id": "R01",
+      "relation": "restatement",
+      "evidence": [
+        {
+          "turn_id": "H2-M03:0000",
+          "quote": "In meeting one we chose telephone booking, which the web form replaced in meeting two."
+        }
+      ]
+    },
+    {
+      "event_index": 11,
+      "meeting_ordinal": 3,
+      "requirement_id": "R01",
+      "relation": "refinement",
+      "evidence": [
+        {
+          "turn_id": "H2-M03:0001",
+          "quote": "The web booking form must show available appointment times."
+        }
+      ]
+    },
+    {
+      "event_index": 12,
+      "meeting_ordinal": 3,
+      "requirement_id": "R02",
+      "relation": "supersession",
+      "evidence": [
+        {
+          "turn_id": "H2-M03:0002",
+          "quote": "Send the patient appointment confirmation by SMS instead of email, keeping the appointment time in the message."
+        }
+      ]
+    },
+    {
+      "event_index": 13,
+      "meeting_ordinal": 3,
+      "requirement_id": "R03",
+      "relation": "restatement",
+      "evidence": [
+        {
+          "turn_id": "H2-M03:0003",
+          "quote": "The staff cancellation email remains unresolved; we have not agreed an alternative."
+        }
+      ]
+    },
+    {
+      "event_index": 14,
+      "meeting_ordinal": 3,
+      "requirement_id": null,
+      "relation": "not_requirement",
+      "evidence": [
+        {
+          "turn_id": "H2-M03:0004",
+          "quote": "Should the SMS also include a map?"
+        }
+      ]
+    }
+  ]
+}

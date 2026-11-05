@@ -1,0 +1,14 @@
+[client]
+For the return record, staff must also record the condition of the object.
+
+[client]
+Record the date when the collections manager approves an outgoing loan.
+
+[consultant]
+The borrower receives the agreement by email with the loan reference.
+
+[client]
+Maybe we could use electronic signatures later.
+
+[client]
+The collections manager approves outgoing loans, and we record when.

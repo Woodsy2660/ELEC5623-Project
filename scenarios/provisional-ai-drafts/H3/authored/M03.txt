@@ -1,0 +1,14 @@
+[client]
+Show the pickup address together with the pickup time.
+
+[consultant]
+The delivered parcel count is recorded for each household with the delivery date.
+
+[client]
+When a coordinator cancels a pickup, record the reason.
+
+[client]
+I wonder if drivers need an offline mode.
+
+[client]
+The pickup parcel count and pickup date are still required.

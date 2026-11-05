@@ -1,0 +1,5 @@
+{"turn_index": 0, "turn_id": "H2-M02:0000", "speaker": "client", "text": "Replace telephone booking with a web booking form; telephone booking is no longer part of this service."}
+{"turn_index": 1, "turn_id": "H2-M02:0001", "speaker": "client", "text": "The patient appointment confirmation email must include the appointment time."}
+{"turn_index": 2, "turn_id": "H2-M02:0002", "speaker": "client", "text": "The cancellation email to staff cannot go ahead and we have no alternative yet."}
+{"turn_index": 3, "turn_id": "H2-M02:0003", "speaker": "observer", "text": "Maybe cancellation notices could appear on a dashboard?"}
+{"turn_index": 4, "turn_id": "H2-M02:0004", "speaker": "client", "text": "The patient confirmation email includes the appointment time."}

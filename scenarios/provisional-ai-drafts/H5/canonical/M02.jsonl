@@ -1,0 +1,5 @@
+{"turn_index": 0, "turn_id": "H5-M02:0000", "speaker": "client", "text": "The annual membership payment receipt must include the membership year."}
+{"turn_index": 1, "turn_id": "H5-M02:0001", "speaker": "client", "text": "The event ticket receipt must include the event name."}
+{"turn_index": 2, "turn_id": "H5-M02:0002", "speaker": "client", "text": "A club administrator must be able to deactivate a member account."}
+{"turn_index": 3, "turn_id": "H5-M02:0003", "speaker": "observer", "text": "Should deactivation happen automatically after a year?"}
+{"turn_index": 4, "turn_id": "H5-M02:0004", "speaker": "client", "text": "The ticket receipt is emailed and includes the event name."}
