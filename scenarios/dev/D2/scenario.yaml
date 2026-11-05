@@ -1,0 +1,25 @@
+id: D2
+name: "Employee portal and payments"
+client: "Fictional employer"
+
+speakers:
+  - label: "client"
+    role: "Client representative"
+    can_confirm_scope: true
+  - label: "consultant"
+    role: "Lead consultant"
+    can_confirm_scope: false
+  - label: "observer"
+    role: "Observer"
+    can_confirm_scope: false
+
+meetings:
+  - ordinal: 1
+    title: "Kick-off"
+    canonical: "canonical/M01.jsonl"
+  - ordinal: 2
+    title: "Two weeks later"
+    canonical: "canonical/M02.jsonl"
+  - ordinal: 3
+    title: "Scope check"
+    canonical: "canonical/M03.jsonl"

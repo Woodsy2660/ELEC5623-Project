@@ -48,7 +48,9 @@ from src.persist.register import confirm_current, next_requirement_id, write_ver
 from src.persist.review import (
     ProjectHeadSnapshot,
     ReviewConflict,
+    evidence_sentence,
     explicit_replacement,
+    hedged_statement,
     meeting_gates,
     meeting_has_candidates,
     pending_review_count,
@@ -452,13 +454,16 @@ def _process_candidate(
         stats["downgrades"] += 1
     classification = outcome.classification
     can_confirm = _get_speaker_can_confirm(session, project_id, inputs.speaker_label)
+    sentences = [
+        evidence_sentence(by_id[span.turn_id].text, span.start, span.end)
+        for span in candidate.evidence
+    ]
     verdict = assess_classification(
         inputs,
         classification,
         speaker_can_confirm_scope=can_confirm,
-        replacement_stated=explicit_replacement(
-            [by_id[span.turn_id].text[span.start : span.end] for span in candidate.evidence]
-        ),
+        replacement_stated=explicit_replacement(sentences),
+        hedged=hedged_statement(sentences),
     )
     decision = _human_decision(mode, event_action, verdict.verdict, verdict.proposed_event)
     try:

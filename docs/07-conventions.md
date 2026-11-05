@@ -22,6 +22,7 @@
   /holdout         H1–H5 + gold
   /dev-adversarial
   /holdout-adversarial   NOT OPENED until final scoring
+  /real-cmu        public CMU interviews + draft gold (supplementary, not holdout)
 /tests
 /docs
 /web               Vite + React review UI. The state engine stays in Python.

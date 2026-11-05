@@ -1,0 +1,91 @@
+# Gold evidence file for a CMU interview (scored copy). AI-drafted; needs human review before use.
+# Labels follow docs/05 strictly; see scenarios/real-cmu/README.md.
+
+events:
+- event_index: 0
+  meeting_ordinal: 1
+  requirement_id: null
+  relation: not_requirement
+  evidence:
+  - turn_id: CMU-MESSAGING-M01:0013
+    quote: the main goal for me to use Wechat is just communicating with my friends and family
+- event_index: 1
+  meeting_ordinal: 1
+  requirement_id: null
+  relation: not_requirement
+  evidence:
+  - turn_id: CMU-MESSAGING-M01:0019
+    quote: wechat that's very bad at managing messages
+- event_index: 2
+  meeting_ordinal: 1
+  requirement_id: null
+  relation: not_requirement
+  evidence:
+  - turn_id: CMU-MESSAGING-M01:0020
+    quote: Is there a feature to let's say PIN or bookmark, any chat that that is
+- event_index: 3
+  meeting_ordinal: 1
+  requirement_id: null
+  relation: not_requirement
+  evidence:
+  - turn_id: CMU-MESSAGING-M01:0021
+    quote: I could ping the chat box with my girlfriends, or some groups that I care about at the top
+      of the list of the chats
+- event_index: 4
+  meeting_ordinal: 1
+  requirement_id: null
+  relation: not_requirement
+  evidence:
+  - turn_id: CMU-MESSAGING-M01:0025
+    quote: all the relevant messages, no matter with whom. No matter, it's a group chat or a private chat
+      will just simply pop up
+- event_index: 5
+  meeting_ordinal: 1
+  requirement_id: null
+  relation: not_requirement
+  evidence:
+  - turn_id: CMU-MESSAGING-M01:0025
+    quote: I could search for messages that just between me and the one that I'm chatting with
+- event_index: 6
+  meeting_ordinal: 1
+  requirement_id: null
+  relation: not_requirement
+  evidence:
+  - turn_id: CMU-MESSAGING-M01:0027
+    quote: I could even search for image that just with apple in it
+- event_index: 7
+  meeting_ordinal: 1
+  requirement_id: null
+  relation: not_requirement
+  evidence:
+  - turn_id: CMU-MESSAGING-M01:0033
+    quote: you could bind your credit card or debit card and transfer your money to your friends or a
+      merchant
+- event_index: 8
+  meeting_ordinal: 1
+  requirement_id: null
+  relation: not_requirement
+  evidence:
+  - turn_id: CMU-MESSAGING-M01:0045
+    quote: I could search for some certain image through stress typing the award
+- event_index: 9
+  meeting_ordinal: 1
+  requirement_id: null
+  relation: not_requirement
+  evidence:
+  - turn_id: CMU-MESSAGING-M01:0055
+    quote: wechat will limits the size of the file to be transferred
+- event_index: 10
+  meeting_ordinal: 1
+  requirement_id: M01
+  relation: new
+  evidence:
+  - turn_id: CMU-MESSAGING-M01:0071
+    quote: the most important one would be the cloud storage for all the messages
+- event_index: 11
+  meeting_ordinal: 1
+  requirement_id: M01
+  relation: restatement
+  evidence:
+  - turn_id: CMU-MESSAGING-M01:0076
+    quote: no cloud storage for your messages

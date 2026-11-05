@@ -1,0 +1,15 @@
+{"turn_index": 0, "turn_id": "D2-M01:0000", "speaker": "consultant", "text": "Morning, and thanks for making the time. I'd like to pin down the basics for the employee portal and the payment side today, so we can start planning the build."}
+{"turn_index": 1, "turn_id": "D2-M01:0001", "speaker": "client", "text": "Sure. Let's start with how people get in. Staff will sign in to the portal with their work email address and a password. That's what we want at launch."}
+{"turn_index": 2, "turn_id": "D2-M01:0002", "speaker": "observer", "text": "Sorry, just so I follow. Is that the same address their payslips go to?"}
+{"turn_index": 3, "turn_id": "D2-M01:0003", "speaker": "client", "text": "Yes, the same work address."}
+{"turn_index": 4, "turn_id": "D2-M01:0004", "speaker": "consultant", "text": "Okay. And when somebody forgets their password?"}
+{"turn_index": 5, "turn_id": "D2-M01:0005", "speaker": "client", "text": "Then the portal has to send a password reset link to their email. That's a separate thing from signing in, it's only for getting back into the account."}
+{"turn_index": 6, "turn_id": "D2-M01:0006", "speaker": "consultant", "text": "Makes sense. On the payment service, I'd suggest that every time an employee pays for something through the portal, the system emails them a receipt automatically."}
+{"turn_index": 7, "turn_id": "D2-M01:0007", "speaker": "client", "text": "Hmm. I can see why you'd want that. Let me check with finance before I agree to it, so please don't lock that one in yet."}
+{"turn_index": 8, "turn_id": "D2-M01:0008", "speaker": "consultant", "text": "No problem. One more thought on login. Might corporate single sign-on be an option for you further down the line?"}
+{"turn_index": 9, "turn_id": "D2-M01:0009", "speaker": "client", "text": "Honestly, no idea yet."}
+{"turn_index": 10, "turn_id": "D2-M01:0010", "speaker": "observer", "text": "And the receipts, could they go out as a text message rather than email?"}
+{"turn_index": 11, "turn_id": "D2-M01:0011", "speaker": "client", "text": "Good question. I'd have to think about that."}
+{"turn_index": 12, "turn_id": "D2-M01:0012", "speaker": "consultant", "text": "Let me read back what we have so far, then."}
+{"turn_index": 13, "turn_id": "D2-M01:0013", "speaker": "client", "text": "Before you do. To be clear on login: work email and password, that's how staff sign in for now."}
+{"turn_index": 14, "turn_id": "D2-M01:0014", "speaker": "consultant", "text": "Perfect. I'll send the notes around and we'll meet again in two weeks."}

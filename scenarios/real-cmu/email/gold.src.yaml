@@ -1,0 +1,118 @@
+# Gold evidence file for a CMU interview (scored copy). AI-drafted; needs human review before use.
+# Labels follow docs/05 strictly; see scenarios/real-cmu/README.md.
+
+events:
+- event_index: 0
+  meeting_ordinal: 1
+  requirement_id: E01
+  relation: new
+  evidence:
+  - turn_id: CMU-EMAIL-M01:0027
+    quote: I would rather receive some spans instead of ignoring some important messages
+- event_index: 1
+  meeting_ordinal: 1
+  requirement_id: null
+  relation: not_requirement
+  evidence:
+  - turn_id: CMU-EMAIL-M01:0029
+    quote: would probably be better if there's an function of editing the email instead of sending a new
+      one
+- event_index: 2
+  meeting_ordinal: 1
+  requirement_id: null
+  relation: not_requirement
+  evidence:
+  - turn_id: CMU-EMAIL-M01:0029
+    quote: if they want, they could see the editing history
+- event_index: 3
+  meeting_ordinal: 1
+  requirement_id: null
+  relation: not_requirement
+  evidence:
+  - turn_id: CMU-EMAIL-M01:0033
+    quote: sometimes I would not receive some emails
+- event_index: 4
+  meeting_ordinal: 1
+  requirement_id: E02
+  relation: new
+  evidence:
+  - turn_id: CMU-EMAIL-M01:0037
+    quote: the feature I want is the AI assistance that is in bills in the email
+- event_index: 5
+  meeting_ordinal: 1
+  requirement_id: null
+  relation: not_requirement
+  evidence:
+  - turn_id: CMU-EMAIL-M01:0037
+    quote: It will warn me before I send it
+- event_index: 6
+  meeting_ordinal: 1
+  requirement_id: null
+  relation: not_requirement
+  evidence:
+  - turn_id: CMU-EMAIL-M01:0041
+    quote: If AI assistant could help me. Get the main point of that email
+- event_index: 7
+  meeting_ordinal: 1
+  requirement_id: null
+  relation: not_requirement
+  evidence:
+  - turn_id: CMU-EMAIL-M01:0045
+    quote: this highlights the keywords
+- event_index: 8
+  meeting_ordinal: 1
+  requirement_id: null
+  relation: not_requirement
+  evidence:
+  - turn_id: CMU-EMAIL-M01:0053
+    quote: if we have, I assistant for that, that would be very helpful, because I spend a lot of time
+      just reading every email
+- event_index: 9
+  meeting_ordinal: 1
+  requirement_id: null
+  relation: not_requirement
+  evidence:
+  - turn_id: CMU-EMAIL-M01:0054
+    quote: maybe you get a a summary of all the emails that you've received from morning to afternoon
+- event_index: 10
+  meeting_ordinal: 1
+  requirement_id: null
+  relation: not_requirement
+  evidence:
+  - turn_id: CMU-EMAIL-M01:0059
+    quote: it would be good to receive notification for some important messages
+- event_index: 11
+  meeting_ordinal: 1
+  requirement_id: E03
+  relation: new
+  evidence:
+  - turn_id: CMU-EMAIL-M01:0071
+    quote: the function of forwarding the email. And BBC, like, sent to all the people in my group
+- event_index: 12
+  meeting_ordinal: 1
+  requirement_id: E04
+  relation: new
+  evidence:
+  - turn_id: CMU-EMAIL-M01:0087
+    quote: the most important would definitely be searching
+- event_index: 13
+  meeting_ordinal: 1
+  requirement_id: null
+  relation: not_requirement
+  evidence:
+  - turn_id: CMU-EMAIL-M01:0087
+    quote: the second one will probably be scheduling
+- event_index: 14
+  meeting_ordinal: 1
+  requirement_id: E02
+  relation: restatement
+  evidence:
+  - turn_id: CMU-EMAIL-M01:0091
+    quote: we could embed, embed some AI assistant to help us read and write emails
+- event_index: 15
+  meeting_ordinal: 1
+  requirement_id: null
+  relation: not_requirement
+  evidence:
+  - turn_id: CMU-EMAIL-M01:0093
+    quote: we could have different category or protocol emails

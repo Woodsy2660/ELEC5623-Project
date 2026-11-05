@@ -40,7 +40,9 @@ from src.persist.review import (
     ReviewConflict,
     ReviewDecision,
     commit_decision,
+    evidence_sentence,
     explicit_replacement,
+    hedged_statement,
     stage_proposal,
 )
 from src.retrieve.schemas import VectorRecord
@@ -509,6 +511,47 @@ def test_edited_text_cannot_switch_the_proposal_embedding_contract(database):
     assert counts(engine) == (0, 0, 0, 0)
 
 
+def test_evidence_sentence_restores_the_words_around_a_cropped_quote():
+    turn = "The emails land in spam. From now on reset links go by SMS instead of email. Thanks."
+    start = turn.index("reset links")
+    end = turn.index("instead of email") + len("instead of email")
+    assert evidence_sentence(turn, start, end) == (
+        "From now on reset links go by SMS instead of email."
+    )
+    assert explicit_replacement([evidence_sentence(turn, start, end)])
+    assert not explicit_replacement([turn[start:end]])
+
+    hedged = "If legal agrees, we will use SSO instead."
+    quote_start = hedged.index("we will")
+    assert evidence_sentence(hedged, quote_start, len(hedged)) == hedged
+    assert not explicit_replacement([evidence_sentence(hedged, quote_start, len(hedged))])
+
+
+@pytest.mark.parametrize(
+    "quote",
+    [
+        "And the receipts, could they go out as a text message rather than email?",
+        "Would SMS be cheaper than email?",
+        "If IT renews the contract, receipt emails might not happen.",
+        "Maybe receipts can't go by email.",
+    ],
+)
+def test_hedge_check_flags_questions_conditions_and_possibilities(quote):
+    assert hedged_statement([quote])
+
+
+@pytest.mark.parametrize(
+    "quote",
+    [
+        "IT won't renew it, so the automatic receipt emails can't happen as agreed.",
+        "The automatic receipt emails we agreed are still blocked.",
+        "Receipts can no longer be emailed.",
+    ],
+)
+def test_hedge_check_lets_plain_contradictions_through(quote):
+    assert not hedged_statement([quote])
+
+
 def test_replacement_rule_does_not_accept_negation():
     assert explicit_replacement(["We have decided to replace email login with SSO."])
     assert not explicit_replacement(["We won't replace email login with SSO."])
@@ -526,6 +569,9 @@ def test_replacement_rule_does_not_accept_negation():
         "We're going to switch to SSO.",
         "We decided to move to quarterly billing.",
         "Let's go with SSO instead.",
+        "from now on password reset links should be sent by text message instead of email",
+        "Going forward, invoices are emailed rather than posted.",
+        "Reset links go by SMS instead of email starting today.",
     ],
 )
 def test_replacement_rule_accepts_decided_replacements(quote):
@@ -547,6 +593,13 @@ def test_replacement_rule_accepts_decided_replacements(quote):
         "Let's discuss whether to switch to SSO.",
         "Login must also support password reset.",
         "Let's review the requirements from last week.",
+        "From now on, should we send SMS instead of email?",
+        "From now on we could send SMS instead of email.",
+        "If finance agrees, from now on receipts go by SMS instead of email.",
+        "From now on we won't send SMS instead of email.",
+        "SMS should be used instead of email.",
+        "the old email reset links are gone now, replaced by text messages as of today",
+        "that was replaced by single sign-on last time",
     ],
 )
 def test_replacement_rule_keeps_hedges_and_other_wording_unresolved(quote):

@@ -48,13 +48,14 @@ def assess_proposal(
     current_state: State | None,
     speaker_can_confirm_scope: bool,
     replacement_stated: bool,
+    hedged: bool,
 ) -> RuleVerdict:
     """Map a classification result to an allowed lifecycle event or a safe verdict.
 
     ``current_state`` is the state of ``matched_requirement_id``. It must be
-    ``None`` for a ``new`` candidate. ``replacement_stated`` is intentionally an
-    explicit input: deriving it from evidence text belongs to the integration
-    contract with Tracks A and B, not to this pure state engine.
+    ``None`` for a ``new`` candidate. ``replacement_stated`` and ``hedged`` are
+    intentionally explicit inputs: deriving them from evidence text belongs to the
+    integration contract with Tracks A and B, not to this pure state engine.
     """
     if relation not in {*_EVENT_BY_RELATION, *_NO_OP_RELATIONS}:
         return _rejected("unknown relation")
@@ -86,6 +87,14 @@ def assess_proposal(
             None,
             current_state,
             "supersession requires an authorised speaker and an explicit replacement",
+        )
+
+    if relation == "contradiction" and hedged:
+        return RuleVerdict(
+            Verdict.UNRESOLVED,
+            None,
+            current_state,
+            "contradiction requires an unhedged statement",
         )
 
     event_type = _EVENT_BY_RELATION[relation]

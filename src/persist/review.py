@@ -165,6 +165,36 @@ def meeting_gates(session: Session, project_id: str) -> list[MeetingGate]:
     return gates
 
 
+def evidence_sentence(text: str, start: int, end: int) -> str:
+    """Widen a quoted span to the whole sentence it sits in.
+
+    The extractor may quote "reset links should be sent by SMS instead of email"
+    and drop the "From now on" or "If legal agrees," that decides the meaning.
+    """
+    left = max(text.rfind(mark, 0, start) for mark in ".!?") + 1
+    if end > start and text[end - 1] in ".!?":
+        right = end
+    else:
+        stops = [i for i in (text.find(mark, end) for mark in ".!?") if i >= 0]
+        right = min(stops) + 1 if stops else len(text)
+    return text[left:right].strip()
+
+
+def hedged_statement(quotes: list[str]) -> bool:
+    """True when the evidence is a question, a condition or a possibility.
+
+    Negation is not a hedge here: "the receipt emails can't happen as agreed" is how
+    a contradiction is stated.
+    """
+    text = " ".join(quotes).lower().replace("’", "'")
+    return bool(
+        re.search(
+            r"\b(if|unless|maybe|perhaps|possibly|probably|may|might|could|would)\b|[?]",
+            text,
+        )
+    )
+
+
 def explicit_replacement(quotes: list[str]) -> bool:
     """Conservative English rule on quoted evidence, never the classifier label.
 
@@ -173,10 +203,22 @@ def explicit_replacement(quotes: list[str]) -> bool:
     """
     text = " ".join(quotes).lower().replace("’", "'")
     if re.search(
-        r"\b(if|unless|maybe|perhaps|possibly|probably|may|could|might|would|should|not|never|no)\b"
+        r"\b(if|unless|maybe|perhaps|possibly|probably|may|could|might|would|not|never|no)\b"
         r"|n't|[?]",
         text,
     ):
+        return False
+    # A dated commitment plus a named alternative is a replacement even without "we'll":
+    # "from now on reset links should be sent by SMS instead of email". Normative
+    # "should" is accepted only in this frame; elsewhere it stays a recommendation.
+    commitment = r"(?:from now on|going forward|from today|as of today|starting (?:today|now))"
+    alternative = r"(?:instead of|rather than)"
+    if re.search(
+        rf"\b{commitment}\b[^.!?]*\b{alternative}\b|\b{alternative}\b[^.!?]*\b{commitment}\b",
+        text,
+    ):
+        return True
+    if re.search(r"\bshould\b", text):
         return False
     decision = r"(?:we will|we'll|we are going to|we're going to|we (?:have |'ve )?decided to|let's|let us)"
     return any(
@@ -340,15 +382,15 @@ def assess_stored_proposal(
         head = current_head(session, meeting.project_id, proposal.predicted_id)
     if context.expected_version_id != (head.current_version_id if head else None):
         raise ReviewConflict("Requirement changed since this proposal; regenerate it before review")
+    sentences = [evidence_sentence(turns[s.turn_id].text, s.start, s.end) for s in spans]
     return assess_proposal(
         relation=proposal.predicted_relation,
         matched_requirement_id=proposal.predicted_id,
         retrieved_ids=ids,
         current_state=State(head.state) if head else None,
         speaker_can_confirm_scope=speaker.can_confirm_scope,
-        replacement_stated=explicit_replacement(
-            [turns[s.turn_id].text[s.start : s.end] for s in spans]
-        ),
+        replacement_stated=explicit_replacement(sentences),
+        hedged=hedged_statement(sentences),
     )
 
 

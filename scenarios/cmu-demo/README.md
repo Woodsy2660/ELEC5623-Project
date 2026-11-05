@@ -2,7 +2,7 @@
 
 Three requirements-elicitation interviews from a public CMU research dataset, prepared as local demo
 fixtures. They are not part of the dev or holdout corpus, carry no gold labels, and must not be used to
-report model accuracy.
+report model accuracy. Scored copies with draft gold live in `scenarios/real-cmu/`.
 
 Each interview is about a different product, so each is a separate one-meeting project. They exercise
 extraction, evidence checking, retrieval and classification within a meeting. They do not exercise the

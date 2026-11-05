@@ -1,0 +1,17 @@
+id: CMU-GITHUB
+name: "CMU public interview, scored copy: GitHub collaboration interview (CMU interview 11)"
+
+# Scored copy for evaluation. The stakeholder is treated as the scope authority so eval-mode
+# decisions can be replayed; the demo copy in scenarios/cmu-demo keeps every gate closed.
+speakers:
+  - label: "Interviewer"
+    role: "Requirements interviewer"
+    can_confirm_scope: false
+  - label: "Stakeholder"
+    role: "Interviewed user, treated as scope owner for scoring"
+    can_confirm_scope: true
+
+meetings:
+  - ordinal: 1
+    title: "GitHub collaboration interview (CMU interview 11)"
+    canonical: "canonical/M01.jsonl"

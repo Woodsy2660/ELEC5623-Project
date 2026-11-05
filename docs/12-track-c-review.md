@@ -68,11 +68,22 @@ contracts already present in Tracks A and B.
 
 The classifier's `supersession` label does not authorize a state change. A scope owner
 must be configured for the exact speaker on the source evidence, and the quoted text
-must match the conservative English rule in `explicit_replacement`. It needs a decision
-phrase (“we will”, “we'll”, “we're going to”, “we decided to”, “let's”) followed by a
-replacement frame: “use, adopt or go with B instead”, “replace A with B”, or “change,
-switch or move ... to B”. Hedges, questions, conditionals, negation and unrecognized
-wording stay unresolved. This small rule is a safety filter; it does not claim general
+must match the conservative English rule in `explicit_replacement`. The rule reads the
+whole sentence each evidence span sits in (`evidence_sentence`), so a cropped quote cannot
+drop a leading “From now on” or “If legal agrees,”. It accepts either a decision phrase
+(“we will”, “we'll”, “we're going to”, “we decided to”, “let's”) followed by a
+replacement frame (“use, adopt or go with B instead”, “replace A with B”, “change, switch
+or move ... to B”), or a dated commitment (“from now on”, “going forward”, “from today”,
+“as of today”, “starting today/now”) with a named alternative (“instead of”, “rather
+than”). Normative “should” is accepted only in the second form. Hedges, questions,
+conditionals, negation and unrecognized wording stay unresolved.
+
+A `contradiction` is held as unresolved when its evidence sentence is hedged
+(`hedged_statement`: “if”, “unless”, “maybe”, “perhaps”, “possibly”, “probably”, “may”,
+“might”, “could”, “would”, or a question mark). Negation is not a hedge there, because
+“the receipt emails can't happen as agreed” is how a contradiction is stated. The engine
+takes this as an explicit `hedged` input, like `replacement_stated`. Contradiction has no
+authority guard yet. This small rule is a safety filter; it does not claim general
 natural language understanding. Its wording list was set on spec examples and the dev
 split, and it must be frozen with the prompts before holdout scoring.
 
