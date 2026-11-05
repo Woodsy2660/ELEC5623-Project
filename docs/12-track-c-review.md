@@ -82,8 +82,8 @@ A `contradiction` is held as unresolved when its evidence sentence is hedged
 (`hedged_statement`: “if”, “unless”, “maybe”, “perhaps”, “possibly”, “probably”, “may”,
 “might”, “could”, “would”, or a question mark). Negation is not a hedge there, because
 “the receipt emails can't happen as agreed” is how a contradiction is stated. The engine
-takes this as an explicit `hedged` input, like `replacement_stated`. Contradiction has no
-authority guard yet. This small rule is a safety filter; it does not claim general
+takes this as an explicit `hedged` input, like `replacement_stated`. A contradiction from a
+speaker who cannot confirm scope is also held, matching the supersession guard. This small rule is a safety filter; it does not claim general
 natural language understanding. Its wording list was set on spec examples and the dev
 split, and it must be frozen with the prompts before holdout scoring.
 

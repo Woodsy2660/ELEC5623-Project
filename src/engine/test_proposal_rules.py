@@ -90,10 +90,18 @@ def test_supersession_without_required_guard_is_unresolved(overrides: dict[str, 
     assert result.resulting_state is State.CONFIRMED
 
 
-def test_hedged_contradiction_is_unresolved() -> None:
-    result = assess(relation="contradiction", hedged=True)
+@pytest.mark.parametrize(
+    "overrides",
+    [
+        {"hedged": True},
+        {"speaker_can_confirm_scope": False},
+        {"hedged": True, "speaker_can_confirm_scope": False},
+    ],
+)
+def test_contradiction_without_required_guard_is_unresolved(overrides: dict[str, object]) -> None:
+    result = assess(relation="contradiction", **overrides)
 
     assert result.verdict is Verdict.UNRESOLVED
     assert result.proposed_event is None
     assert result.resulting_state is State.CONFIRMED
-    assert assess(relation="contradiction", hedged=False).verdict is Verdict.ALLOWED
+    assert assess(relation="contradiction").verdict is Verdict.ALLOWED

@@ -157,6 +157,86 @@ above, not by these scores.
 - The differences in oracle scores between rounds are classifier variance at temperature 0; the rules
   run after classification.
 
+## Extraction prompt change (failure 4)
+
+`prompts/extract_v1.jinja` was edited on the dev split; its hash is recorded on every call.
+
+- Rule 2 used to say "convert the speaker's words to a declarative requirement sentence" and gave
+  "Maybe we could add a logout button?" → "The system should provide a logout button" as the example.
+  It now says to keep the speaker's stance: decisions become requirements, questions and wishes stay
+  questions or suggestions ("Question (not agreed): …"), complaints and descriptions stay descriptions
+  ("Observation: …"), and nothing becomes "must" or "should" unless the speaker made it one.
+- The evidence rule asks for the whole sentence, including hedge words, conditions, "from now on",
+  "instead of" and the question mark.
+- The task excludes greetings, logistics, definitions and narration of an existing screen unless the
+  speaker states a need.
+- Examples that overlapped the dev scenarios (SSO, "60 minutes", "30 minutes") were replaced with
+  examples that appear in no scenario (CSV export, prices in euros, dark mode, logout button).
+
+Pipeline rerun three times on D1, D2 and the three CMU interviews (15 runs,
+`runs/eval-2026-11-05-extract/runs.tsv`). Oracle runs do not use the extractor and are unchanged.
+
+| Scenario | Metric | Old prompt | New prompt | Baseline |
+|---|---|---:|---:|---:|
+| D2 | Four-class macro-F1 | 0.592 ± 0.174 | **0.770 ± 0.025** | 0.810 |
+| D2 | Extraction F1 (precision / recall) | 0.764 (0.846 / 0.704) | **0.833** (0.833 / 0.833) | — |
+| D2 | Historical-id accuracy | 0.556 | 0.639 | 0.250 |
+| D2 | Joint id and label correct | 0.519 | 0.685 | 0.278 |
+| D2 | Reversals correct, of 3 | 1.67 | **3 (3, 3, 3)** | 2 |
+| D1 | Four-class macro-F1 | 0.600 ± 0.043 | 0.556 ± 0.131 | 0.714 |
+| D1 | Extraction F1 (precision / recall) | 0.781 (0.705 / 0.881) | 0.776 (0.656 / 0.952) | — |
+| D1 | Reversals correct, of 2 | 1 | 1 | 1.67 |
+
+What reached the register on the CMU interviews, per repeat (non-requirements plus unlabelled turns
+written as requirements; explicit asks caught):
+
+| Interview | Old prompt | New prompt |
+|---|---|---|
+| github | 4, 11, 9 written | 0, 0, 8 written |
+| email | 13, 10, 5 written; asks 1, 1, 1 of 4 | 6, 5, 6 written; asks 0, 0, 1 of 4 |
+| messaging | 8, 6, 11 written; asks 1, 0, 0 of 1 | 3, 4, 3 written; asks 1, 1, 1 of 1 |
+
+- On D2 the pipeline is now close to the baseline on the headline (0.770 against 0.810), well ahead on
+  matching, and gets every reversal right in every repeat. Its spread fell from 0.174 to 0.025.
+- On D1 recall rose to 0.952 but precision fell: the extractor now also returns consultant
+  recommendations and sub-points (notification triggers, where the balance is shown) that D1's 14-event
+  gold does not label. The classifier also still files the password rules under the login family. The
+  D1 change is within its spread.
+- On real interviews the noise written to the register roughly halved, at the cost of email recall.
+
+## Authority guard on contradiction
+
+A `contradiction` from a speaker who cannot confirm scope is now held as `unresolved`, as supersession
+already was. This closes the remaining CMU misfire: the interviewer's summary "no cloud storage for your
+messages" written as a contradiction. In three new oracle runs on CMU messaging
+(`runs/eval-2026-11-05-ablation`), the guard held that proposal in repeat 1 and no contradiction reached
+the register in any repeat. D1 and D2 contradictions come from the authorised client and are
+unaffected. Tests: 402 pass.
+
+## Ablation A: full register instead of top-k retrieval
+
+`run_pipeline --offer-all` offers every current family to the classifier instead of the fused top 5.
+Everything else, including the rule engine and prompts, is unchanged, and the run row records
+`system: ablation-a`. Three repeats each on D1 and D2 (12 runs, `runs/eval-2026-11-05-ablation`),
+compared with the same code using retrieval.
+
+| Scenario | Metric | Oracle, top-k | Oracle, full register | Pipeline, top-k | Pipeline, full register |
+|---|---|---:|---:|---:|---:|
+| D1 | Four-class macro-F1 | 0.710 ± 0.011 | 0.691 ± 0.039 | 0.556 ± 0.131 | 0.547 ± 0.079 |
+| D1 | Historical-id accuracy | 0.500 | 0.500 | 0.444 | 0.389 |
+| D1 | Reversals correct, of 2 | 1 | 1 | 1 | 1 |
+| D2 | Four-class macro-F1 | 0.881 ± 0.000 | 0.881 ± 0.000 | 0.770 ± 0.025 | 0.758 ± 0.042 |
+| D2 | Historical-id accuracy | 0.833 | 0.833 | 0.639 | 0.556 |
+| D2 | Reversals correct, of 3 | 3 | 3 | 3 | 3 |
+| D2 | Input tokens per run | 18,408 | 18,402 | 23,220 | 22,412 |
+
+- At this register size retrieval neither helps nor hurts. D1 and D2 never hold more than nine families,
+  so the top 5 already covers most of the register and the full register costs almost no extra tokens.
+- `docs/04` anticipated this: at small n the remaining case for retrieval is scaling. Showing it needs the
+  synthetic large-register stress test, which has not been built.
+- Ablation A keeps the rule engine, so the pipeline's advantage over the baseline on matching and
+  reversals comes from the rules and the prompts, not from retrieval, on these scenarios.
+
 ## CMU interviews (real speech, one meeting each)
 
 Gold here is mostly `not_requirement`: 12 of 12 events in github, 11 of 16 in email and 10 of 12 in

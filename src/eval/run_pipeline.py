@@ -343,6 +343,9 @@ def _process_candidate(
         vector = embedder.encode([candidate.text_norm])[0]
         project_heads = project_head_snapshot(session, project_id)
         corpus = _get_corpus_versions(session, project_id)
+        extra = {}
+        if stats.get("offer_all"):
+            extra["top_k"] = max(1, len({version.requirement_id for version in corpus}))
         retrieval = retrieve(
             RetrievalRequest(
                 candidate=candidate,
@@ -350,6 +353,7 @@ def _process_candidate(
                 embedding_version=embedder.version,
                 embedding_dim=embedder.dim,
                 embedding=tuple(vector),
+                **extra,
             ),
             corpus,
         )
@@ -840,8 +844,13 @@ def run_pipeline(
     config=None,
     embedder: Embedder | None = None,
     classifier=None,
+    offer_all: bool = False,
 ) -> dict[str, Any]:
-    """Run retrieval, classification, and the engine. Gold does not supply labels."""
+    """Run retrieval, classification, and the engine. Gold does not supply labels.
+
+    ``offer_all`` is Ablation A (docs/04): every current family is offered to the
+    classifier instead of the top-k, with the engine unchanged.
+    """
     if mode not in {"demo", "eval"}:
         raise ValueError("mode must be demo or eval")
     if mode == "demo" and candidate_source != "extracted":
@@ -873,6 +882,12 @@ def run_pipeline(
         embedder=embedder,
         runs_dir=runs_dir,
     )
+    if offer_all:
+        notes["system"] = "ablation-a"
+        notes["retrieval"] = "full register offered"
+        session.get(Run, run_id).notes = json.dumps(notes)
+        session.commit()
+        stats["offer_all"] = True
     if needs_client and client is None:
         stats["errors"].append("No Azure config for classification")
         session.close()
@@ -981,6 +996,11 @@ def main() -> None:
     )
     parser.add_argument("--repeat", type=int, choices=[1, 2, 3], required=True)
     parser.add_argument("--db", type=str, default="sqlite:///pipeline.db")
+    parser.add_argument(
+        "--offer-all",
+        action="store_true",
+        help="Ablation A: offer every current family to the classifier instead of the top-k",
+    )
     args = parser.parse_args()
 
     load_dotenv()
@@ -1002,6 +1022,7 @@ def main() -> None:
         candidate_source=args.candidate_source,
         repeat_index=args.repeat,
         db_url=args.db,
+        offer_all=args.offer_all,
     )
     print("Results:")
     print(f"  Run ID: {stats['run_id']}")

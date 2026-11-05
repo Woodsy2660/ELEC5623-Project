@@ -89,12 +89,12 @@ def assess_proposal(
             "supersession requires an authorised speaker and an explicit replacement",
         )
 
-    if relation == "contradiction" and hedged:
+    if relation == "contradiction" and (hedged or not speaker_can_confirm_scope):
         return RuleVerdict(
             Verdict.UNRESOLVED,
             None,
             current_state,
-            "contradiction requires an unhedged statement",
+            "contradiction requires an authorised speaker and an unhedged statement",
         )
 
     event_type = _EVENT_BY_RELATION[relation]

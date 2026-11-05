@@ -631,6 +631,50 @@ def test_demo_pipeline_rejects_gold_candidates() -> None:
         )
 
 
+def test_ablation_a_offers_every_current_family(tmp_path: Path) -> None:
+    offered: list[int] = []
+
+    def fake_classify(client, *, session, run_id, inputs, **kwargs):
+        offered.append(len(inputs.retrieval.retrieved_ids))
+        classification = Classification(
+            matched_requirement_id=None,
+            relation=Relation.NEW,
+            rationale="stub",
+            retrieved_ids=list(inputs.retrieval.retrieved_ids),
+            replacement_stated=False,
+        )
+        return ClassificationOutcome(
+            retrieved_ids=tuple(classification.retrieved_ids),
+            classification=classification,
+            downgraded=False,
+            model_relation="new",
+            error=None,
+            call_ids=(),
+        )
+
+    db_url = f"sqlite:///{tmp_path / 'ablation.db'}"
+    stats = run_pipeline(
+        scenario_dir=Path("scenarios/dev/D1"),
+        mode="eval",
+        candidate_source="gold",
+        repeat_index=1,
+        db_url=db_url,
+        runs_dir=tmp_path / "runs",
+        client=object(),
+        config=type("Cfg", (), {"deployment_name": "cia-chat", "temperature": 0.0, "seed": 42})(),
+        embedder=_Embedder(),
+        classifier=fake_classify,
+        offer_all=True,
+    )
+    assert stats["errors"] == []
+    # Every gold candidate is classified new, so candidate n sees n - 1 families.
+    assert offered == list(range(14))
+    session = sessionmaker(bind=create_database_engine(db_url))()
+    notes = json.loads(session.get(Run, stats["run_id"]).notes)
+    assert notes["system"] == "ablation-a"
+    session.close()
+
+
 def test_gold_run_does_not_copy_labels_and_retrieval_sees_earlier_versions(tmp_path: Path) -> None:
     seen: list[Classification] = []
 
