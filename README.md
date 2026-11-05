@@ -28,6 +28,9 @@ Coding agents: read `AGENTS.md` first.
 | [`docs/12-track-c-review.md`](docs/12-track-c-review.md) | SQLite review setup, behavior, validation and remaining work |
 | [`handover.md`](handover.md) | 27 Oct 2026 status for the report: what is wired, what is unmeasured, what D1 contains |
 
+For the three-meeting presentation demo and read-only HTML scope export, see
+[`scenarios/demo/README.md`](scenarios/demo/README.md).
+
 ## Team
 
 | Track | Owner |

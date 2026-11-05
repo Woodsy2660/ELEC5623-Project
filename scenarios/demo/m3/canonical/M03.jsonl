@@ -1,0 +1,5 @@
+{"turn_index": 0, "turn_id": "DEMO-M03:0000", "speaker": "Alex Morgan", "text": "Let's review the portal requirements before the build starts."}
+{"turn_index": 1, "turn_id": "DEMO-M03:0001", "speaker": "Priya Raman", "text": "Each invoice PDF also shows the purchase order number."}
+{"turn_index": 2, "turn_id": "DEMO-M03:0002", "speaker": "Tom Alder", "text": "That field is already in the order system."}
+{"turn_index": 3, "turn_id": "DEMO-M03:0003", "speaker": "Priya Raman", "text": "Customers receive an email when their order ships."}
+{"turn_index": 4, "turn_id": "DEMO-M03:0004", "speaker": "Alex Morgan", "text": "Great. We'll export the agreed scope for the development team."}

@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { useProject, useProposals, useSettings, useUpdateSettings } from '../api/queries.ts'
 import type { Schemas } from '../api/client.ts'
-import { AppShell } from '../components/AppShell.tsx'
+import { AppShell, ReviewerAccess } from '../components/AppShell.tsx'
 import { AuthorityBadge } from '../components/AuthorityBadge.tsx'
 import { StatusTag } from '../components/StatusTag.tsx'
 
@@ -125,9 +125,6 @@ export function SettingsRoute() {
                     borderBottom: index === draft.speakers.length - 1 ? undefined : '1px solid var(--border-subtle)',
                   }}
                 >
-                  <span className="cia-id" style={{ flex: '0 0 130px' }}>
-                    {speaker.speaker_label}
-                  </span>
                   <span style={{ flex: '999 1 auto', minWidth: 0, fontSize: 14 }}>{speaker.name}</span>
                   <select
                     className="fld"
@@ -153,7 +150,12 @@ export function SettingsRoute() {
             </div>
           </section>
           <section className="sec">
-            <h2 style={heading}>Model</h2>
+            <h2 style={heading}>Reviewer access</h2>
+            <p style={{ ...lede, lineHeight: '20px' }}>Enter the reviewer token to confirm or reject suggestions in this browser tab.</p>
+            <ReviewerAccess />
+          </section>
+          <details className="sec">
+            <summary style={{ cursor: 'pointer' }}><h2 style={{ ...heading, display: 'inline' }}>AI model (advanced)</h2></summary>
             <p style={{ ...lede, lineHeight: '20px' }}>
               Pinned for reproducibility. Changing any of these starts a new run series; earlier results are not
               comparable.
@@ -220,7 +222,7 @@ export function SettingsRoute() {
                 <div style={{ fontSize: 13, fontWeight: 600 }}>{draft.prompt_status}</div>
               </div>
             </div>
-          </section>
+          </details>
           <section className="sec" id="provider-retention">
             <h2 style={heading}>Data and retention</h2>
             <p style={{ ...lede, lineHeight: '20px' }}>

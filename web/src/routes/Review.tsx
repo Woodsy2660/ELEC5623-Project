@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import type { CSSProperties } from 'react'
 import { useDecide, useProject, useProposals, useRequirements } from '../api/queries.ts'
 import type { Schemas } from '../api/client.ts'
-import { AppShell, ReviewerAccess } from '../components/AppShell.tsx'
+import { AppShell } from '../components/AppShell.tsx'
 import { ProposalCard } from '../components/ProposalCard.tsx'
 import { RelationChip } from '../components/RelationChip.tsx'
 import { ScopeBar } from '../components/ScopeBar.tsx'
@@ -50,7 +50,7 @@ export function ReviewRoute() {
   const unresolved = list.proposals.find((item) => item.unresolved)
   const selected = list.proposals.find((item) => item.id === picked) ?? unresolved ?? list.proposals[0]
   const discarded = list.discarded_candidates
-  const discardedNoun = discarded === 1 ? 'candidate' : 'candidates'
+  const discardedNoun = discarded === 1 ? 'suggestion was' : 'suggestions were'
 
   function choose(id: string) {
     setPicked(id)
@@ -92,8 +92,9 @@ export function ReviewRoute() {
         }}
       >
         <div style={{ padding: '0 12px 12px' }}>
-          <div style={{ fontSize: 15, fontWeight: 500 }}>{list.proposals.length} proposals</div>
-          <div style={{ fontSize: 13, color: 'var(--ink-meta)', marginTop: 2 }}>{list.queue_label}</div>
+          <div style={{ fontSize: 15, fontWeight: 500 }}>
+            {list.proposals.length} {list.proposals.length === 1 ? 'suggestion' : 'suggestions'} to review
+          </div>
         </div>
         {list.proposals.map((item) => (
           <button
@@ -104,7 +105,6 @@ export function ReviewRoute() {
             onClick={() => choose(item.id)}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-              <span className="cia-id">{item.requirement_id ?? 'new'}</span>
               <RelationChip relation={item.classification.relation} style={queueChip} />
             </div>
             <div
@@ -114,24 +114,25 @@ export function ReviewRoute() {
                 color: selected?.id === item.id ? 'var(--ink)' : 'var(--ink-proposed)',
               }}
             >
-              {item.queue_text}
+              {preview(item.statement)}
             </div>
           </button>
         ))}
-        <div style={{ marginTop: 12, padding: 12, borderTop: '1px solid var(--border-subtle)', fontSize: 12, lineHeight: '18px', color: 'var(--ink-meta)' }}>
-          {discarded} {discardedNoun} discarded: evidence did not resolve to stored transcript text. Counted as an extraction
-          error.
-        </div>
+        {discarded > 0 ? (
+          <div style={{ marginTop: 12, padding: 12, borderTop: '1px solid var(--border-subtle)', fontSize: 12, lineHeight: '18px', color: 'var(--ink-meta)' }}>
+            {discarded} {discardedNoun} left out because the quote could not be found in the transcript.
+          </div>
+        ) : null}
       </div>
       <main style={{ flex: '999 1 520px', minWidth: 0, boxSizing: 'border-box', padding: '32px 40px' }}>
-        <ScopeBar client={project.data.client} projectName={project.data.name} count={list.scope_count_label} />
-        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 10 }}>
-          <ReviewerAccess />
-        </div>
+        <ScopeBar
+          client={project.data.client}
+          projectName={project.data.name}
+          count={inScope(requirements.data)}
+        />
         {selected ? (
           <div style={{ marginTop: 18 }}>
             <ProposalCard
-              scopeLabel={`${project.data.name} / ${scopeIdentity(selected, requirements.data)}`}
               statement={selected.statement}
               unresolved={selected.unresolved}
               relation={selected.classification.relation}
@@ -193,20 +194,18 @@ export function ReviewRoute() {
           <p style={{ margin: '28px 0 0', color: 'var(--ink-meta)' }}>No proposals in this queue.</p>
         )}
         <p style={{ margin: '20px 0 0', maxWidth: 760, fontSize: 13, lineHeight: '20px', color: 'var(--ink-meta)' }}>
-          Check the transcript evidence, retrieved alternatives, and any register changes above before confirming.
-          A model proposal is not client approval; proposals tied to a changed requirement remain blocked.
+          The AI only suggests. Nothing changes in the agreed scope until a reviewer confirms it.
         </p>
       </main>
     </AppShell>
   )
 }
 
-function scopeIdentity(proposal: Schemas['ProposalOut'], rows: Schemas['RegisterRow'][]): string {
-  if (!proposal.requirement_id) return 'new'
-  const family = rows.filter((row) => row.requirement_id === proposal.requirement_id)
-  const current = family.reduce<Schemas['RegisterRow'] | undefined>(
-    (best, row) => (!best || row.version > best.version ? row : best),
-    undefined,
-  )
-  return current ? `${proposal.requirement_id} v${current.version}` : proposal.requirement_id
+function preview(text: string): string {
+  return text.length > 90 ? `${text.slice(0, 88).trimEnd()}…` : text
+}
+
+function inScope(rows: Schemas['RegisterRow'][]): string {
+  const agreed = rows.filter((row) => row.state === 'confirmed').length
+  return `${agreed} agreed ${agreed === 1 ? 'requirement' : 'requirements'}`
 }

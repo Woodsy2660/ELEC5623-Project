@@ -108,8 +108,8 @@ export function ReviewerAccess() {
   const [token, setToken] = useState('')
   const [notice, setNotice] = useState('')
   return (
-    <details style={{ width: '100%', maxWidth: 320 }}>
-      <summary style={{ cursor: 'pointer', fontSize: 13, textAlign: 'right' }}>Reviewer access</summary>
+    <details open style={{ width: '100%', maxWidth: 360 }}>
+      <summary style={{ cursor: 'pointer', fontSize: 13 }}>Reviewer token</summary>
       <div
         style={{
           marginTop: 8,

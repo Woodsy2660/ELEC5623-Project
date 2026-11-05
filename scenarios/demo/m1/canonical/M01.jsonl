@@ -1,0 +1,7 @@
+{"turn_index": 0, "turn_id": "DEMO-M01:0000", "speaker": "Alex Morgan", "text": "Thanks for joining. Let's agree the first requirements for the customer portal."}
+{"turn_index": 1, "turn_id": "DEMO-M01:0001", "speaker": "Priya Raman", "text": "Customers log in with their email address and a password."}
+{"turn_index": 2, "turn_id": "DEMO-M01:0002", "speaker": "Alex Morgan", "text": "Got it. What do customers need to see once they are in?"}
+{"turn_index": 3, "turn_id": "DEMO-M01:0003", "speaker": "Priya Raman", "text": "Customers see all of their orders on one page, newest first, with the status of each order."}
+{"turn_index": 4, "turn_id": "DEMO-M01:0004", "speaker": "Priya Raman", "text": "Customers can download an invoice for any order as a PDF."}
+{"turn_index": 5, "turn_id": "DEMO-M01:0005", "speaker": "Tom Alder", "text": "That all works with the current order system."}
+{"turn_index": 6, "turn_id": "DEMO-M01:0006", "speaker": "Alex Morgan", "text": "Great. I'll send these through for confirmation."}

@@ -128,7 +128,6 @@ export function CaptureRoute() {
               <div className="cia-alts">
                 {scope.map((row) => (
                   <div key={row.requirement_id} className="cia-alt">
-                    <span className="cia-alt__rank">{row.requirement_id}</span>
                     <span className="cia-alt__text">{row.text}</span>
                     <StateChip state={row.state} />
                   </div>

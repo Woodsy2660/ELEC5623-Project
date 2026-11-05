@@ -111,7 +111,7 @@ Text edits made in the review API use Track B's isolated local trace database.
   Browsing or reviewing records already in the DB does not call Azure; the review API
   uses the local embedding model for an edited/new requirement.
 - `REVIEWER_TOKEN` is checked by the local API on every confirm, reject or edit. Enter
-  the same value under **Reviewer access** in the app and press **Apply**. The browser
+  the same value under **Reviewer access** in **Settings** and press **Apply**. The browser
   keeps it only in the current tab's memory, so enter it again after a full page reload.
   This is one shared local-demo write token, not per-user authentication.
 - The Azure key is only for the Python pipeline. Never enter it in the browser or set it
@@ -154,8 +154,9 @@ npm.cmd --prefix web run dev -- --host 127.0.0.1
 ```
 
 Open `http://localhost:5173/`, choose project **D1**, then open **Review queue**.
-At the top of the review panel, expand **Reviewer access**, enter the same local token,
-and save it for this browser tab. Review the transcript evidence and retrieved alternatives before deciding. If an
+Open **Settings**, find **Reviewer access**, enter the same local token and press
+**Apply**. Use the app navigation to return to **Review queue** in the same tab.
+Review the transcript evidence and retrieved alternatives before deciding. If an
 earlier confirmation changed the register, the queue remains available and affected
 cards show the current entries. Compare them with the proposal before using Confirm;
 the server rechecks that exact register snapshot and the deterministic rules in the
@@ -188,7 +189,7 @@ have been given a populated DB.
 | Browser cannot connect or reports `Failed to fetch` | Keep the API terminal running; verify it uses the same `DATABASE_URL` as the pipeline. Keep the Vite terminal running too. |
 | Review queue is empty after a fresh clone | Run the D1 demo pipeline once, check its `Results` and `Errors`, and make sure the API points to `sqlite:///track-c-demo.db`. |
 | Saving returns `503` | Stop and restart the API after setting `REVIEWER_TOKEN` in that PowerShell process. |
-| Saving returns `401` | In **Reviewer access**, enter the exact same token as the API and press **Apply**. |
+| Saving returns `401` | In **Settings → Reviewer access**, enter the exact same token as the API and press **Apply**. |
 | Saving returns `409` | The server rejected a stale or invalid decision. Reload the queue, inspect the register changes and evidence, and do not retry blindly. |
 
 `ingest_scenario` imports only scenario metadata and canonical transcript files. It

@@ -1,6 +1,7 @@
 """FR01/FR03: project-scoped SQLite reads using the existing HTTP contract."""
 
 import json
+from datetime import datetime
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -49,6 +50,69 @@ from src.persist.review import (
 from src.validate.schemas import EvidenceSpan
 
 
+def _day(ts: datetime) -> str:
+    """Human date for the review UI, e.g. '2 Nov 2026'."""
+    return f"{ts.day} {ts:%b %Y}"
+
+
+def _stamp(ts: datetime) -> str:
+    """Human date and time for the review UI, e.g. '2 Nov 2026, 10:36'."""
+    return f"{ts.day} {ts:%b %Y}, {ts:%H:%M} UTC"
+
+
+def _version_meeting(session: Session, version: RequirementVersion) -> Meeting | None:
+    """The meeting whose transcript a version's evidence comes from."""
+    for raw in json.loads(version.evidence_json or "[]"):
+        turn = session.get(Turn, raw.get("turn_id")) if isinstance(raw, dict) else None
+        if turn is not None:
+            return session.get(Meeting, turn.meeting_id)
+    return None
+
+
+def _when(session: Session, version: RequirementVersion, event: Event) -> str:
+    meeting = _version_meeting(session, version)
+    if meeting is None:
+        return _day(event.ts)
+    return f"Meeting {meeting.ordinal} · {event.ts.day} {event.ts:%b}"
+
+
+_EVENT_WORDS = {
+    "create": "Added",
+    "confirm": "Confirmed",
+    "refine": "Refined",
+    "resolve": "Resolved",
+    "reject": "Rejected",
+    "supersede": "Replaced",
+    "withdraw": "Withdrawn",
+    "contradict": "Marked as conflicting",
+    "edit": "Edited",
+}
+
+
+def _confirmation_event(session: Session, project_id: str, created: Event) -> Event | None:
+    """Find the actual confirmation of a version created in proposed state."""
+    source = json.loads(created.payload_json)
+    if not source.get("requirement_id") or not source.get("candidate_id"):
+        return None
+    if created.event_type != "create":
+        return created if source.get("resulting_state") == "confirmed" else None
+    for event in session.scalars(
+        select(Event)
+        .where(Event.project_id == project_id, Event.event_type == "confirm")
+        .order_by(Event.ts.desc(), Event.id)
+    ):
+        payload = json.loads(event.payload_json)
+        if payload.get("requirement_id") == source.get("requirement_id") and payload.get(
+            "candidate_id"
+        ) == source.get("candidate_id"):
+            return event
+    return None
+
+
+def _actor(actor: str) -> str:
+    return "a reviewer" if actor in ("human-reviewer", "reviewer", "") else actor
+
+
 def require_project(session: Session, project_id: str) -> Project:
     project = session.get(Project, project_id)
     if project is None:
@@ -73,7 +137,7 @@ def register_rows(session: Session, project_id: str) -> list[RegisterRow]:
             version_label=f"v{version.version}",
             text=head.text,
             state=State(head.state),
-            changed_label=event.ts.isoformat(),
+            changed_label=_when(session, version, event),
         )
         for head, version, event in rows
     ]
@@ -103,7 +167,7 @@ def meetings(session: Session, project_id: str) -> list[MeetingOut]:
                 ordinal=meeting.ordinal,
                 title=metadata.get("title", f"Meeting {meeting.ordinal}"),
                 source_name=metadata.get("source_name"),
-                when_label=meeting.imported_at.isoformat(),
+                when_label=_day(meeting.imported_at),
                 status="past",
                 turn_count=count,
             )
@@ -348,18 +412,35 @@ def requirement_detail(session: Session, project_id: str, requirement_id: str) -
             if not meeting or meeting.project_id != project_id:
                 raise ReviewConflict("Version evidence is missing or outside this project")
             quotes.append(quote_from_span(speaker=turn.speaker, text=turn.text, span=span))
+        if version.state == "superseded":
+            footer = "Replaced. This wording and its evidence are kept."
+        elif version.state == "withdrawn":
+            footer = "Withdrawn. Kept for the record."
+        elif version.state == "confirmed":
+            confirmation = _confirmation_event(session, project_id, event)
+            footer = (
+                f"Confirmed by {_actor(confirmation.actor)} · {_stamp(confirmation.ts)}"
+                if confirmation
+                else "Recorded as confirmed; confirmation event unavailable"
+            )
+        elif version.state == "contradicted":
+            footer = "In conflict. Review the evidence to clarify the agreed scope."
+        else:
+            footer = "Waiting for someone who can approve scope"
         entries.append(
             TimelineEntry(
                 version=version.version,
                 state=State(version.state),
-                when_label=event.ts.isoformat(),
+                when_label=_when(session, version, event),
+                footer=footer,
                 text=version.text,
                 historical=version.id != head.current_version_id,
                 struck=version.state in ("superseded", "withdrawn"),
                 evidence=quotes,
             )
         )
-        event_labels.append(f"{event.ts.isoformat()} {event.event_type} ({event.actor})")
+        word = _EVENT_WORDS.get(event.event_type, event.event_type.replace("_", " ").capitalize())
+        event_labels.append(f"{_stamp(event.ts)} · {word} by {_actor(event.actor)}")
     return RequirementDetail(
         id=requirement_id,
         project_id=project_id,
@@ -367,10 +448,15 @@ def requirement_detail(session: Session, project_id: str, requirement_id: str) -
         current_state=State(head.state),
         current_text=head.text,
         current_version=current.version,
-        summary="Persisted requirement history",
+        summary=(
+            f"{len(versions)} version{'s' if len(versions) != 1 else ''}"
+            f" · last changed {_day(session.get(Event, current.created_event_id).ts)}"
+        ),
         timeline=entries,
         audit=AuditBlock(
-            family_created=first_event.ts.isoformat(),
+            family_created=(
+                _when(session, versions[0], first_event) if versions else _day(first_event.ts)
+            ),
             events=event_labels,
             prompt_version=run.prompt_hash if run else "Unavailable",
             model=run.model_deployment if run else "Unavailable",

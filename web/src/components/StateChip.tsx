@@ -3,8 +3,8 @@ export type LifecycleState = 'confirmed' | 'proposed' | 'contradicted' | 'supers
 const LABEL: Record<LifecycleState, string> = {
   confirmed: 'Confirmed',
   proposed: 'Proposed',
-  contradicted: 'Contradicted',
-  superseded: 'Superseded',
+  contradicted: 'In conflict',
+  superseded: 'Replaced',
   withdrawn: 'Withdrawn',
 }
 
