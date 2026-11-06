@@ -1,0 +1,14 @@
+[consultant]
+In meeting one the limit was two hours, but that was replaced with three hours last meeting.
+
+[client]
+The three-hour room reservation limit applies separately to each day.
+
+[client]
+The reminder email is still blocked and there is no replacement decision.
+
+[observer]
+Would a text reminder be cheaper?
+
+[client]
+The reservation confirmation email still needs the room number.

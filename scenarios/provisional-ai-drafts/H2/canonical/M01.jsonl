@@ -1,0 +1,5 @@
+{"turn_index": 0, "turn_id": "H2-M01:0000", "speaker": "client", "text": "Patients must book appointments by calling the clinic."}
+{"turn_index": 1, "turn_id": "H2-M01:0001", "speaker": "client", "text": "Email patients a confirmation for each appointment."}
+{"turn_index": 2, "turn_id": "H2-M01:0002", "speaker": "client", "text": "Email staff when an appointment is cancelled."}
+{"turn_index": 3, "turn_id": "H2-M01:0003", "speaker": "consultant", "text": "Could patients book online in future?"}
+{"turn_index": 4, "turn_id": "H2-M01:0004", "speaker": "client", "text": "For now patients book by calling us."}

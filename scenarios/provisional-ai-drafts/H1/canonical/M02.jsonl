@@ -1,0 +1,5 @@
+{"turn_index": 0, "turn_id": "H1-M02:0000", "speaker": "client", "text": "The proposed booking reminder email is approved."}
+{"turn_index": 1, "turn_id": "H1-M02:0001", "speaker": "client", "text": "The booking confirmation email must include the room number."}
+{"turn_index": 2, "turn_id": "H1-M02:0002", "speaker": "client", "text": "Replace the two-hour maximum with a three-hour maximum for room reservations."}
+{"turn_index": 3, "turn_id": "H1-M02:0003", "speaker": "client", "text": "The agreed reminder emails cannot be sent; we have not decided on a replacement."}
+{"turn_index": 4, "turn_id": "H1-M02:0004", "speaker": "consultant", "text": "The confirmation email includes the room number."}

@@ -1,0 +1,16 @@
+id: CMU-EMAIL
+name: "CMU public interview demo: Email client requirements interview"
+
+# Interview participants are not project scope authorities. Keep all gates closed.
+speakers:
+  - label: "Interviewer"
+    role: "Requirements interviewer"
+    can_confirm_scope: false
+  - label: "Stakeholder"
+    role: "Interviewed user"
+    can_confirm_scope: false
+
+meetings:
+  - ordinal: 1
+    title: "Email client requirements interview (CMU interview 20)"
+    canonical: "canonical/M01.jsonl"

@@ -1,0 +1,14 @@
+[client]
+Record the number of food parcels collected at each pickup.
+
+[client]
+Record the number of food parcels delivered to each household.
+
+[client]
+Show volunteers the pickup address.
+
+[consultant]
+Would a weekly summary be useful?
+
+[client]
+Count parcels at each pickup.

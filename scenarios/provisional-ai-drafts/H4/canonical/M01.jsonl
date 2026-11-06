@@ -1,0 +1,5 @@
+{"turn_index": 0, "turn_id": "H4-M01:0000", "speaker": "client", "text": "Staff must record the date an object leaves the museum on loan."}
+{"turn_index": 1, "turn_id": "H4-M01:0001", "speaker": "client", "text": "Staff must record the date a loaned object returns to the museum."}
+{"turn_index": 2, "turn_id": "H4-M01:0002", "speaker": "client", "text": "Email the borrower a loan agreement."}
+{"turn_index": 3, "turn_id": "H4-M01:0003", "speaker": "observer", "text": "Can we attach a photograph as well?"}
+{"turn_index": 4, "turn_id": "H4-M01:0004", "speaker": "client", "text": "We need the return date for every object on loan."}

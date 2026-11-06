@@ -1,0 +1,184 @@
+{
+  "events": [
+    {
+      "event_index": 0,
+      "meeting_ordinal": 1,
+      "requirement_id": "R01",
+      "relation": "new",
+      "evidence": [
+        {
+          "turn_id": "H1-M01:0000",
+          "quote": "Students may reserve a study room for two hours."
+        }
+      ]
+    },
+    {
+      "event_index": 1,
+      "meeting_ordinal": 1,
+      "requirement_id": "R02",
+      "relation": "new",
+      "evidence": [
+        {
+          "turn_id": "H1-M01:0001",
+          "quote": "Email students when their room reservation is confirmed."
+        }
+      ]
+    },
+    {
+      "event_index": 2,
+      "meeting_ordinal": 1,
+      "requirement_id": "R03",
+      "relation": "new",
+      "evidence": [
+        {
+          "turn_id": "H1-M01:0002",
+          "quote": "I propose an email reminder before a room booking."
+        }
+      ]
+    },
+    {
+      "event_index": 3,
+      "meeting_ordinal": 1,
+      "requirement_id": null,
+      "relation": "not_requirement",
+      "evidence": [
+        {
+          "turn_id": "H1-M01:0003",
+          "quote": "Leave that reminder proposal open while I ask the librarians."
+        }
+      ]
+    },
+    {
+      "event_index": 4,
+      "meeting_ordinal": 1,
+      "requirement_id": null,
+      "relation": "not_requirement",
+      "evidence": [
+        {
+          "turn_id": "H1-M01:0004",
+          "quote": "Could a student reserve a room by phone?"
+        }
+      ]
+    },
+    {
+      "event_index": 5,
+      "meeting_ordinal": 2,
+      "requirement_id": "R03",
+      "relation": "restatement",
+      "evidence": [
+        {
+          "turn_id": "H1-M02:0000",
+          "quote": "The proposed booking reminder email is approved."
+        }
+      ]
+    },
+    {
+      "event_index": 6,
+      "meeting_ordinal": 2,
+      "requirement_id": "R02",
+      "relation": "refinement",
+      "evidence": [
+        {
+          "turn_id": "H1-M02:0001",
+          "quote": "The booking confirmation email must include the room number."
+        }
+      ]
+    },
+    {
+      "event_index": 7,
+      "meeting_ordinal": 2,
+      "requirement_id": "R01",
+      "relation": "supersession",
+      "evidence": [
+        {
+          "turn_id": "H1-M02:0002",
+          "quote": "Replace the two-hour maximum with a three-hour maximum for room reservations."
+        }
+      ]
+    },
+    {
+      "event_index": 8,
+      "meeting_ordinal": 2,
+      "requirement_id": "R03",
+      "relation": "contradiction",
+      "evidence": [
+        {
+          "turn_id": "H1-M02:0003",
+          "quote": "The agreed reminder emails cannot be sent; we have not decided on a replacement."
+        }
+      ]
+    },
+    {
+      "event_index": 9,
+      "meeting_ordinal": 2,
+      "requirement_id": "R02",
+      "relation": "restatement",
+      "evidence": [
+        {
+          "turn_id": "H1-M02:0004",
+          "quote": "The confirmation email includes the room number."
+        }
+      ]
+    },
+    {
+      "event_index": 10,
+      "meeting_ordinal": 3,
+      "requirement_id": "R01",
+      "relation": "restatement",
+      "evidence": [
+        {
+          "turn_id": "H1-M03:0000",
+          "quote": "In meeting one the limit was two hours, but that was replaced with three hours last meeting."
+        }
+      ]
+    },
+    {
+      "event_index": 11,
+      "meeting_ordinal": 3,
+      "requirement_id": "R01",
+      "relation": "refinement",
+      "evidence": [
+        {
+          "turn_id": "H1-M03:0001",
+          "quote": "The three-hour room reservation limit applies separately to each day."
+        }
+      ]
+    },
+    {
+      "event_index": 12,
+      "meeting_ordinal": 3,
+      "requirement_id": "R03",
+      "relation": "restatement",
+      "evidence": [
+        {
+          "turn_id": "H1-M03:0002",
+          "quote": "The reminder email is still blocked and there is no replacement decision."
+        }
+      ]
+    },
+    {
+      "event_index": 13,
+      "meeting_ordinal": 3,
+      "requirement_id": null,
+      "relation": "not_requirement",
+      "evidence": [
+        {
+          "turn_id": "H1-M03:0003",
+          "quote": "Would a text reminder be cheaper?"
+        }
+      ]
+    },
+    {
+      "event_index": 14,
+      "meeting_ordinal": 3,
+      "requirement_id": "R02",
+      "relation": "restatement",
+      "evidence": [
+        {
+          "turn_id": "H1-M03:0004",
+          "quote": "The reservation confirmation email still needs the room number."
+        }
+      ]
+    }
+  ]
+}

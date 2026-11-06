@@ -1,0 +1,5 @@
+{"turn_index": 0, "turn_id": "H5-M03:0000", "speaker": "client", "text": "After a phone number is updated, show the member the new number."}
+{"turn_index": 1, "turn_id": "H5-M03:0001", "speaker": "client", "text": "When deactivating an account, the administrator must enter a reason."}
+{"turn_index": 2, "turn_id": "H5-M03:0002", "speaker": "consultant", "text": "The annual fee receipt goes by email and shows the membership year."}
+{"turn_index": 3, "turn_id": "H5-M03:0003", "speaker": "client", "text": "Perhaps we could add postal receipts one day."}
+{"turn_index": 4, "turn_id": "H5-M03:0004", "speaker": "client", "text": "An administrator can deactivate an account by entering a reason."}

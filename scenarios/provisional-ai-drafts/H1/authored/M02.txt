@@ -1,0 +1,14 @@
+[client]
+The proposed booking reminder email is approved.
+
+[client]
+The booking confirmation email must include the room number.
+
+[client]
+Replace the two-hour maximum with a three-hour maximum for room reservations.
+
+[client]
+The agreed reminder emails cannot be sent; we have not decided on a replacement.
+
+[consultant]
+The confirmation email includes the room number.

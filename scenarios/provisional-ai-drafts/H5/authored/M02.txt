@@ -1,0 +1,14 @@
+[client]
+The annual membership payment receipt must include the membership year.
+
+[client]
+The event ticket receipt must include the event name.
+
+[client]
+A club administrator must be able to deactivate a member account.
+
+[observer]
+Should deactivation happen automatically after a year?
+
+[client]
+The ticket receipt is emailed and includes the event name.

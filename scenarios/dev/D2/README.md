@@ -1,6 +1,10 @@
 # D2 — event-sequence draft and dialogue brief
 
-**Status:** Draft for Danyang to review and Lucas to turn into dialogue. No transcript or final evidence spans exist yet. Initial drafting used AI assistance; this is not final human-reviewed gold.
+**Status:** Dialogue and gold drafted, awaiting human review. `authored/M01–M03.txt` realise the 18 events below; `canonical/` was produced with `src.ingest.normalise`; `gold.src.yaml` holds the quotes and `gold.yaml` the resolved spans (`PYTHONPATH=. python tools/resolve_spans.py scenarios/dev/D2`). The dialogue and gold were drafted with AI assistance, so they are not final human-reviewed gold. Before scoring, Lucas checks the dialogue against the brief and Danyang checks every label and quote.
+
+Deviation to review: the eval harness auto-confirms every engine-allowed proposal, and `replay_to_cutoff` treats `new` as confirmed. Event 3 is therefore confirmed at the end of Meeting 1 in eval mode, so the delayed confirmation (events 3 and 7) is present in the dialogue but not measured. Event 7 stays `restatement`. Not-requirement events carry `requirement_id: null`.
+
+Validation: one oracle run (`--candidate-source gold`, 2026-11-05) loaded and scored all 18 events: four-class macro-F1 0.83, six-class 0.87, historical-id accuracy 10 of 12. This checks the files, not the system; it is a single dev run.
 
 Gold author: Danyang (Track B). Dialogue author: Lucas (Track C), following the rotation in `docs/05-annotation-and-corpus.md`. This is a dev scenario, not a no-reversal control.
 

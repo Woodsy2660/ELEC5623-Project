@@ -1,0 +1,132 @@
+# Gold evidence file for D2 (dev). AI-drafted from the event table in README.md; needs human review.
+# Quotes are exact substrings of canonical/*.jsonl. Run tools/resolve_spans.py to rebuild gold.yaml.
+
+events:
+- event_index: 0
+  meeting_ordinal: 1
+  requirement_id: R01
+  relation: new
+  evidence:
+  - turn_id: D2-M01:0001
+    quote: Staff will sign in to the portal with their work email address and a password
+- event_index: 1
+  meeting_ordinal: 1
+  requirement_id: R02
+  relation: new
+  evidence:
+  - turn_id: D2-M01:0005
+    quote: the portal has to send a password reset link to their email
+- event_index: 2
+  meeting_ordinal: 1
+  requirement_id: R03
+  relation: new
+  evidence:
+  - turn_id: D2-M01:0006
+    quote: every time an employee pays for something through the portal, the system emails them a receipt
+      automatically
+- event_index: 3
+  meeting_ordinal: 1
+  requirement_id: null
+  relation: not_requirement
+  evidence:
+  - turn_id: D2-M01:0008
+    quote: Might corporate single sign-on be an option for you further down the line?
+- event_index: 4
+  meeting_ordinal: 1
+  requirement_id: null
+  relation: not_requirement
+  evidence:
+  - turn_id: D2-M01:0010
+    quote: could they go out as a text message rather than email?
+- event_index: 5
+  meeting_ordinal: 1
+  requirement_id: R01
+  relation: restatement
+  evidence:
+  - turn_id: D2-M01:0013
+    quote: work email and password, that's how staff sign in for now
+- event_index: 6
+  meeting_ordinal: 2
+  requirement_id: R03
+  relation: restatement
+  evidence:
+  - turn_id: D2-M02:0001
+    quote: go ahead with an emailed receipt after every payment, exactly as you described it last time
+- event_index: 7
+  meeting_ordinal: 2
+  requirement_id: R02
+  relation: refinement
+  evidence:
+  - turn_id: D2-M02:0003
+    quote: The reset email has to arrive within two minutes of the request
+- event_index: 8
+  meeting_ordinal: 2
+  requirement_id: R01
+  relation: supersession
+  evidence:
+  - turn_id: D2-M02:0006
+    quote: we'll use corporate single sign-on for the portal instead of email and password
+- event_index: 9
+  meeting_ordinal: 2
+  requirement_id: null
+  relation: not_requirement
+  evidence:
+  - turn_id: D2-M02:0008
+    quote: Would SMS be cheaper than email?
+- event_index: 10
+  meeting_ordinal: 2
+  requirement_id: R03
+  relation: contradiction
+  evidence:
+  - turn_id: D2-M02:0010
+    quote: the automatic receipt emails can't happen as agreed
+- event_index: 11
+  meeting_ordinal: 2
+  requirement_id: R02
+  relation: restatement
+  evidence:
+  - turn_id: D2-M02:0014
+    quote: Reset links go by email and reach people within two minutes
+- event_index: 12
+  meeting_ordinal: 3
+  requirement_id: R01
+  relation: restatement
+  evidence:
+  - turn_id: D2-M03:0000
+    quote: in our first meeting we had staff signing in with their work email and password, but that was
+      replaced by single sign-on last time
+- event_index: 13
+  meeting_ordinal: 3
+  requirement_id: R02
+  relation: supersession
+  evidence:
+  - turn_id: D2-M03:0002
+    quote: from now on password reset links should be sent by text message instead of email
+- event_index: 14
+  meeting_ordinal: 3
+  requirement_id: R01
+  relation: refinement
+  evidence:
+  - turn_id: D2-M03:0005
+    quote: authentication through the identity provider has to finish within five seconds
+- event_index: 15
+  meeting_ordinal: 3
+  requirement_id: R01
+  relation: restatement
+  evidence:
+  - turn_id: D2-M03:0007
+    quote: for login we're on single sign-on, and it completes in under five seconds
+- event_index: 16
+  meeting_ordinal: 3
+  requirement_id: R03
+  relation: restatement
+  evidence:
+  - turn_id: D2-M03:0009
+    quote: The automatic receipt emails we agreed are still blocked
+- event_index: 17
+  meeting_ordinal: 3
+  requirement_id: R02
+  relation: restatement
+  evidence:
+  - turn_id: D2-M03:0010
+    quote: the old email reset links are gone now, replaced by text messages as of today

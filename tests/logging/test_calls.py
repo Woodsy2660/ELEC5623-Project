@@ -346,6 +346,68 @@ class TestCallLogger:
                     messages=[{"role": "user", "content": "Test"}],
                 )
 
-        # Verify no row was inserted on failure
+        # Hard rule 4: the failed call is still logged, with zero usage and its error
         rows = db_session.query(ModelCall).all()
-        assert len(rows) == 0
+        assert len(rows) == 1
+        row = rows[0]
+        assert (row.stage, row.input_tokens, row.output_tokens, row.cost, row.retries) == (
+            "extract",
+            0,
+            0,
+            0.0,
+            1,
+        )
+        error = json.loads(Path(row.raw_json_path).read_text(encoding="utf-8"))
+        assert error["message"] == "API error"
+
+    def test_rate_limit_waits_before_the_retry(
+        self, db_session, temp_runs_dir, prompt_file, monkeypatch
+    ):
+        """A 429 is retried once after the advised wait, not immediately."""
+        from src.logging import calls
+
+        class RateLimited(Exception):
+            status_code = 429
+            response = type("R", (), {"headers": {"retry-after": "7"}})()
+
+        waits: list[float] = []
+        monkeypatch.setattr(calls, "_sleep", waits.append)
+        client = MagicMock()
+        client.chat.completions.create.side_effect = [
+            RateLimited("rate limit"),
+            FakeCompletion(content='{"ok": true}'),
+        ]
+        with CallLogger(
+            db_session, client, deployment_name="gpt-4o", runs_dir=temp_runs_dir
+        ) as logger:
+            parsed = logger.call(
+                run_id="test-run-001",
+                stage="extract",
+                prompt_path=prompt_file,
+                messages=[{"role": "user", "content": "Test"}],
+            )
+        assert waits == [7.0]
+        assert parsed.retries == 1
+
+    def test_other_errors_retry_without_waiting(
+        self, db_session, temp_runs_dir, prompt_file, monkeypatch
+    ):
+        from src.logging import calls
+
+        waits: list[float] = []
+        monkeypatch.setattr(calls, "_sleep", waits.append)
+        client = MagicMock()
+        client.chat.completions.create.side_effect = [
+            Exception("transient"),
+            FakeCompletion(content='{"ok": true}'),
+        ]
+        with CallLogger(
+            db_session, client, deployment_name="gpt-4o", runs_dir=temp_runs_dir
+        ) as logger:
+            logger.call(
+                run_id="test-run-001",
+                stage="extract",
+                prompt_path=prompt_file,
+                messages=[{"role": "user", "content": "Test"}],
+            )
+        assert waits == []

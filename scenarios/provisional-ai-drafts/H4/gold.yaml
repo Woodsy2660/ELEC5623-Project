@@ -1,0 +1,214 @@
+{
+  "events": [
+    {
+      "event_index": 0,
+      "meeting_ordinal": 1,
+      "requirement_id": "R01",
+      "relation": "new",
+      "evidence": [
+        {
+          "turn_id": "H4-M01:0000",
+          "quote": "Staff must record the date an object leaves the museum on loan.",
+          "start": 0,
+          "end": 63
+        }
+      ]
+    },
+    {
+      "event_index": 1,
+      "meeting_ordinal": 1,
+      "requirement_id": "R02",
+      "relation": "new",
+      "evidence": [
+        {
+          "turn_id": "H4-M01:0001",
+          "quote": "Staff must record the date a loaned object returns to the museum.",
+          "start": 0,
+          "end": 65
+        }
+      ]
+    },
+    {
+      "event_index": 2,
+      "meeting_ordinal": 1,
+      "requirement_id": "R03",
+      "relation": "new",
+      "evidence": [
+        {
+          "turn_id": "H4-M01:0002",
+          "quote": "Email the borrower a loan agreement.",
+          "start": 0,
+          "end": 36
+        }
+      ]
+    },
+    {
+      "event_index": 3,
+      "meeting_ordinal": 1,
+      "requirement_id": null,
+      "relation": "not_requirement",
+      "evidence": [
+        {
+          "turn_id": "H4-M01:0003",
+          "quote": "Can we attach a photograph as well?",
+          "start": 0,
+          "end": 35
+        }
+      ]
+    },
+    {
+      "event_index": 4,
+      "meeting_ordinal": 1,
+      "requirement_id": "R02",
+      "relation": "restatement",
+      "evidence": [
+        {
+          "turn_id": "H4-M01:0004",
+          "quote": "We need the return date for every object on loan.",
+          "start": 0,
+          "end": 49
+        }
+      ]
+    },
+    {
+      "event_index": 5,
+      "meeting_ordinal": 2,
+      "requirement_id": "R01",
+      "relation": "refinement",
+      "evidence": [
+        {
+          "turn_id": "H4-M02:0000",
+          "quote": "For the departure record, staff must also record the receiving institution.",
+          "start": 0,
+          "end": 75
+        }
+      ]
+    },
+    {
+      "event_index": 6,
+      "meeting_ordinal": 2,
+      "requirement_id": "R03",
+      "relation": "refinement",
+      "evidence": [
+        {
+          "turn_id": "H4-M02:0001",
+          "quote": "The emailed loan agreement must include the loan reference number.",
+          "start": 0,
+          "end": 66
+        }
+      ]
+    },
+    {
+      "event_index": 7,
+      "meeting_ordinal": 2,
+      "requirement_id": "R04",
+      "relation": "new",
+      "evidence": [
+        {
+          "turn_id": "H4-M02:0002",
+          "quote": "A collections manager must approve each outgoing loan.",
+          "start": 0,
+          "end": 54
+        }
+      ]
+    },
+    {
+      "event_index": 8,
+      "meeting_ordinal": 2,
+      "requirement_id": null,
+      "relation": "not_requirement",
+      "evidence": [
+        {
+          "turn_id": "H4-M02:0003",
+          "quote": "Would automatic approval be acceptable for small loans?",
+          "start": 0,
+          "end": 55
+        }
+      ]
+    },
+    {
+      "event_index": 9,
+      "meeting_ordinal": 2,
+      "requirement_id": "R01",
+      "relation": "restatement",
+      "evidence": [
+        {
+          "turn_id": "H4-M02:0004",
+          "quote": "Record the departure date and receiving institution.",
+          "start": 0,
+          "end": 52
+        }
+      ]
+    },
+    {
+      "event_index": 10,
+      "meeting_ordinal": 3,
+      "requirement_id": "R02",
+      "relation": "refinement",
+      "evidence": [
+        {
+          "turn_id": "H4-M03:0000",
+          "quote": "For the return record, staff must also record the condition of the object.",
+          "start": 0,
+          "end": 74
+        }
+      ]
+    },
+    {
+      "event_index": 11,
+      "meeting_ordinal": 3,
+      "requirement_id": "R04",
+      "relation": "refinement",
+      "evidence": [
+        {
+          "turn_id": "H4-M03:0001",
+          "quote": "Record the date when the collections manager approves an outgoing loan.",
+          "start": 0,
+          "end": 71
+        }
+      ]
+    },
+    {
+      "event_index": 12,
+      "meeting_ordinal": 3,
+      "requirement_id": "R03",
+      "relation": "restatement",
+      "evidence": [
+        {
+          "turn_id": "H4-M03:0002",
+          "quote": "The borrower receives the agreement by email with the loan reference.",
+          "start": 0,
+          "end": 69
+        }
+      ]
+    },
+    {
+      "event_index": 13,
+      "meeting_ordinal": 3,
+      "requirement_id": null,
+      "relation": "not_requirement",
+      "evidence": [
+        {
+          "turn_id": "H4-M03:0003",
+          "quote": "Maybe we could use electronic signatures later.",
+          "start": 0,
+          "end": 47
+        }
+      ]
+    },
+    {
+      "event_index": 14,
+      "meeting_ordinal": 3,
+      "requirement_id": "R04",
+      "relation": "restatement",
+      "evidence": [
+        {
+          "turn_id": "H4-M03:0004",
+          "quote": "The collections manager approves outgoing loans, and we record when.",
+          "start": 0,
+          "end": 68
+        }
+      ]
+    }
+  ]
+}

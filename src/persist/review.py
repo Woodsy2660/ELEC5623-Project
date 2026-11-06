@@ -96,20 +96,167 @@ def candidate_evidence(
     return meeting, spans, turns
 
 
+class MeetingGate(BaseModel):
+    meeting_id: str
+    ordinal: int
+    generated: bool
+    can_generate: bool
+    reason: str = ""
+
+
+def meeting_has_candidates(session: Session, meeting_id: str) -> bool:
+    return (
+        session.scalar(select(Candidate.id).where(Candidate.meeting_id == meeting_id).limit(1))
+        is not None
+    )
+
+
+def pending_review_count(session: Session, project_id: str) -> int:
+    """Proposals in this project that no reviewer has confirmed, edited or rejected."""
+    return len(
+        session.scalars(
+            select(Proposal.id)
+            .join(Candidate, Candidate.id == Proposal.candidate_id)
+            .join(Meeting, Meeting.id == Candidate.meeting_id)
+            .where(Meeting.project_id == project_id, Proposal.decision.is_(None))
+        ).all()
+    )
+
+
+def meeting_gates(session: Session, project_id: str) -> list[MeetingGate]:
+    """Demo order from docs/02: the reviewed register feeds the next meeting.
+
+    Only the earliest unprocessed meeting can be generated, and only once every
+    earlier proposal in the project has a human decision.
+    """
+    pending = pending_review_count(session, project_id)
+    gates: list[MeetingGate] = []
+    first_open: int | None = None
+    for meeting in session.scalars(
+        select(Meeting).where(Meeting.project_id == project_id).order_by(Meeting.ordinal)
+    ):
+        if meeting_has_candidates(session, meeting.id):
+            gates.append(
+                MeetingGate(
+                    meeting_id=meeting.id,
+                    ordinal=meeting.ordinal,
+                    generated=True,
+                    can_generate=False,
+                )
+            )
+            continue
+        if first_open is not None:
+            reason = f"Generate meeting {first_open} first"
+        elif pending:
+            reason = f"Decide the {pending} pending proposals from earlier meetings first"
+        else:
+            reason = ""
+        gates.append(
+            MeetingGate(
+                meeting_id=meeting.id,
+                ordinal=meeting.ordinal,
+                generated=False,
+                can_generate=not reason,
+                reason=reason,
+            )
+        )
+        if first_open is None:
+            first_open = meeting.ordinal
+    return gates
+
+
+def evidence_sentence(text: str, start: int, end: int) -> str:
+    """Widen a quoted span to the whole sentence it sits in.
+
+    The extractor may quote "reset links should be sent by SMS instead of email"
+    and drop the "From now on" or "If legal agrees," that decides the meaning.
+    """
+    left = max(text.rfind(mark, 0, start) for mark in ".!?") + 1
+    if end > start and text[end - 1] in ".!?":
+        right = end
+    else:
+        stops = [i for i in (text.find(mark, end) for mark in ".!?") if i >= 0]
+        right = min(stops) + 1 if stops else len(text)
+    return text[left:right].strip()
+
+
+def hedged_statement(quotes: list[str]) -> bool:
+    """True when the evidence is a question, a condition or a possibility.
+
+    Negation is not a hedge here: "the receipt emails can't happen as agreed" is how
+    a contradiction is stated.
+    """
+    text = " ".join(quotes).lower().replace("’", "'")
+    return bool(
+        re.search(
+            r"\b(if|unless|maybe|perhaps|possibly|probably|may|might|could|would)\b|[?]",
+            text,
+        )
+    )
+
+
+def cancellation_stated(quotes: list[str]) -> bool:
+    """True when the evidence withdraws something: the content test for a contradiction.
+
+    A contradiction makes an earlier statement false with no replacement (docs/05), so
+    its evidence must carry a refusal or withdrawal. A plain requirement sentence ("Record
+    the parcels delivered to each household") or a reaffirmation ("still required") does
+    not. "cancel" is left out because it is often the subject matter, not the decision.
+    """
+    text = " ".join(quotes).lower().replace("’", "'")
+    return bool(
+        re.search(
+            r"\b(?:cannot|can't|won't|will not|must not|shall not|no longer|not part of"
+            r"|not (?:needed|required|necessary|going ahead|go ahead|happen(?:ing)?)"
+            r"|(?:don't|doesn't|do not|does not) need"
+            r"|drop(?:s|ped)?|remove[sd]?|withdraw(?:n|s)?|scrap(?:s|ped)?|abandon(?:s|ed)?)\b",
+            text,
+        )
+    )
+
+
 def explicit_replacement(quotes: list[str]) -> bool:
     """Conservative English rule on quoted evidence, never the classifier label.
 
     Unrecognised wording remains unresolved for review. This is a declared MVP
     rule, not a general natural-language entailment test.
     """
-    text = " ".join(quotes).lower()
-    if re.search(r"\b(if|maybe|perhaps|could|might|would|should|not|never|no)\b|n't|[?]", text):
+    text = " ".join(quotes).lower().replace("’", "'")
+    # "no longer" retires the outgoing option ("telephone booking is no longer part of
+    # this service"); it does not refuse the replacement, so it is not a negation here.
+    if re.search(
+        r"\b(if|unless|maybe|perhaps|possibly|probably|may|could|might|would|not|never|no)\b"
+        r"|n't|[?]",
+        re.sub(r"\bno longer\b", "", text),
+    ):
         return False
+    # A dated commitment plus a named alternative is a replacement even without "we'll":
+    # "from now on reset links should be sent by SMS instead of email". Normative
+    # "should" is accepted only in this frame; elsewhere it stays a recommendation.
+    commitment = r"(?:from now on|going forward|from today|as of today|starting (?:today|now))"
+    alternative = r"(?:instead of|rather than)"
+    if re.search(
+        rf"\b{commitment}\b[^.!?]*\b{alternative}\b|\b{alternative}\b[^.!?]*\b{commitment}\b",
+        text,
+    ):
+        return True
+    if re.search(r"\bshould\b", text):
+        return False
+    # An unhedged instruction names the replacement directly: "Replace X with Y",
+    # "Switch X to Y", "Send it by SMS instead of email".
+    if re.search(
+        r"(?:^|[.;:!]\s*)(?:replace\b[^.!?]+\bwith\b|(?:switch|change|move)\b[^.!?]*\bto\b)", text
+    ):
+        return True
+    if re.search(r"\b(?:instead of|rather than)\b", text):
+        return True
+    decision = r"(?:we will|we'll|we are going to|we're going to|we (?:have |'ve )?decided to|let's|let us)"
     return any(
         re.search(pattern, text)
         for pattern in (
-            r"\bwe (?:will|have decided to) (?:use|adopt)\b[^.!?]+\binstead\b",
-            r"\bwe (?:will|have decided to) replace\b[^.!?]+\bwith\b[^.!?]+",
+            rf"\b{decision} (?:use|adopt|go with)\b[^.!?]+\binstead\b",
+            rf"\b{decision} replace\b[^.!?]+\bwith\b[^.!?]+",
+            rf"\b{decision} (?:change|switch|move)\b[^.!?]*\bto\b[^.!?]+",
         )
     )
 
@@ -265,15 +412,16 @@ def assess_stored_proposal(
         head = current_head(session, meeting.project_id, proposal.predicted_id)
     if context.expected_version_id != (head.current_version_id if head else None):
         raise ReviewConflict("Requirement changed since this proposal; regenerate it before review")
+    sentences = [evidence_sentence(turns[s.turn_id].text, s.start, s.end) for s in spans]
     return assess_proposal(
         relation=proposal.predicted_relation,
         matched_requirement_id=proposal.predicted_id,
         retrieved_ids=ids,
         current_state=State(head.state) if head else None,
         speaker_can_confirm_scope=speaker.can_confirm_scope,
-        replacement_stated=explicit_replacement(
-            [turns[s.turn_id].text[s.start : s.end] for s in spans]
-        ),
+        replacement_stated=explicit_replacement(sentences),
+        hedged=hedged_statement(sentences),
+        cancellation_stated=cancellation_stated(sentences),
     )
 
 

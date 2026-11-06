@@ -13,8 +13,14 @@ import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from src.extract.extractor import ExtractionError, extract_candidates
-from src.persist.models import Base, Candidate, Meeting, Project, Run, Turn
+from src.extract import extractor
+from src.extract.extractor import (
+    ExtractionError,
+    _render_prompt,
+    _turn_windows,
+    extract_candidates,
+)
+from src.persist.models import Base, Candidate, Meeting, ModelCall, Project, Run, Turn
 
 
 class FakeUsage:
@@ -450,3 +456,76 @@ class TestExtractCandidates:
 
         assert result.call_id is not None
         assert len(result.call_id) == 36  # UUID format
+
+
+def test_prompt_keeps_turn_text_byte_exact() -> None:
+    """Quotes must match stored text, so the prompt cannot escape its characters."""
+    text = """Let's add "SSO" & <MFA> — it's required"""
+
+    prompt = _render_prompt([{"turn_id": "t-1", "speaker": "Sam", "text": text}])
+
+    assert json.dumps(text, ensure_ascii=False) in prompt
+    assert "\\u0027" not in prompt
+
+
+def test_turn_windows_split_long_meetings_without_breaking_turns(monkeypatch):
+    monkeypatch.setattr(extractor, "MAX_TURN_CHARS_PER_CALL", 10)
+    turns = [
+        {"turn_id": str(i), "speaker": "A", "text": "x" * n} for i, n in enumerate([4, 5, 3, 12, 1])
+    ]
+    windows = _turn_windows(turns)
+    assert [[t["turn_id"] for t in w] for w in windows] == [["0", "1"], ["2"], ["3"], ["4"]]
+    assert [t for w in windows for t in w] == turns
+
+
+def test_short_meeting_is_one_window():
+    turns = [{"turn_id": "0", "speaker": "A", "text": "short"}]
+    assert _turn_windows(turns) == [turns]
+
+
+def test_long_meeting_is_extracted_per_window_and_a_failed_window_is_logged(
+    db_session, temp_runs_dir, monkeypatch
+):
+    """Each window is its own logged call; a failed window does not drop the others."""
+    from src.logging import calls
+
+    monkeypatch.setattr(calls, "_sleep", lambda s: None)
+    # Each fixture turn is under 80 characters, so a 60-character limit gives three windows.
+    monkeypatch.setattr(extractor, "MAX_TURN_CHARS_PER_CALL", 60)
+    first = {
+        "candidates": [
+            {
+                "statement": "The system shall support SSO authentication.",
+                "evidence": [{"turn_id": "turn-001", "quote": "support SSO authentication"}],
+            }
+        ]
+    }
+    third = {
+        "candidates": [
+            {
+                "statement": "Passwords must be at least 12 characters.",
+                "evidence": [{"turn_id": "turn-003", "quote": "at least 12 characters long"}],
+            }
+        ]
+    }
+    client = MagicMock()
+    client.chat.completions.create.side_effect = [
+        FakeCompletion(content=json.dumps(first)),
+        Exception("window two fails"),
+        Exception("window two fails again"),
+        FakeCompletion(content=json.dumps(third)),
+    ]
+    result = extract_candidates(
+        db_session,
+        client,
+        run_id="run-001",
+        meeting_id="meet-001",
+        deployment_name="gpt-4o-mini",
+        runs_dir=temp_runs_dir,
+    )
+    assert result.accepted == 2
+    assert result.parse_failures == 1
+    assert [c.candidate_id for c in result.candidates] == ["meet-001-C0000", "meet-001-C0001"]
+    rows = db_session.query(ModelCall).filter(ModelCall.stage == "extract").all()
+    assert len(rows) == 3
+    assert sorted(r.input_tokens for r in rows) == [0, 100, 100]

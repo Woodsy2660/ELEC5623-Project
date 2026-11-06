@@ -1,0 +1,14 @@
+[client]
+Replace telephone booking with a web booking form; telephone booking is no longer part of this service.
+
+[client]
+The patient appointment confirmation email must include the appointment time.
+
+[client]
+The cancellation email to staff cannot go ahead and we have no alternative yet.
+
+[observer]
+Maybe cancellation notices could appear on a dashboard?
+
+[client]
+The patient confirmation email includes the appointment time.

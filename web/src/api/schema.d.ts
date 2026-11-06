@@ -107,6 +107,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/projects/{project_id}/meetings/{meeting_id}/generate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Generate */
+        post: operations["generate_projects__project_id__meetings__meeting_id__generate_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/meetings/{meeting_id}/turns": {
         parameters: {
             query?: never;
@@ -290,6 +307,19 @@ export interface components {
             /** After */
             after: string;
         };
+        /** GenerateResult */
+        GenerateResult: {
+            /** Meeting Id */
+            meeting_id: string;
+            /** Candidates */
+            candidates: number;
+            /** Proposals Created */
+            proposals_created: number;
+            /** Classify Errors */
+            classify_errors: number;
+            /** Errors */
+            errors?: string[];
+        };
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
@@ -352,6 +382,12 @@ export interface components {
             footer?: string | null;
             /** Capture Label */
             capture_label?: string | null;
+            /** Generated */
+            generated?: boolean | null;
+            /** Can Generate */
+            can_generate?: boolean | null;
+            /** Generate Reason */
+            generate_reason?: string | null;
         };
         /** ProjectOut */
         ProjectOut: {
@@ -877,6 +913,58 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["MeetingOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    generate_projects__project_id__meetings__meeting_id__generate_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                project_id: string;
+                meeting_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GenerateResult"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReasonBody"];
+                };
+            };
+            /** @description Conflict */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReasonBody"];
                 };
             };
             /** @description Validation Error */

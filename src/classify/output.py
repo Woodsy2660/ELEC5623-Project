@@ -78,17 +78,24 @@ def assess_classification(
     *,
     speaker_can_confirm_scope: bool,
     replacement_stated: bool,
+    hedged: bool,
+    cancellation_stated: bool,
 ) -> RuleVerdict:
     """Assess an already decoded prediction. Does not confirm, persist or derive guards.
 
-    Authority is project configuration. Explicit replacement must be established
-    from validated evidence by the agreed integration rule, not the LLM label.
+    Authority is project configuration. Explicit replacement and hedging must be
+    established from validated evidence by the agreed integration rule, not the LLM label.
     """
     inputs = ClassificationInput.model_validate(inputs.model_dump())
     if classification.retrieved_ids != inputs.retrieval.retrieved_ids:
         raise ClassificationOutputError("Classification retrieval provenance does not match inputs")
-    if type(speaker_can_confirm_scope) is not bool or type(replacement_stated) is not bool:
-        raise ValueError("Authority and replacement guards must be explicit booleans")
+    if any(
+        type(guard) is not bool
+        for guard in (speaker_can_confirm_scope, replacement_stated, hedged, cancellation_stated)
+    ):
+        raise ValueError(
+            "Authority, replacement, hedge and withdrawal guards must be explicit booleans"
+        )
     heads = {head.requirement_id: head for head in inputs.current_heads}
     matched = classification.matched_requirement_id
     return assess_proposal(
@@ -98,4 +105,6 @@ def assess_classification(
         current_state=heads[matched].state if matched in heads else None,
         speaker_can_confirm_scope=speaker_can_confirm_scope,
         replacement_stated=replacement_stated,
+        hedged=hedged,
+        cancellation_stated=cancellation_stated,
     )

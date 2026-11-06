@@ -15,6 +15,8 @@ def assess(**overrides: object):  # type: ignore[no-untyped-def]
         "current_state": State.CONFIRMED,
         "speaker_can_confirm_scope": True,
         "replacement_stated": True,
+        "hedged": False,
+        "cancellation_stated": True,
     }
     values.update(overrides)
     return assess_proposal(**values)  # type: ignore[arg-type]
@@ -87,3 +89,21 @@ def test_supersession_without_required_guard_is_unresolved(overrides: dict[str, 
     assert result.verdict is Verdict.UNRESOLVED
     assert result.proposed_event is None
     assert result.resulting_state is State.CONFIRMED
+
+
+@pytest.mark.parametrize(
+    "overrides",
+    [
+        {"hedged": True},
+        {"speaker_can_confirm_scope": False},
+        {"hedged": True, "speaker_can_confirm_scope": False},
+        {"cancellation_stated": False},
+    ],
+)
+def test_contradiction_without_required_guard_is_unresolved(overrides: dict[str, object]) -> None:
+    result = assess(relation="contradiction", **overrides)
+
+    assert result.verdict is Verdict.UNRESOLVED
+    assert result.proposed_event is None
+    assert result.resulting_state is State.CONFIRMED
+    assert assess(relation="contradiction").verdict is Verdict.ALLOWED

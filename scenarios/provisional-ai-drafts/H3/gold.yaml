@@ -1,0 +1,214 @@
+{
+  "events": [
+    {
+      "event_index": 0,
+      "meeting_ordinal": 1,
+      "requirement_id": "R01",
+      "relation": "new",
+      "evidence": [
+        {
+          "turn_id": "H3-M01:0000",
+          "quote": "Record the number of food parcels collected at each pickup.",
+          "start": 0,
+          "end": 59
+        }
+      ]
+    },
+    {
+      "event_index": 1,
+      "meeting_ordinal": 1,
+      "requirement_id": "R02",
+      "relation": "new",
+      "evidence": [
+        {
+          "turn_id": "H3-M01:0001",
+          "quote": "Record the number of food parcels delivered to each household.",
+          "start": 0,
+          "end": 62
+        }
+      ]
+    },
+    {
+      "event_index": 2,
+      "meeting_ordinal": 1,
+      "requirement_id": "R03",
+      "relation": "new",
+      "evidence": [
+        {
+          "turn_id": "H3-M01:0002",
+          "quote": "Show volunteers the pickup address.",
+          "start": 0,
+          "end": 35
+        }
+      ]
+    },
+    {
+      "event_index": 3,
+      "meeting_ordinal": 1,
+      "requirement_id": null,
+      "relation": "not_requirement",
+      "evidence": [
+        {
+          "turn_id": "H3-M01:0003",
+          "quote": "Would a weekly summary be useful?",
+          "start": 0,
+          "end": 33
+        }
+      ]
+    },
+    {
+      "event_index": 4,
+      "meeting_ordinal": 1,
+      "requirement_id": "R01",
+      "relation": "restatement",
+      "evidence": [
+        {
+          "turn_id": "H3-M01:0004",
+          "quote": "Count parcels at each pickup.",
+          "start": 0,
+          "end": 29
+        }
+      ]
+    },
+    {
+      "event_index": 5,
+      "meeting_ordinal": 2,
+      "requirement_id": "R01",
+      "relation": "refinement",
+      "evidence": [
+        {
+          "turn_id": "H3-M02:0000",
+          "quote": "For each pickup, record the parcel count alongside the pickup date.",
+          "start": 0,
+          "end": 67
+        }
+      ]
+    },
+    {
+      "event_index": 6,
+      "meeting_ordinal": 2,
+      "requirement_id": "R02",
+      "relation": "refinement",
+      "evidence": [
+        {
+          "turn_id": "H3-M02:0001",
+          "quote": "For each household delivery, record the parcel count alongside the delivery date.",
+          "start": 0,
+          "end": 81
+        }
+      ]
+    },
+    {
+      "event_index": 7,
+      "meeting_ordinal": 2,
+      "requirement_id": null,
+      "relation": "not_requirement",
+      "evidence": [
+        {
+          "turn_id": "H3-M02:0002",
+          "quote": "Could we record the weight as well?",
+          "start": 0,
+          "end": 35
+        }
+      ]
+    },
+    {
+      "event_index": 8,
+      "meeting_ordinal": 2,
+      "requirement_id": "R03",
+      "relation": "restatement",
+      "evidence": [
+        {
+          "turn_id": "H3-M02:0003",
+          "quote": "Volunteers need to see the pickup address.",
+          "start": 0,
+          "end": 42
+        }
+      ]
+    },
+    {
+      "event_index": 9,
+      "meeting_ordinal": 2,
+      "requirement_id": "R04",
+      "relation": "new",
+      "evidence": [
+        {
+          "turn_id": "H3-M02:0004",
+          "quote": "A coordinator must be able to cancel a scheduled pickup.",
+          "start": 0,
+          "end": 56
+        }
+      ]
+    },
+    {
+      "event_index": 10,
+      "meeting_ordinal": 3,
+      "requirement_id": "R03",
+      "relation": "refinement",
+      "evidence": [
+        {
+          "turn_id": "H3-M03:0000",
+          "quote": "Show the pickup address together with the pickup time.",
+          "start": 0,
+          "end": 54
+        }
+      ]
+    },
+    {
+      "event_index": 11,
+      "meeting_ordinal": 3,
+      "requirement_id": "R02",
+      "relation": "restatement",
+      "evidence": [
+        {
+          "turn_id": "H3-M03:0001",
+          "quote": "The delivered parcel count is recorded for each household with the delivery date.",
+          "start": 0,
+          "end": 81
+        }
+      ]
+    },
+    {
+      "event_index": 12,
+      "meeting_ordinal": 3,
+      "requirement_id": "R04",
+      "relation": "refinement",
+      "evidence": [
+        {
+          "turn_id": "H3-M03:0002",
+          "quote": "When a coordinator cancels a pickup, record the reason.",
+          "start": 0,
+          "end": 55
+        }
+      ]
+    },
+    {
+      "event_index": 13,
+      "meeting_ordinal": 3,
+      "requirement_id": null,
+      "relation": "not_requirement",
+      "evidence": [
+        {
+          "turn_id": "H3-M03:0003",
+          "quote": "I wonder if drivers need an offline mode.",
+          "start": 0,
+          "end": 41
+        }
+      ]
+    },
+    {
+      "event_index": 14,
+      "meeting_ordinal": 3,
+      "requirement_id": "R01",
+      "relation": "restatement",
+      "evidence": [
+        {
+          "turn_id": "H3-M03:0004",
+          "quote": "The pickup parcel count and pickup date are still required.",
+          "start": 0,
+          "end": 59
+        }
+      ]
+    }
+  ]
+}

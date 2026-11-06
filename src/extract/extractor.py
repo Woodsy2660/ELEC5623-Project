@@ -70,11 +70,38 @@ class ExtractionResult:
     call_id: str | None = None
 
 
+# A whole hour-long meeting in one request exceeds the deployment's 50k tokens per
+# minute (docs/09), so Azure answers 429 however long we wait. Longer meetings are split
+# into consecutive windows of whole turns. Every authored scenario is well below this.
+MAX_TURN_CHARS_PER_CALL = 60_000
+
+
+def _turn_windows(turns: list[dict[str, str]]) -> list[list[dict[str, str]]]:
+    """Split turns into consecutive windows whose text stays within the limit."""
+    windows: list[list[dict[str, str]]] = [[]]
+    size = 0
+    for turn in turns:
+        length = len(turn["text"])
+        if windows[-1] and size + length > MAX_TURN_CHARS_PER_CALL:
+            windows.append([])
+            size = 0
+        windows[-1].append(turn)
+        size += length
+    return windows
+
+
 def _render_prompt(turns: list[dict[str, str]]) -> str:
-    """Render the extraction prompt with the meeting turns."""
+    """Render the extraction prompt with the meeting turns.
+
+    Jinja's tojson escapes apostrophes as \\u0027. The model must see the raw turn
+    text, because its quotes have to match that text byte for byte.
+    """
     template_content = PROMPT_PATH.read_text(encoding="utf-8")
     template = Template(template_content)
-    return template.render(turns=turns)
+    rendered_turns = [
+        {**turn, "text_json": json.dumps(turn["text"], ensure_ascii=False)} for turn in turns
+    ]
+    return template.render(turns=rendered_turns)
 
 
 def _build_schema() -> dict[str, Any]:
@@ -201,19 +228,12 @@ def extract_candidates(
         {"turn_id": turn.id, "speaker": turn.speaker, "text": turn.text} for turn in turns
     ]
 
-    # Build turns lookup for resolution
+    # Build turns lookup for resolution. Evidence always resolves against the whole
+    # meeting, so a quote is valid whichever window produced it.
     turns_text = {turn.id: turn.text for turn in turns}
 
-    # Render prompt
-    prompt_content = _render_prompt(turns_data)
-
-    # Build messages
-    messages = [
-        {"role": "user", "content": prompt_content},
-    ]
-
-    # Make the model call
     result = ExtractionResult(candidates=[])
+    index = 0  # candidate numbering continues across windows
 
     with CallLogger(
         session,
@@ -223,68 +243,70 @@ def extract_candidates(
         seed=seed,
         runs_dir=runs_dir,
     ) as logger:
-        try:
-            response = logger.call(
-                run_id=run_id,
-                stage="extract",
-                prompt_path=PROMPT_PATH,
-                messages=messages,
-                response_format=_build_schema(),
-            )
-            result.call_id = response.call_id
-        except ModelCallError:
-            result.parse_failures = 1
-            return result
+        for window in _turn_windows(turns_data):
+            messages = [{"role": "user", "content": _render_prompt(window)}]
+            try:
+                response = logger.call(
+                    run_id=run_id,
+                    stage="extract",
+                    prompt_path=PROMPT_PATH,
+                    messages=messages,
+                    response_format=_build_schema(),
+                )
+            except ModelCallError:
+                # The failed call is logged by CallLogger. Count it and keep the
+                # other windows rather than losing the whole meeting.
+                result.parse_failures += 1
+                continue
+            if result.call_id is None:
+                result.call_id = response.call_id
 
-    # Parse the response
-    try:
-        data = json.loads(response.content)
-        extraction = _ExtractionResponse.model_validate(data)
-    except (json.JSONDecodeError, ValidationError):
-        result.parse_failures = 1
-        return result
+            try:
+                data = json.loads(response.content)
+                extraction = _ExtractionResponse.model_validate(data)
+            except (json.JSONDecodeError, ValidationError):
+                result.parse_failures += 1
+                continue
 
-    result.returned = len(extraction.candidates)
+            result.returned += len(extraction.candidates)
 
-    # Process each candidate
-    for idx, item in enumerate(extraction.candidates):
-        candidate_id = f"{meeting_id}-C{idx:04d}"
+            for item in extraction.candidates:
+                candidate_id = f"{meeting_id}-C{index:04d}"
+                index += 1
 
-        # Resolve evidence quotes to spans
-        spans, errors = _resolve_evidence(item.evidence, turns_text, meeting_id)
+                # Resolve evidence quotes to spans
+                spans, errors = _resolve_evidence(item.evidence, turns_text, meeting_id)
 
-        if errors or not spans:
-            # Candidate rejected - evidence doesn't resolve
-            result.rejected_unresolvable += 1
-            continue
+                if errors or not spans:
+                    # Candidate rejected - evidence doesn't resolve
+                    result.rejected_unresolvable += 1
+                    continue
 
-        # Create candidate
-        candidate = Candidate(
-            candidate_id=candidate_id,
-            project_id=project_id,
-            meeting_id=meeting_id,
-            text_norm=item.statement,
-            evidence=spans,
-            atomic=True,
-        )
+                candidate = Candidate(
+                    candidate_id=candidate_id,
+                    project_id=project_id,
+                    meeting_id=meeting_id,
+                    text_norm=item.statement,
+                    evidence=spans,
+                    atomic=True,
+                )
 
-        # Persist to database
-        evidence_json = json.dumps(
-            [{"turn_id": s.turn_id, "start": s.start, "end": s.end} for s in spans]
-        )
+                evidence_json = json.dumps(
+                    [{"turn_id": s.turn_id, "start": s.start, "end": s.end} for s in spans]
+                )
+                session.add(
+                    CandidateModel(
+                        id=candidate_id,
+                        meeting_id=meeting_id,
+                        run_id=run_id,
+                        text_norm=item.statement,
+                        evidence_json=evidence_json,
+                        extract_call_id=response.call_id,
+                    )
+                )
 
-        db_candidate = CandidateModel(
-            id=candidate_id,
-            meeting_id=meeting_id,
-            run_id=run_id,
-            text_norm=item.statement,
-            evidence_json=evidence_json,
-            extract_call_id=response.call_id,
-        )
-        session.add(db_candidate)
-
-        result.candidates.append(candidate)
-        result.accepted += 1
+                result.candidates.append(candidate)
+                result.accepted += 1
 
     session.flush()
     return result

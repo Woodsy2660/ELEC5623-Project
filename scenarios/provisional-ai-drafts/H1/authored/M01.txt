@@ -1,0 +1,14 @@
+[client]
+Students may reserve a study room for two hours.
+
+[client]
+Email students when their room reservation is confirmed.
+
+[consultant]
+I propose an email reminder before a room booking.
+
+[client]
+Leave that reminder proposal open while I ask the librarians.
+
+[client]
+Could a student reserve a room by phone?

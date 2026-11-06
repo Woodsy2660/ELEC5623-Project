@@ -1,0 +1,44 @@
+[consultant]
+Morning, and thanks for making the time. I'd like to pin down the basics for the employee portal and the payment side today, so we can start planning the build.
+
+[client]
+Sure. Let's start with how people get in. Staff will sign in to the portal with their work email address and a password. That's what we want at launch.
+
+[observer]
+Sorry, just so I follow. Is that the same address their payslips go to?
+
+[client]
+Yes, the same work address.
+
+[consultant]
+Okay. And when somebody forgets their password?
+
+[client]
+Then the portal has to send a password reset link to their email. That's a separate thing from signing in, it's only for getting back into the account.
+
+[consultant]
+Makes sense. On the payment service, I'd suggest that every time an employee pays for something through the portal, the system emails them a receipt automatically.
+
+[client]
+Hmm. I can see why you'd want that. Let me check with finance before I agree to it, so please don't lock that one in yet.
+
+[consultant]
+No problem. One more thought on login. Might corporate single sign-on be an option for you further down the line?
+
+[client]
+Honestly, no idea yet.
+
+[observer]
+And the receipts, could they go out as a text message rather than email?
+
+[client]
+Good question. I'd have to think about that.
+
+[consultant]
+Let me read back what we have so far, then.
+
+[client]
+Before you do. To be clear on login: work email and password, that's how staff sign in for now.
+
+[consultant]
+Perfect. I'll send the notes around and we'll meet again in two weeks.

@@ -1,0 +1,47 @@
+[consultant]
+Welcome back. Did you get a chance to talk to finance about the receipts?
+
+[client]
+I did, and they're happy. So yes, go ahead with an emailed receipt after every payment, exactly as you described it last time.
+
+[consultant]
+Great, noted.
+
+[client]
+On the reset links, one thing came up. The reset email has to arrive within two minutes of the request, otherwise people give up and phone the help desk.
+
+[observer]
+Two minutes from when they click the button?
+
+[client]
+From when they click "forgot password", yes.
+
+[client]
+And a bigger change. The company has moved to one identity provider for everything, so we'll use corporate single sign-on for the portal instead of email and password. There's no email login as a fallback.
+
+[consultant]
+Understood. I'll rework the login design around that.
+
+[client]
+Oh, about receipts. Would SMS be cheaper than email? Just wondering.
+
+[consultant]
+Probably a little. I can find out.
+
+[client]
+Actually, there's a problem there. Our mail relay contract ends next month and IT won't renew it, so the automatic receipt emails can't happen as agreed. I don't have an alternative for you yet.
+
+[observer]
+So, um, where does that leave us?
+
+[client]
+Let's park it for today.
+
+[consultant]
+Okay. And password reset, is anything else changing?
+
+[client]
+No. Reset links go by email and reach people within two minutes. Nothing new there.
+
+[consultant]
+Thanks. Same time in two weeks?

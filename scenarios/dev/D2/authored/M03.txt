@@ -1,0 +1,38 @@
+[consultant]
+Good afternoon. Quick recap first: in our first meeting we had staff signing in with their work email and password, but that was replaced by single sign-on last time.
+
+[client]
+Right.
+
+[client]
+Now, password resets. The emails keep landing in spam on site, so from now on password reset links should be sent by text message instead of email.
+
+[observer]
+Same two-minute limit for the texts?
+
+[client]
+Yes, keep the two minutes.
+
+[client]
+On single sign-on, authentication through the identity provider has to finish within five seconds, or people will start complaining.
+
+[consultant]
+Five seconds end to end, understood.
+
+[client]
+So for login we're on single sign-on, and it completes in under five seconds.
+
+[consultant]
+And the receipts?
+
+[client]
+Still stuck, I'm afraid. The automatic receipt emails we agreed are still blocked, and I can't offer anything else yet.
+
+[consultant]
+Okay. For the record, the old email reset links are gone now, replaced by text messages as of today.
+
+[client]
+Correct.
+
+[consultant]
+Thanks, everyone. I'll circulate the updated scope this week.

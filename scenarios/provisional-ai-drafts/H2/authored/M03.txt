@@ -1,0 +1,14 @@
+[consultant]
+In meeting one we chose telephone booking, which the web form replaced in meeting two.
+
+[client]
+The web booking form must show available appointment times.
+
+[client]
+Send the patient appointment confirmation by SMS instead of email, keeping the appointment time in the message.
+
+[client]
+The staff cancellation email remains unresolved; we have not agreed an alternative.
+
+[client]
+Should the SMS also include a map?

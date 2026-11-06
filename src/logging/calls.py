@@ -21,9 +21,49 @@ from src.llm.config import compute_cost
 
 
 class ModelCallError(Exception):
-    """Error during model call (schema failure, parse error, etc.)."""
+    """Error during model call (schema failure, parse error, etc.).
 
-    pass
+    ``row_data`` carries the model_calls row for a call that failed after its retry,
+    so the caller can log it. Hard rule 4: a failed call is still a model call.
+    """
+
+    def __init__(self, message: str, row_data: dict[str, Any] | None = None):
+        super().__init__(message)
+        self.row_data = row_data
+
+
+# Azure answers a token-rate overrun with 429. An immediate retry fails the same way,
+# so wait for the advised interval first. Module-level so tests can replace it.
+_sleep = time.sleep
+RATE_LIMIT_DEFAULT_WAIT_S = 30.0
+RATE_LIMIT_MAX_WAIT_S = 60.0
+
+
+def _rate_limit_wait(error: Exception) -> float | None:
+    """Seconds to wait before retrying a 429, or None for other errors."""
+    if getattr(error, "status_code", None) != 429:
+        return None
+    response = getattr(error, "response", None)
+    headers = getattr(response, "headers", None) or {}
+    try:
+        advised = float(headers.get("retry-after", RATE_LIMIT_DEFAULT_WAIT_S))
+    except (TypeError, ValueError):
+        advised = RATE_LIMIT_DEFAULT_WAIT_S
+    return min(max(advised, 1.0), RATE_LIMIT_MAX_WAIT_S)
+
+
+def _write_error_record(run_id: str, call_id: str, error: Exception, runs_dir: Path) -> str:
+    """Write the final error of a failed call to disk and return the path."""
+    run_dir = runs_dir / run_id
+    run_dir.mkdir(parents=True, exist_ok=True)
+    raw_path = run_dir / f"{call_id}.error.json"
+    payload = {
+        "error_type": type(error).__name__,
+        "status_code": getattr(error, "status_code", None),
+        "message": str(error),
+    }
+    raw_path.write_text(json.dumps(payload, indent=2, ensure_ascii=False), encoding="utf-8")
+    return str(raw_path)
 
 
 @dataclass(frozen=True)
@@ -172,12 +212,31 @@ def call_model(
             last_error = e
 
             if attempt == 0:
-                # First failure - retry once
+                # First failure - retry once, after the advised wait for a rate limit
                 retries = 1
+                wait = _rate_limit_wait(e)
+                if wait is not None:
+                    _sleep(wait)
                 continue
             else:
-                # Second failure - raise
-                raise ModelCallError(f"Model call failed after retry: {e}") from e
+                # Second failure - log a row with zero usage, then raise
+                row_data = {
+                    "id": call_id,
+                    "run_id": run_id,
+                    "stage": stage,
+                    "deployment_name": deployment_name,
+                    "served_model": deployment_name,
+                    "prompt_hash": prompt_hash,
+                    "temperature": temperature,
+                    "seed": seed,
+                    "input_tokens": 0,
+                    "output_tokens": 0,
+                    "latency_ms": latency_ms,
+                    "retries": retries,
+                    "cost": 0.0,
+                    "raw_json_path": _write_error_record(run_id, call_id, e, runs_dir),
+                }
+                raise ModelCallError(f"Model call failed after retry: {e}", row_data) from e
 
     # Should never reach here, but for type safety
     raise ModelCallError(f"Model call failed: {last_error}")
@@ -302,18 +361,24 @@ class CallLogger:
         """
         from src.persist.models import ModelCall
 
-        parsed, row_data = call_model(
-            self.client,
-            run_id=run_id,
-            stage=stage,
-            prompt_path=prompt_path,
-            messages=messages,
-            response_format=response_format,
-            deployment_name=self.deployment_name,
-            temperature=self.temperature,
-            seed=self.seed,
-            runs_dir=self.runs_dir,
-        )
+        try:
+            parsed, row_data = call_model(
+                self.client,
+                run_id=run_id,
+                stage=stage,
+                prompt_path=prompt_path,
+                messages=messages,
+                response_format=response_format,
+                deployment_name=self.deployment_name,
+                temperature=self.temperature,
+                seed=self.seed,
+                runs_dir=self.runs_dir,
+            )
+        except ModelCallError as exc:
+            if exc.row_data is not None:
+                self.session.add(ModelCall(**exc.row_data))
+                self.session.flush()
+            raise
 
         # Insert row into model_calls table
         model_call = ModelCall(**row_data)

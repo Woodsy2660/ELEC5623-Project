@@ -1,0 +1,115 @@
+events:
+- event_index: 0
+  meeting_ordinal: 1
+  requirement_id: null
+  relation: not_requirement
+  evidence:
+  - turn_id: CMU-GITHUB-M01:0023
+    quote: from my student perspective is like team collaboration
+    start: 58
+    end: 112
+- event_index: 1
+  meeting_ordinal: 1
+  requirement_id: null
+  relation: not_requirement
+  evidence:
+  - turn_id: CMU-GITHUB-M01:0069
+    quote: when that port request is merged, the Kanban board would automatically
+      reflect that
+    start: 362
+    end: 445
+- event_index: 2
+  meeting_ordinal: 1
+  requirement_id: null
+  relation: not_requirement
+  evidence:
+  - turn_id: CMU-GITHUB-M01:0075
+    quote: having a convenient place to store my code in a in a in a safe manner
+    start: 49
+    end: 118
+- event_index: 3
+  meeting_ordinal: 1
+  requirement_id: null
+  relation: not_requirement
+  evidence:
+  - turn_id: CMU-GITHUB-M01:0083
+    quote: make sure that the main repository stays safe from unknown code changes
+      before they are reviewed by others
+    start: 171
+    end: 277
+- event_index: 4
+  meeting_ordinal: 1
+  requirement_id: null
+  relation: not_requirement
+  evidence:
+  - turn_id: CMU-GITHUB-M01:0083
+    quote: It's also a very convenient way to track history
+    start: 279
+    end: 327
+- event_index: 5
+  meeting_ordinal: 1
+  requirement_id: null
+  relation: not_requirement
+  evidence:
+  - turn_id: CMU-GITHUB-M01:0085
+    quote: Could have a forum or such, or like a a blog, tab forward discussions or
+      information on building these action workflows
+    start: 541
+    end: 660
+- event_index: 6
+  meeting_ordinal: 1
+  requirement_id: null
+  relation: not_requirement
+  evidence:
+  - turn_id: CMU-GITHUB-M01:0087
+    quote: It would be to see a visual mapping of the repository history
+    start: 118
+    end: 179
+- event_index: 7
+  meeting_ordinal: 1
+  requirement_id: null
+  relation: not_requirement
+  evidence:
+  - turn_id: CMU-GITHUB-M01:0087
+    quote: visually see there was new branches made where they were merged in and
+      within those branches like see issues with like their corresponding timeline
+    start: 579
+    end: 726
+- event_index: 8
+  meeting_ordinal: 1
+  requirement_id: null
+  relation: not_requirement
+  evidence:
+  - turn_id: CMU-GITHUB-M01:0093
+    quote: if a Github was to integrate such an assistant to allow users to consult
+      with it to have better to use all the resources available on Github
+    start: 200
+    end: 340
+- event_index: 9
+  meeting_ordinal: 1
+  requirement_id: null
+  relation: not_requirement
+  evidence:
+  - turn_id: CMU-GITHUB-M01:0094
+    quote: can AI help you with the code as well like the code is
+    start: 69
+    end: 123
+- event_index: 10
+  meeting_ordinal: 1
+  requirement_id: null
+  relation: not_requirement
+  evidence:
+  - turn_id: CMU-GITHUB-M01:0097
+    quote: an AI assistant or something that would review help me with code reviews,
+      provide suggestions
+    start: 152
+    end: 245
+- event_index: 11
+  meeting_ordinal: 1
+  requirement_id: null
+  relation: not_requirement
+  evidence:
+  - turn_id: CMU-GITHUB-M01:0107
+    quote: I want to ensure that I review their code
+    start: 55
+    end: 96

@@ -7,15 +7,19 @@ You extract discrete requirement statements from the conversation.
 TASK
 Return every statement that proposes, confirms, changes, or challenges a software
 requirement. This includes:
-- Direct requirement statements ("Users must log in with email")
+- Direct requirement statements ("Reports must be exported as CSV")
 - Confirmations of requirements ("Yes, that's the requirement")
-- Changes to requirements ("Actually, let's change it to 60 minutes")
+- Changes to requirements ("Actually, let's show prices in euros instead")
 - Contradictions or removals ("We won't need that feature")
-- Hedged or conditional proposals ("Could we use SSO instead?")
+- Hedged or conditional proposals ("Could we add a dark mode?")
 
 Be inclusive at this stage. Include hedged and conditional statements. Deciding
 whether something is not a requirement is the classifier's job, not yours.
 Omitting them here makes them unmeasurable.
+
+Do not return greetings, small talk, meeting logistics, explanations of what a
+term means, or step-by-step narration of how an existing screen looks, unless the
+speaker states in that turn that they need, want or reject something.
 
 CONTEXT
 The meeting transcript is provided as a JSON array of turns. Each turn has:
@@ -29,21 +33,34 @@ register, and no gold labels.
 CONSTRAINTS
 
 1. ATOMIC: One obligation per candidate. Split compound statements.
-   - "Users must use SSO and sessions timeout after 30 minutes" becomes TWO candidates
+   - "Reports are exported as CSV and archived after 90 days" becomes TWO candidates
    - Never return compound requirements as a single candidate
 
-2. NORMALISE: Convert the speaker's words to a declarative requirement sentence.
-   - Speaker says: "Maybe we could add a logout button?"
-   - Return: "The system should provide a logout button"
+2. KEEP THE STANCE: Write the statement as one short, self-contained sentence
+   that keeps the speaker's stance. Never make it stronger than the speaker did.
+   - A decision, obligation or approval becomes a declarative requirement.
+     Speaker says: "Let's show prices in euros instead of dollars."
+     Return: "Prices are shown in euros instead of dollars."
+   - A question, suggestion, wish or hedge stays a question or suggestion.
+     Speaker says: "Maybe we could add a logout button?"
+     Return: "Question (not agreed): could the system provide a logout button?"
+   - A complaint, reason or description of how something works today stays a
+     description.
+     Speaker says: "The old tool only keeps an audit log for a week."
+     Return: "Observation: the current tool keeps the audit log for one week."
+   Never turn a question, wish, complaint or description into "must" or "should".
 
 3. EVIDENCE: Every candidate MUST cite at least one evidence quote.
    - The quote must be copied EXACTLY, character for character, from the turn text
    - Do not paraphrase, truncate, or modify the quote in any way
    - The quote must actually appear verbatim in the source turn
+   - Quote the whole sentence that carries the statement, including any hedge
+     words, conditions ("if ..."), time words ("from now on"), "instead of ..."
+     and the question mark. Do not cut these off.
 
 4. INCLUSIVE: Include hedged and conditional statements.
-   - "Could we use SSO?" should be extracted
-   - "What about adding a dark mode?" should be extracted
+   - "Could we add a dark mode?" should be extracted
+   - "What about a team calendar?" should be extracted
    - The classifier will decide if these are requirements or not
 
 5. INVENT NOTHING: If no quote supports a statement, do not return it.
@@ -56,7 +73,7 @@ Return a JSON object with this exact structure:
 {
   "candidates": [
     {
-      "statement": "The normalised requirement statement",
+      "statement": "One sentence that keeps the speaker's stance",
       "evidence": [
         {
           "turn_id": "The turn_id where the evidence appears",
@@ -68,7 +85,7 @@ Return a JSON object with this exact structure:
 }
 
 Each candidate has:
-- statement: A declarative requirement sentence (normalised)
+- statement: One sentence that keeps the speaker's stance (rule 2)
 - evidence: One or more quotes with their turn_ids
 
 The quote field must contain the EXACT text from the turn - do not modify it.
@@ -76,5 +93,5 @@ Multiple evidence items are allowed if the requirement spans multiple turns.
 
 MEETING TRANSCRIPT
 {% for turn in turns %}
-{"turn_id": "{{ turn.turn_id }}", "speaker": "{{ turn.speaker }}", "text": {{ turn.text | tojson }}}
+{"turn_id": "{{ turn.turn_id }}", "speaker": "{{ turn.speaker }}", "text": {{ turn.text_json }}}
 {% endfor %}

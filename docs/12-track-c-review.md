@@ -29,7 +29,9 @@ contracts already present in Tracks A and B.
 - `run_pipeline --mode demo --candidate-source extracted` uses Track B retrieval and
   classification, then stages each valid result through `stage_proposal`. The review
   API can read that same SQLite database. Demo mode rejects `gold` as its candidate
-  source. Eval mode remains separate; see the open decision-gate issue below before
+  source. It processes one meeting per run and will not extract the next meeting while
+  any earlier proposal in the project is undecided, so the reviewed register feeds the
+  next meeting as `docs/02-architecture.md` requires. Eval mode remains separate; see the open decision-gate issue below before
   using it for measurements.
 - The database review queue reports A's `rejected_unresolvable` count from runs with
   a recorded project ID. Older run notes have no project ID, so their extraction
@@ -66,11 +68,35 @@ contracts already present in Tracks A and B.
 
 The classifier's `supersession` label does not authorize a state change. A scope owner
 must be configured for the exact speaker on the source evidence, and the quoted text
-must match the conservative English rule in `explicit_replacement`. It recognises
-explicit wording such as “we will use SSO instead” and “we have decided to replace A
-with B”. Hedges, questions, conditionals, negation and unrecognized wording stay
-unresolved. This small rule is a safety filter; it does not claim general natural
-language understanding.
+must match the conservative English rule in `explicit_replacement`. The rule reads the
+whole sentence each evidence span sits in (`evidence_sentence`), so a cropped quote cannot
+drop a leading “From now on” or “If legal agrees,”. It accepts either a decision phrase
+(“we will”, “we'll”, “we're going to”, “we decided to”, “let's”) followed by a
+replacement frame (“use, adopt or go with B instead”, “replace A with B”, “change, switch
+or move ... to B”), or a dated commitment (“from now on”, “going forward”, “from today”,
+“as of today”, “starting today/now”) with a named alternative (“instead of”, “rather
+than”). Normative “should” is accepted only in the second form. An unhedged instruction
+that names the replacement is also accepted: a sentence opening with “Replace A with B” or
+“Change, switch or move ... to B”, or any unhedged sentence with “instead of” or “rather
+than”. “No longer” retires the outgoing option and is not read as negation. Hedges,
+questions, conditionals, other negation and unrecognized wording stay unresolved.
+
+A `contradiction` is held as unresolved when its evidence sentence is hedged
+(`hedged_statement`: “if”, “unless”, “maybe”, “perhaps”, “possibly”, “probably”, “may”,
+“might”, “could”, “would”, or a question mark). Negation is not a hedge there, because
+“the receipt emails can't happen as agreed” is how a contradiction is stated. The engine
+takes this as an explicit `hedged` input, like `replacement_stated`. A contradiction from a
+speaker who cannot confirm scope is also held, matching the supersession guard. A
+contradiction must also state a withdrawal (`cancellation_stated`: “cannot”, “can't”,
+“won't”, “will not”, “must not”, “no longer”, “not needed/required”, “don't need”, “drop”,
+“remove”, “withdraw”, “scrap”, “abandon”). A plain requirement sentence or a reaffirmation
+(“still required”) labelled contradiction is held, because docs/05 defines a contradiction as
+making an earlier statement false. “Cancel” is excluded because it is often the subject
+matter. This small rule is a safety filter; it does not claim general
+natural language understanding. Its wording list was set on spec examples and the dev
+split, and it must be frozen with the prompts before holdout scoring. The imperative
+replacement forms and the withdrawal check were added after the provisional AI-draft run
+(docs/16), so results on those drafts after the change are post hoc.
 
 The `proposal_reviews` table is additive and never backfills earlier proposal rows.
 Old pending proposals without the new full-project snapshot stay visible but cannot be
@@ -167,9 +193,22 @@ local embedding model.
 The CLI imports D1 from its authored transcripts and speaker settings; it does not
 seed gold labels. The runner also imports the meetings itself, so the explicit
 `ingest_scenario` command is optional. Check the CLI's `Errors` section if the queue is
-empty. Run the demo once per database: each run creates a new set of proposals, so a
-repeat in the same database can add duplicate pending items. Use a new database
-filename for a clean repeat.
+empty.
+
+The review UI can do the same without the CLI. Import the scenario's meetings without a
+model call (`python -m src.eval.ingest_scenario --scenario scenarios/dev/D1
+--database-url <url>`), start the API with the Azure settings in `.env`, enter the
+reviewer token under **Reviewer access** on the **Meetings** page, and press **Generate
+proposals** on meeting 1. When every proposal is decided, meeting 2's button becomes
+available. The server decides which meeting may run and returns the reason when it may
+not; the page only shows it. Each generate call is logged like a CLI run.
+
+From the CLI, the first run processes meeting 1 only. Confirm, edit or reject every proposal in the
+queue, then run the same `run_pipeline` command again to process meeting 2 against the
+reviewed register. While any proposal is still undecided, a rerun processes nothing and
+prints which meeting is waiting. A proposal that cannot be confirmed still needs a
+decision; reject it. Meetings already processed are skipped, so rerunning never
+duplicates proposals. Use a new database filename for a clean repeat.
 
 The eval CLI loads `.env`, but the database initializer and API read process
 environment variables. The commands above set those variables in the PowerShell

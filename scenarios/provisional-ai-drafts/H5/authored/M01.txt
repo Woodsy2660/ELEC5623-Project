@@ -1,0 +1,14 @@
+[client]
+Email a receipt when a member pays an annual membership fee.
+
+[client]
+Email a receipt when a member pays for an event ticket.
+
+[client]
+Members must be able to update their contact phone number.
+
+[consultant]
+Could the two receipts be combined?
+
+[client]
+Members can update their phone number themselves.

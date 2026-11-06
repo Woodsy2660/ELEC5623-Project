@@ -44,6 +44,7 @@ from src.persist.review import (
     ReviewConflict,
     assess_stored_proposal,
     candidate_evidence,
+    meeting_gates,
     project_head_snapshot,
     project_snapshot_fingerprint,
 )
@@ -155,11 +156,13 @@ def meetings(session: Session, project_id: str) -> list[MeetingOut]:
         )
         if (payload := json.loads(event.payload_json))
     }
+    gates = {gate.meeting_id: gate for gate in meeting_gates(session, project_id)}
     for meeting in session.scalars(
         select(Meeting).where(Meeting.project_id == project_id).order_by(Meeting.ordinal)
     ):
         count = len(list(session.scalars(select(Turn.id).where(Turn.meeting_id == meeting.id))))
         metadata = imports.get(meeting.id, {})
+        gate = gates[meeting.id]
         result.append(
             MeetingOut(
                 id=meeting.id,
@@ -170,6 +173,9 @@ def meetings(session: Session, project_id: str) -> list[MeetingOut]:
                 when_label=_day(meeting.imported_at),
                 status="past",
                 turn_count=count,
+                generated=gate.generated,
+                can_generate=gate.can_generate,
+                generate_reason=gate.reason or None,
             )
         )
     return result

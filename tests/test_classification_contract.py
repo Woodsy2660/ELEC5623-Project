@@ -277,7 +277,12 @@ def test_supersession_needs_independent_authority_and_replacement_guards(
     inputs = make_inputs()
     output = decode_output(prediction(), prepare_request(inputs))
     verdict = assess_classification(
-        inputs, output, speaker_can_confirm_scope=authority, replacement_stated=replacement
+        inputs,
+        output,
+        speaker_can_confirm_scope=authority,
+        replacement_stated=replacement,
+        hedged=False,
+        cancellation_stated=True,
     )
     assert verdict.verdict == Verdict.UNRESOLVED
     assert verdict.proposed_event is None
@@ -288,7 +293,12 @@ def test_adapter_uses_authoritative_state_without_mutating_inputs() -> None:
     snapshot = inputs.model_dump()
     output = decode_output(prediction(), prepare_request(inputs))
     verdict = assess_classification(
-        inputs, output, speaker_can_confirm_scope=True, replacement_stated=True
+        inputs,
+        output,
+        speaker_can_confirm_scope=True,
+        replacement_stated=True,
+        hedged=False,
+        cancellation_stated=True,
     )
     assert verdict.verdict == Verdict.ALLOWED
     assert verdict.proposed_event == EventType.SUPERSEDE
@@ -303,7 +313,12 @@ def test_adapter_rejects_changed_retrieval_provenance_and_non_boolean_guards() -
     output.retrieved_ids = ["INVENTED"]
     with pytest.raises(ClassificationOutputError, match="provenance"):
         assess_classification(
-            inputs, output, speaker_can_confirm_scope=True, replacement_stated=True
+            inputs,
+            output,
+            speaker_can_confirm_scope=True,
+            replacement_stated=True,
+            hedged=False,
+            cancellation_stated=True,
         )
     output = decode_output(prediction(), prepare_request(inputs))
     with pytest.raises(ValueError, match="booleans"):
@@ -312,6 +327,8 @@ def test_adapter_rejects_changed_retrieval_provenance_and_non_boolean_guards() -
             output,
             speaker_can_confirm_scope="false",  # type: ignore[arg-type]
             replacement_stated=True,
+            hedged=False,
+            cancellation_stated=True,
         )
 
 

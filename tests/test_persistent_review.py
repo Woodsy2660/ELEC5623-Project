@@ -41,8 +41,11 @@ from src.persist.retrieval import retrieval_snapshot
 from src.persist.review import (
     ReviewConflict,
     ReviewDecision,
+    cancellation_stated,
     commit_decision,
+    evidence_sentence,
     explicit_replacement,
+    hedged_statement,
     stage_proposal,
 )
 from src.retrieve.schemas import VectorRecord
@@ -512,9 +515,104 @@ def test_edited_text_cannot_switch_the_proposal_embedding_contract(database):
     assert counts(engine) == (0, 0, 0, 0)
 
 
+def test_evidence_sentence_restores_the_words_around_a_cropped_quote():
+    turn = "The emails land in spam. From now on reset links should go by SMS instead of email. Thanks."
+    start = turn.index("reset links")
+    end = turn.index("instead of email") + len("instead of email")
+    assert evidence_sentence(turn, start, end) == (
+        "From now on reset links should go by SMS instead of email."
+    )
+    assert explicit_replacement([evidence_sentence(turn, start, end)])
+    assert not explicit_replacement([turn[start:end]])
+
+    hedged = "If legal agrees, we will use SSO instead."
+    quote_start = hedged.index("we will")
+    assert evidence_sentence(hedged, quote_start, len(hedged)) == hedged
+    assert not explicit_replacement([evidence_sentence(hedged, quote_start, len(hedged))])
+
+
+@pytest.mark.parametrize(
+    "quote",
+    [
+        "And the receipts, could they go out as a text message rather than email?",
+        "Would SMS be cheaper than email?",
+        "If IT renews the contract, receipt emails might not happen.",
+        "Maybe receipts can't go by email.",
+    ],
+)
+def test_hedge_check_flags_questions_conditions_and_possibilities(quote):
+    assert hedged_statement([quote])
+
+
+@pytest.mark.parametrize(
+    "quote",
+    [
+        "IT won't renew it, so the automatic receipt emails can't happen as agreed.",
+        "The automatic receipt emails we agreed are still blocked.",
+        "Receipts can no longer be emailed.",
+    ],
+)
+def test_hedge_check_lets_plain_contradictions_through(quote):
+    assert not hedged_statement([quote])
+
+
 def test_replacement_rule_does_not_accept_negation():
     assert explicit_replacement(["We have decided to replace email login with SSO."])
     assert not explicit_replacement(["We won't replace email login with SSO."])
+    assert not explicit_replacement(["We won’t replace email login with SSO."])
+
+
+@pytest.mark.parametrize(
+    "quote",
+    [
+        "We will use SSO instead.",
+        "We'll use SSO instead.",
+        "We’ll use SSO instead.",
+        "We have decided to replace email login with SSO.",
+        "Let's change it to sixty minutes instead.",
+        "We're going to switch to SSO.",
+        "We decided to move to quarterly billing.",
+        "Let's go with SSO instead.",
+        "from now on password reset links should be sent by text message instead of email",
+        "Going forward, invoices are emailed rather than posted.",
+        "Reset links go by SMS instead of email starting today.",
+        "Replace the two-hour maximum with a three-hour maximum.",
+        "Replace phone booking with a web form; phone booking is no longer offered.",
+        "Switch the export format to CSV.",
+        "Send the confirmation by SMS instead of email.",
+        "Use invoices rather than receipts.",
+    ],
+)
+def test_replacement_rule_accepts_decided_replacements(quote):
+    assert explicit_replacement([quote])
+
+
+@pytest.mark.parametrize(
+    "quote",
+    [
+        "Could we use SSO?",
+        "could SSO be an option?",
+        "Should we switch to SSO?",
+        "Maybe we will use SSO instead.",
+        "We might change it to sixty minutes.",
+        "We should change it to SSO.",
+        "If legal agrees, we will use SSO instead.",
+        "We will use SSO instead unless legal objects.",
+        "Let's not change it to SSO.",
+        "Let's discuss whether to switch to SSO.",
+        "Login must also support password reset.",
+        "Let's review the requirements from last week.",
+        "From now on, should we send SMS instead of email?",
+        "From now on we could send SMS instead of email.",
+        "If finance agrees, from now on receipts go by SMS instead of email.",
+        "From now on we won't send SMS instead of email.",
+        "SMS should be used instead of email.",
+        "the old email reset links are gone now, replaced by text messages as of today",
+        "that was replaced by single sign-on last time",
+    ],
+)
+def test_replacement_rule_keeps_hedges_and_other_wording_unresolved(quote):
+    assert not explicit_replacement([quote])
 
 
 def test_existing_meeting_contract_imports_real_turns_and_is_idempotent(database):
@@ -584,6 +682,51 @@ def test_precomputed_candidate_embedding_is_saved_without_a_model_call(database)
     with Session(engine) as db:
         versions, _ = retrieval_snapshot(db, "P1")
         assert len(versions) == 1
+
+
+@pytest.mark.parametrize(
+    "quote",
+    [
+        "Replace email login with SSO if legal agrees.",
+        "We won't replace phone booking with a web form.",
+        "Could we send it by SMS instead of email?",
+        "Phone booking is not replaced with anything yet.",
+        "In meeting one the limit was two hours, but that was replaced with three hours.",
+    ],
+)
+def test_replacement_rule_rejects_hedged_negated_or_reported_replacements(quote):
+    assert not explicit_replacement([quote])
+
+
+@pytest.mark.parametrize(
+    "quote",
+    [
+        "IT won't renew it, so the automatic receipt emails can't happen as agreed.",
+        "The agreed reminder emails cannot be sent; we have not decided on a replacement.",
+        "The cancellation email to staff cannot go ahead and we have no alternative yet.",
+        "Receipts can no longer be emailed.",
+        "The weekly report is not needed any more.",
+        "We don't need the audit export.",
+        "Drop the dark mode requirement.",
+        "The calendar sync has been withdrawn.",
+    ],
+)
+def test_withdrawal_check_accepts_stated_withdrawals(quote):
+    assert cancellation_stated([quote])
+
+
+@pytest.mark.parametrize(
+    "quote",
+    [
+        "Record the number of food parcels delivered to each household.",
+        "The pickup parcel count and pickup date are still required.",
+        "Email a receipt when a member pays for an event ticket.",
+        "When a coordinator cancels a pickup, record the reason.",
+        "Email staff when an appointment is cancelled.",
+    ],
+)
+def test_withdrawal_check_rejects_plain_or_reaffirming_requirements(quote):
+    assert not cancellation_stated([quote])
 
 
 def test_scope_document_uses_current_pointer_not_later_proposed_version(database):
