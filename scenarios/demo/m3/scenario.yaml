@@ -1,0 +1,19 @@
+id: DEMO
+name: "Tideway customer portal"
+client: "Tideway Logistics"
+
+speakers:
+  - label: "Priya Raman"
+    role: "Product Owner (client)"
+    can_confirm_scope: true
+  - label: "Alex Morgan"
+    role: "Lead Consultant"
+    can_confirm_scope: false
+  - label: "Tom Alder"
+    role: "Engineer (client)"
+    can_confirm_scope: false
+
+meetings:
+  - ordinal: 3
+    title: "Scope sign-off"
+    canonical: "canonical/M03.jsonl"

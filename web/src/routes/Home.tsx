@@ -4,6 +4,14 @@ import type { Schemas } from '../api/client.ts'
 import { AppShell } from '../components/AppShell.tsx'
 import { StatusTag } from '../components/StatusTag.tsx'
 
+const STATE_WORD: Record<string, string> = {
+  confirmed: 'confirmed',
+  proposed: 'proposed',
+  contradicted: 'in conflict',
+  superseded: 'replaced',
+  withdrawn: 'withdrawn',
+}
+
 const WORDS = ['No', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten']
 
 export function HomeRoute() {
@@ -139,18 +147,20 @@ function ProjectCard({ project }: { project: Schemas['ProjectOut'] }) {
     <>
       <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 12 }}>
         <span style={{ fontFamily: 'var(--font-display)', fontSize: 21 }}>{project.name}</span>
-        <span className="cia-id">{project.requirement_count} reqs</span>
+        <span style={{ fontSize: 13, color: 'var(--ink-meta)' }}>
+          {project.requirement_count} {project.requirement_count === 1 ? 'requirement' : 'requirements'}
+        </span>
       </div>
       <p style={{ margin: '10px 0 18px', fontSize: 13, lineHeight: '20px', color: 'var(--ink-meta)' }}>
-        {project.client} · {meetings}
+        {project.client ? `${project.client} · ${meetings}` : meetings}
       </p>
       <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
         {project.empty ? (
           <span className="cia-chip cia-chip--empty">Empty</span>
         ) : (
-          project.state_counts.map((item) => (
+          project.state_counts.filter((item) => item.count > 0).map((item) => (
             <span key={item.state} className={`cia-chip cia-chip--${item.state}`}>
-              {item.count} {item.state}
+              {item.count} {STATE_WORD[item.state] ?? item.state}
             </span>
           ))
         )}

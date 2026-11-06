@@ -12,8 +12,10 @@ from sqlalchemy.orm import Session
 
 from src.api.app import create_app
 from src.api.queries import proposals as query_proposals
+from src.api.queries import requirement_detail
 from src.classify.schemas import Classification
 from src.eval.replay_to_cutoff import _compute_actual_state
+from src.export.register import ExportError
 from src.persist.database import (
     create_database_engine,
     initialize_database,
@@ -44,6 +46,7 @@ from src.persist.review import (
     stage_proposal,
 )
 from src.retrieve.schemas import VectorRecord
+from tools.export_scope_document import build_html
 
 AUTH = {"Authorization": "Bearer synthetic-test-token"}
 
@@ -581,3 +584,114 @@ def test_precomputed_candidate_embedding_is_saved_without_a_model_call(database)
     with Session(engine) as db:
         versions, _ = retrieval_snapshot(db, "P1")
         assert len(versions) == 1
+
+
+def test_scope_document_uses_current_pointer_not_later_proposed_version(database):
+    engine, _ = database
+    rid = family(engine)
+    with transaction(engine) as db:
+        current = db.get(RequirementCurrent, rid)
+        original = db.get(RequirementVersion, current.current_version_id)
+        db.add(
+            RequirementVersion(
+                id=f"{rid}-future",
+                requirement_id=rid,
+                version=2,
+                text="Unapproved future scope",
+                state="proposed",
+                evidence_json=original.evidence_json,
+                created_event_id=original.created_event_id,
+            )
+        )
+    with Session(engine) as db:
+        result = build_html(db, "P1", "<script>client</script>", "Consult & Co")
+    assert "Users can sign in." in result
+    assert "Unapproved future scope" not in result
+    assert (
+        "<script>client</script>" not in result and "&lt;script&gt;client&lt;/script&gt;" in result
+    )
+    assert "Generating it does not record client sign-off" in result
+    assert "https://fonts.googleapis.com" not in result
+
+
+def test_scope_document_keeps_latest_predecessor_and_original_replacement(database):
+    engine, _ = database
+    rid = family(engine)
+    decide(
+        engine,
+        stage(
+            engine,
+            text="Users sign in with email and password.",
+            relation="refinement",
+            matched=rid,
+            ids=[rid],
+        ),
+    )
+    decide(
+        engine,
+        stage(
+            engine,
+            text="Users sign in with SSO.",
+            relation="supersession",
+            matched=rid,
+            ids=[rid],
+            quote="We will use SSO instead.",
+        ),
+    )
+    with Session(engine) as db:
+        before = db.scalar(select(func.count()).select_from(Event))
+        result = build_html(db, "P1", "Client", "Consultancy")
+        assert db.scalar(select(func.count()).select_from(Event)) == before
+    assert "<s>Users sign in with email and password.</s>" in result
+    assert "<s>Users can sign in.</s>" not in result
+    assert "Users sign in with SSO." in result and "We will use SSO instead." in result
+    assert "Meeting 1" in result
+
+
+@pytest.mark.parametrize("bad", ["other-project", "missing-turn", "bad-offset"])
+def test_scope_document_rejects_unresolvable_or_cross_project_evidence(database, bad):
+    engine, _ = database
+    rid = family(engine)
+    with transaction(engine) as db:
+        version = db.get(RequirementVersion, db.get(RequirementCurrent, rid).current_version_id)
+        span = json.loads(version.evidence_json)[0]
+        if bad == "other-project":
+            turn = db.get(Turn, span["turn_id"])
+            turn.meeting_id = "P2-M01"
+        elif bad == "missing-turn":
+            span["turn_id"] = "nonexistent"
+        else:
+            span["end"] = 999999
+        version.evidence_json = json.dumps([span])
+    with Session(engine) as db, pytest.raises(ExportError):
+        build_html(db, "P1", "Client", "Consultancy")
+
+
+def test_history_uses_confirmation_actor_and_time_not_create_event(database):
+    engine, _ = database
+    rid = family(engine)
+    with transaction(engine) as db:
+        for event in db.scalars(select(Event).where(Event.project_id == "P1")):
+            if event.event_type == "create":
+                event.actor = "proposal-author"
+                event.ts = datetime(2026, 1, 1, 9, 0, tzinfo=UTC)
+            elif event.event_type == "confirm":
+                event.actor = "reviewer"
+                event.ts = datetime(2026, 1, 3, 12, 0, tzinfo=UTC)
+    with Session(engine) as db:
+        detail = requirement_detail(db, "P1", rid)
+    footer = detail.timeline[0].footer
+    assert footer == "Confirmed by a reviewer · 3 Jan 2026, 12:00 UTC"
+    assert "proposal-author" not in footer
+    assert detail.timeline[0].evidence[0].span == "Users can sign in."
+
+
+def test_confirmation_missing_is_not_presented_as_reviewer_approval(database):
+    engine, _ = database
+    rid = family(engine)
+    with transaction(engine) as db:
+        event = db.scalar(select(Event).where(Event.event_type == "confirm"))
+        event.event_type = "legacy-note"
+    with Session(engine) as db:
+        footer = requirement_detail(db, "P1", rid).timeline[0].footer
+    assert footer == "Recorded as confirmed; confirmation event unavailable"

@@ -63,8 +63,9 @@ export function RegisterRoute() {
     contradicted: rows.filter((row) => row.state === 'contradicted').length,
     history: rows.filter((row) => row.state === 'superseded' || row.state === 'withdrawn').length,
   }
+  const replaced = rows.filter((row) => row.state === 'superseded').length
   const visible = rows.filter((row) => matches(row, filter))
-  const snapshot = past > 0 ? `state after meeting ${past} of ${past} · ` : ''
+  const snapshot = past > 0 ? ` · after ${past} ${past === 1 ? 'meeting' : 'meetings'}` : ''
 
   return (
     <AppShell projectId={projectId} projectName={project.data.name} active="register" reviewCount={reviewCount}>
@@ -72,14 +73,14 @@ export function RegisterRoute() {
         <ScopeBar
           client={project.data.client}
           projectName={project.data.name}
-          count={`${families} requirement families · ${rows.length} versions`}
+          count={`${counts.confirmed} agreed · ${replaced} replaced`}
         />
         <header style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 24, flexWrap: 'wrap' }}>
           <div>
             <h1 style={titleStyle}>Register</h1>
             <p style={subtitleStyle}>
-              {project.data.name} · {snapshot}
-              {families} requirement families
+              {families} {families === 1 ? 'requirement' : 'requirements'}
+              {snapshot}
             </p>
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
@@ -88,7 +89,7 @@ export function RegisterRoute() {
             </button>
             <Link to={`/projects/${projectId}/review`} style={{ textDecoration: 'none' }}>
               <span className="cia-btn cia-btn--primary" style={{ display: 'inline-block' }}>
-                Review {reviewCount} proposals
+                {reviewCount ? `Review ${reviewCount} ${reviewCount === 1 ? 'suggestion' : 'suggestions'}` : 'Review queue'}
               </span>
             </Link>
           </div>
@@ -96,14 +97,19 @@ export function RegisterRoute() {
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
           <FilterButton label={`All ${counts.all}`} on={filter === 'all'} onClick={() => setFilter('all')} />
           <FilterButton label={`Confirmed ${counts.confirmed}`} on={filter === 'confirmed'} onClick={() => setFilter('confirmed')} />
-          <FilterButton label={`Proposed ${counts.proposed}`} on={filter === 'proposed'} onClick={() => setFilter('proposed')} />
-          <FilterButton
-            label={`Contradicted ${counts.contradicted}`}
-            on={filter === 'contradicted'}
-            onClick={() => setFilter('contradicted')}
-          />
-          <FilterButton label={`History ${counts.history}`} on={filter === 'history'} onClick={() => setFilter('history')} />
-          <span style={{ marginLeft: 'auto', fontSize: 13, color: 'var(--ink-meta)' }}>Sorted by state, then ID</span>
+          {counts.proposed || filter === 'proposed' ? (
+            <FilterButton label={`Proposed ${counts.proposed}`} on={filter === 'proposed'} onClick={() => setFilter('proposed')} />
+          ) : null}
+          {counts.contradicted || filter === 'contradicted' ? (
+            <FilterButton
+              label={`In conflict ${counts.contradicted}`}
+              on={filter === 'contradicted'}
+              onClick={() => setFilter('contradicted')}
+            />
+          ) : null}
+          {counts.history || filter === 'history' ? (
+            <FilterButton label={`History ${counts.history}`} on={filter === 'history'} onClick={() => setFilter('history')} />
+          ) : null}
         </div>
         <div style={{ background: 'var(--surface-raised)', border: '1px solid var(--border-subtle)', borderRadius: 10, overflow: 'hidden' }}>
           <RegisterTable
@@ -119,9 +125,7 @@ export function RegisterRoute() {
           />
         </div>
         <p style={{ margin: 0, fontSize: 13, lineHeight: '20px', color: 'var(--ink-meta)', maxWidth: '78ch' }}>
-          Superseded rows are struck through and kept; withdrawn rows are kept without a strike, because withdrawn means
-          never adopted rather than replaced. Both stay readable — the contrast floor is set so history can be read, not
-          merely detected.
+          Replaced and withdrawn requirements remain available in history, with their original evidence.
         </p>
       </main>
     </AppShell>

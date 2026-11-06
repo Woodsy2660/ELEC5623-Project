@@ -16,7 +16,6 @@ export function RegisterTable({ rows }: { rows: RegisterTableRow[] }) {
     <table className="cia-register">
       <thead>
         <tr>
-          <th style={{ width: 110 }}>ID</th>
           <th>Requirement</th>
           <th style={{ width: 150 }}>State</th>
           <th style={{ width: 130 }}>Last changed</th>
@@ -25,9 +24,6 @@ export function RegisterTable({ rows }: { rows: RegisterTableRow[] }) {
       <tbody>
         {rows.map((row) => (
           <tr key={row.key} data-state={row.state}>
-            <td>
-              <span className="cia-id">{row.versionLabel}</span>
-            </td>
             <td>
               <Link className="rowlink" to={row.href}>
                 <span className="cia-register__text">{row.text}</span>
