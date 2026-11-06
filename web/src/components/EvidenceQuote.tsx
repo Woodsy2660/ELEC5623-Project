@@ -20,8 +20,7 @@ export function EvidenceQuote({
   return (
     <div className="cia-evidence" style={style}>
       <div className="cia-evidence__meta">
-        <span className="cia-evidence__speaker">{speaker}</span>
-        <span className="cia-id">{turnId}</span>
+        <span className="cia-evidence__speaker" data-turn={turnId}>{speaker}</span>
       </div>
       <p className="cia-evidence__quote">
         {before ? <span className="cia-evidence__context">{before}</span> : null}

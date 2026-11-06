@@ -5,6 +5,17 @@ import { EvidenceQuote } from './EvidenceQuote.tsx'
 import { RelationChip } from './RelationChip.tsx'
 import { StateChip } from './StateChip.tsx'
 
+const RELATION_LINE: Record<RelationLabel, string> = {
+  new: 'New requirement from this meeting',
+  refinement: 'Adds detail to an agreed requirement',
+  contradiction: 'Conflicts with an agreed requirement',
+  supersession: 'Would replace an agreed requirement',
+  restatement: 'Repeats an agreed requirement',
+  not_requirement: 'Not a requirement',
+}
+
+const CHANGE_WORD = { added: 'Added', changed: 'Changed', removed: 'Removed' } as const
+
 export type ProposalEvidence = {
   speaker: string
   turnId: string
@@ -31,12 +42,9 @@ export type ProjectChangeRow = {
 }
 
 export function ProposalCard({
-  scopeLabel,
   statement,
   unresolved,
   relation,
-  proposalStatus,
-  toState,
   evidence,
   speakerName,
   speakerRole,
@@ -58,12 +66,12 @@ export function ProposalCard({
   onEdit,
   onJump,
 }: {
-  scopeLabel: string
+  scopeLabel?: string
   statement: string
   unresolved: boolean
   relation: RelationLabel
-  proposalStatus: LifecycleState
-  toState: LifecycleState | null
+  proposalStatus?: LifecycleState
+  toState?: LifecycleState | null
   evidence: ProposalEvidence[]
   speakerName: string
   speakerRole: string
@@ -87,7 +95,7 @@ export function ProposalCard({
 }) {
   const words =
     authorityNote ??
-    `${speakerName} (${speakerRole}) ${speakerCanConfirm ? 'can' : 'cannot'} confirm scope`
+    `${speakerName} · ${speakerRole} · ${speakerCanConfirm ? 'can approve scope' : 'cannot approve scope'}`
   const note = notice || (decided ? '' : canConfirm ? '' : canConfirmReason)
   return (
     <div className={unresolved ? 'cia-proposal cia-proposal--unresolved' : 'cia-proposal'} style={{ maxWidth: 760 }}>
@@ -95,14 +103,7 @@ export function ProposalCard({
         <div>
           <p className="cia-proposal__statement">{statement}</p>
           <div className="cia-proposal__transition">
-            <span className="cia-id">{scopeLabel}</span>
-            <StateChip state={proposalStatus} />
-            {toState ? (
-              <>
-                <span>→</span>
-                <StateChip state={toState} />
-              </>
-            ) : null}
+            <span>{RELATION_LINE[relation] ?? ''}</span>
           </div>
         </div>
         <RelationChip relation={relation} />
@@ -118,25 +119,18 @@ export function ProposalCard({
               borderRadius: 8,
             }}
           >
-            <div className="cia-proposal__section-label">Register changed since this proposal was created</div>
+            <div className="cia-proposal__section-label">Scope changed since this suggestion</div>
             <p style={{ margin: '8px 0 12px', fontSize: 13, lineHeight: '20px' }}>
-              This proposal has not been classified again. Compare these current entries with its evidence before
-              confirming; the server will check the current register again when you decide.
+              Scope has changed since this was suggested. Compare it with the entries below before you confirm.
             </p>
             <div style={{ display: 'grid', gap: 10 }}>
               {projectChanges.map((change) => (
                 <div key={change.requirementId} style={{ borderTop: '1px solid var(--border-subtle)', paddingTop: 8 }}>
-                  <div style={{ fontSize: 12, fontWeight: 600 }}>
-                    {change.change.toUpperCase()} · {change.requirementId}
-                  </div>
+                  <div style={{ fontSize: 12, fontWeight: 600 }}>{CHANGE_WORD[change.change]}</div>
                   <div style={{ fontSize: 12, color: 'var(--ink-meta)', marginTop: 3 }}>
-                    {change.previousVersion == null
-                      ? 'Not in the original register snapshot'
-                      : `Previously v${change.previousVersion} · ${change.previousState ?? 'unknown'}`}
+                    {change.previousState == null ? 'Not in scope when this was suggested' : `Was ${change.previousState}`}
                     {' → '}
-                    {change.currentVersion == null
-                      ? 'No longer in the current register'
-                      : `Now v${change.currentVersion} · ${change.currentState ?? 'unknown'}`}
+                    {change.currentState == null ? 'no longer in scope' : `now ${change.currentState}`}
                   </div>
                   {change.currentText ? <div style={{ fontSize: 13, marginTop: 5 }}>{change.currentText}</div> : null}
                 </div>
@@ -162,23 +156,23 @@ export function ProposalCard({
           </div>
         </div>
         <div>
-          <div className="cia-proposal__section-label">Model rationale</div>
+          <div className="cia-proposal__section-label">Why the AI suggested this</div>
           <p className="cia-rationale">{rationale}</p>
         </div>
-        <div>
-          <div className="cia-proposal__section-label">
-            Retrieved alternatives ({retrieved.length} considered)
+        {retrieved.length ? (
+          <div>
+            <div className="cia-proposal__section-label">Related requirement history</div>
+            <div className="cia-alts">
+              {retrieved.map((item) => (
+                <div key={item.rank} className={item.chosen ? 'cia-alt cia-alt--chosen' : 'cia-alt'}>
+                  <span className="cia-alt__text">{item.text}</span>
+                  {item.chosen ? <span style={{ fontSize: 12, color: 'var(--ink-meta)' }}>Matched</span> : null}
+                  <StateChip state={item.state} />
+                </div>
+              ))}
+            </div>
           </div>
-          <div className="cia-alts">
-            {retrieved.map((item) => (
-              <div key={item.rank} className={item.chosen ? 'cia-alt cia-alt--chosen' : 'cia-alt'}>
-                <span className="cia-alt__rank">{item.rank}</span>
-                <span className="cia-alt__text">{item.text}</span>
-                <StateChip state={item.state} />
-              </div>
-            ))}
-          </div>
-        </div>
+        ) : null}
       </div>
       <div className="cia-actions">
         {editing ? (

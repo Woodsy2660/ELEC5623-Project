@@ -47,31 +47,28 @@ export function RequirementDetailRoute() {
     )
   }
 
-  const families = new Set(requirements.data.map((row) => row.requirement_id)).size
+  const agreed = requirements.data.filter((row) => row.state === 'confirmed').length
   const item = detail.data
   const textColor = item.current_state === 'proposed' ? 'var(--ink-proposed)' : 'var(--ink)'
 
   return (
     <AppShell projectId={projectId} projectName={project.data.name} active="register" reviewCount={reviewCount}>
       <main style={mainStyle}>
-        <ScopeBar client={project.data.client} projectName={project.data.name} count={`${families} requirement families`} />
+        <ScopeBar client={project.data.client} projectName={project.data.name} count={`${agreed} agreed ${agreed === 1 ? 'requirement' : 'requirements'}`} />
         <div>
           <Link to={`/projects/${projectId}/register`} style={{ fontSize: 13 }}>
             ← Register
           </Link>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 12, marginTop: 10, flexWrap: 'wrap' }}>
-            <h1 style={titleStyle}>{item.title ?? item.id}</h1>
-            <span className="cia-id" style={{ fontSize: 14 }}>
-              {item.id}
-            </span>
+            <h1 style={titleStyle}>{item.title ?? 'Requirement history'}</h1>
             <StateChip state={item.current_state} />
           </div>
-          <p style={{ margin: '8px 0 0', fontSize: 15, lineHeight: '23px', color: textColor, maxWidth: '70ch' }}>{item.current_text}</p>
+          <p style={{ margin: '10px 0 0', fontSize: 18, lineHeight: '27px', color: textColor, maxWidth: '70ch' }}>{item.current_text}</p>
           <p style={{ margin: '6px 0 0', fontSize: 13, color: 'var(--ink-meta)' }}>{item.summary}</p>
         </div>
         <section style={{ display: 'flex', flexWrap: 'wrap', gap: 32 }}>
           <div style={{ flex: '999 1 420px', minWidth: 0 }}>
-            <h2 style={sectionLabel}>Decision history</h2>
+            <h2 style={sectionLabel}>History</h2>
             <div style={{ display: 'flex', flexDirection: 'column' }}>
               {item.timeline.map((entry, index) => (
                 <TimelineItem key={`${entry.version}-${entry.when_label}-${index}`} entry={entry} last={index === item.timeline.length - 1} />
@@ -81,7 +78,7 @@ export function RequirementDetailRoute() {
           <aside style={{ flex: '1 1 280px', minWidth: 0 }}>
             {item.audit ? (
               <>
-                <h2 style={sectionLabel}>Audit</h2>
+                <h2 style={sectionLabel}>Record</h2>
                 <div
                   style={{
                     background: 'var(--surface-raised)',
@@ -93,26 +90,33 @@ export function RequirementDetailRoute() {
                     gap: 14,
                   }}
                 >
-                  <AuditLine label="Family created" value={item.audit.family_created} />
-                  <AuditLine label="Events" value={item.audit.events.join(', ')} />
+                  <AuditLine label="First recorded" value={item.audit.family_created} />
                   <div>
-                    <div style={{ fontSize: 12, color: 'var(--ink-meta)' }}>Prompt version</div>
-                    <div className="cia-id">{item.audit.prompt_version}</div>
+                    <div style={{ fontSize: 12, color: 'var(--ink-meta)' }}>Changes</div>
+                    {item.audit.events.map((event) => (
+                      <div key={event} style={{ fontSize: 14, lineHeight: '21px', marginTop: 4 }}>
+                        {event}
+                      </div>
+                    ))}
                   </div>
-                  <div>
-                    <div style={{ fontSize: 12, color: 'var(--ink-meta)' }}>Model</div>
-                    <div className="cia-id">{item.audit.model}</div>
-                  </div>
-                  <div style={{ borderTop: '1px solid var(--border-subtle)', paddingTop: 14 }}>
-                    <div style={{ fontSize: 12, color: 'var(--ink-meta)' }}>Rejected proposals</div>
-                    <div style={{ fontSize: 14 }}>{item.audit.rejected_proposals}</div>
-                  </div>
+                  <details style={{ borderTop: '1px solid var(--border-subtle)', paddingTop: 12 }}>
+                    <summary style={{ cursor: 'pointer', fontSize: 12, color: 'var(--ink-meta)' }}>Technical details</summary>
+                    <div style={{ marginTop: 10, display: 'flex', flexDirection: 'column', gap: 10 }}>
+                      <div>
+                        <div style={{ fontSize: 12, color: 'var(--ink-meta)' }}>AI model</div>
+                        <div className="cia-id">{item.audit.model}</div>
+                      </div>
+                      <div>
+                        <div style={{ fontSize: 12, color: 'var(--ink-meta)' }}>Prompt version</div>
+                        <div className="cia-id" style={{ wordBreak: 'break-all' }}>{item.audit.prompt_version}</div>
+                      </div>
+                    </div>
+                  </details>
                 </div>
               </>
             ) : null}
             <p style={{ margin: item.audit ? '14px 0 0' : 0, fontSize: 13, lineHeight: '20px', color: 'var(--ink-meta)' }}>
-              Every version keeps the evidence it was created from, so a reviewer can reconstruct why scope changed
-              without opening the transcript.
+              Every version keeps the client’s words it came from, so anyone can see why scope changed.
             </p>
           </aside>
         </section>
@@ -137,7 +141,7 @@ function TimelineItem({ entry, last }: { entry: Schemas['TimelineEntry']; last: 
       </div>
       <div style={{ flex: '999 1 auto', minWidth: 0, paddingBottom: last ? 0 : 28 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-          <span className="cia-id">v{entry.version}</span>
+          <span style={{ fontSize: 13, fontWeight: 500 }}>Version {entry.version}</span>
           {entry.relation ? <RelationChip relation={entry.relation} /> : null}
           {entry.state ? <StateChip state={entry.state} /> : null}
           <span style={{ fontSize: 13, color: 'var(--ink-meta)' }}>{entry.when_label}</span>

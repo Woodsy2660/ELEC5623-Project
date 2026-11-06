@@ -1,0 +1,6 @@
+{"turn_index": 0, "turn_id": "DEMO-M02:0000", "speaker": "Alex Morgan", "text": "Welcome back. Any changes since our last meeting?"}
+{"turn_index": 1, "turn_id": "DEMO-M02:0001", "speaker": "Priya Raman", "text": "Yes. Our security team reviewed the login design this week."}
+{"turn_index": 2, "turn_id": "DEMO-M02:0002", "speaker": "Priya Raman", "text": "We will use single sign-on through our company identity provider instead."}
+{"turn_index": 3, "turn_id": "DEMO-M02:0003", "speaker": "Tom Alder", "text": "Understood. I'll look at the identity provider setup."}
+{"turn_index": 4, "turn_id": "DEMO-M02:0004", "speaker": "Priya Raman", "text": "The order list also shows the expected delivery date for each order."}
+{"turn_index": 5, "turn_id": "DEMO-M02:0005", "speaker": "Alex Morgan", "text": "Thanks, I'll update the register."}

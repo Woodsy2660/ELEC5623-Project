@@ -8,6 +8,15 @@ export type RelationLabel =
   | 'restatement'
   | 'not_requirement'
 
+const WORDS: Record<RelationLabel, string> = {
+  new: 'New',
+  refinement: 'Refinement',
+  contradiction: 'Conflict',
+  supersession: 'Replacement',
+  restatement: 'Repeat',
+  not_requirement: 'Not a requirement',
+}
+
 const TINT: Partial<Record<RelationLabel, string>> = {
   contradiction: 'cia-relation--contradiction',
   supersession: 'cia-relation--supersession',
@@ -17,7 +26,7 @@ export function RelationChip({ relation, style }: { relation: RelationLabel; sty
   const tint = TINT[relation]
   return (
     <span className={tint ? `cia-relation ${tint}` : 'cia-relation'} style={style}>
-      {relation}
+      {WORDS[relation] ?? relation}
     </span>
   )
 }

@@ -73,8 +73,12 @@ export function MeetingsRoute() {
         {/* Header with project context */}
         <header style={{ marginBottom: 8 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
-            <span style={{ fontSize: 13, color: 'var(--ink-meta)' }}>{project.data.client}</span>
-            <span style={{ color: 'var(--border-strong)' }}>·</span>
+            {project.data.client ? (
+              <>
+                <span style={{ fontSize: 13, color: 'var(--ink-meta)' }}>{project.data.client}</span>
+                <span style={{ color: 'var(--border-strong)' }}>·</span>
+              </>
+            ) : null}
             <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--ink)' }}>{project.data.name}</span>
           </div>
           <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 24, flexWrap: 'wrap' }}>
@@ -82,7 +86,7 @@ export function MeetingsRoute() {
               <h1 style={titleStyle}>Meetings</h1>
               <p style={subtitleStyle}>
                 {sortedPast.filter((meeting) => meeting.generated !== false).length} processed ·{' '}
-                {currentReqs.length} requirements tracked
+                {currentReqs.length} requirements
               </p>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 8 }}>
@@ -140,9 +144,6 @@ export function MeetingsRoute() {
                       }}
                       className="proposal-row"
                     >
-                      <span className="cia-id" style={{ flex: '0 0 48px' }}>
-                        {proposal.requirement_id ?? 'NEW'}
-                      </span>
                       <span style={{
                         flex: '1 1 auto',
                         minWidth: 0,
@@ -152,7 +153,7 @@ export function MeetingsRoute() {
                         textOverflow: 'ellipsis',
                         whiteSpace: 'nowrap'
                       }}>
-                        {proposal.queue_text}
+                        {proposal.statement}
                       </span>
                       <RelationChip relation={proposal.classification.relation} style={{ fontSize: 11, padding: '1px 8px' }} />
                     </Link>
@@ -258,7 +259,6 @@ export function MeetingsRoute() {
                         }}
                       >
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-                          <span className="cia-id">{req.requirement_id}</span>
                           <StateChip state={req.state} />
                         </div>
                         <p style={{
@@ -301,7 +301,7 @@ export function MeetingsRoute() {
                 {[
                   { label: 'Confirmed', count: currentReqs.filter(r => r.state === 'confirmed').length, color: 'var(--state-confirmed)' },
                   { label: 'Proposed', count: currentReqs.filter(r => r.state === 'proposed').length, color: 'var(--ink-proposed)' },
-                  { label: 'Superseded', count: currentReqs.filter(r => r.state === 'superseded').length, color: 'var(--state-superseded)' },
+                  { label: 'Replaced', count: currentReqs.filter(r => r.state === 'superseded').length, color: 'var(--state-superseded)' },
                 ].filter(s => s.count > 0).map(stat => (
                   <div key={stat.label} style={{ textAlign: 'center' }}>
                     <div style={{ fontSize: 18, fontWeight: 600, color: stat.color }}>{stat.count}</div>
@@ -378,7 +378,6 @@ function PastCard({ meeting, projectId }: { meeting: Schemas['MeetingOut']; proj
       }}
     >
       <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginBottom: 10 }}>
-        <span className="cia-id">{meeting.id}</span>
         <span style={{ fontSize: 15, fontWeight: 500, color: 'var(--ink)' }}>{meeting.title}</span>
         <span style={{ marginLeft: 'auto', fontSize: 12, color: 'var(--ink-meta)' }}>
           {meeting.when_label}
